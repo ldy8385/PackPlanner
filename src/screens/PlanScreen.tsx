@@ -13,6 +13,7 @@ import {Card, Text, Button, ProgressBar, Surface} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Plan, Gear, PlanItem, PlanType} from '../types';
 import GearSelectScreen from './GearSelectScreen';
+import KakaoMap from '../components/KakaoMap';
 
 interface PlanScreenProps {
   plans: Plan[];
@@ -201,11 +202,22 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   const toggleItemCheck = (planId: string, itemId: string) => {
     const updatedPlans = plans.map(plan => {
       if (plan.id === planId) {
+        // 재귀적으로 모든 레벨의 아이템에서 체크 상태 토글
+        const toggleInTree = (items: PlanItem[]): PlanItem[] => {
+          return items.map(item => {
+            if (item.id === itemId) {
+              return {...item, isChecked: !item.isChecked};
+            }
+            if (item.children) {
+              return {...item, children: toggleInTree(item.children)};
+            }
+            return item;
+          });
+        };
+
         return {
           ...plan,
-          items: plan.items.map(item =>
-            item.id === itemId ? {...item, isChecked: !item.isChecked} : item,
-          ),
+          items: toggleInTree(plan.items),
         };
       }
       return plan;
@@ -223,9 +235,34 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   const removeItemFromPlan = (planId: string, itemId: string) => {
     const updatedPlans = plans.map(plan => {
       if (plan.id === planId) {
+        // 재귀적으로 모든 레벨의 아이템에서 제거
+        const removeFromTree = (items: PlanItem[]): PlanItem[] => {
+          return items
+            .map(item => {
+              if (item.id === itemId) {
+                // 자식들을 승격시키거나 삭제
+                return null;
+              }
+              if (item.children) {
+                const updatedChildren = removeFromTree(item.children);
+                const filtered = updatedChildren.filter(
+                  (i): i is PlanItem => i !== null,
+                );
+                if (filtered.length === 0) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const {children: _, ...rest} = item;
+                  return rest;
+                }
+                return {...item, children: filtered};
+              }
+              return item;
+            })
+            .filter((i): i is PlanItem => i !== null);
+        };
+
         return {
           ...plan,
-          items: plan.items.filter(item => item.id !== itemId),
+          items: removeFromTree(plan.items),
         };
       }
       return plan;
@@ -488,6 +525,18 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   {selectedPlan.destination}
                 </Text>
               </View>
+
+              {/* 지도 표시 - 위치 정보가 있을 때만 */}
+              {selectedPlan.location && (
+                <View style={styles.mapContainer}>
+                  <KakaoMap
+                    latitude={selectedPlan.location.latitude}
+                    longitude={selectedPlan.location.longitude}
+                    height={180}
+                  />
+                </View>
+              )}
+
               <View style={styles.detailInfoRow}>
                 <Icon name="calendar" size={18} color="#49454F" />
                 <Text variant="bodyLarge" style={styles.detailInfoText}>
@@ -541,7 +590,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             onPress={() => setShowGearSelect(true)}
             style={styles.addGearButton}
             buttonColor="#2E7D32">
-            장비 추가
+            장비 변경
           </Button>
         </ScrollView>
 
@@ -866,6 +915,13 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.3,
     shadowRadius: 2,
+  },
+  mapContainer: {
+    marginVertical: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
 });
 
