@@ -12,5 +12,6 @@ module.exports = {
         allowUndefined: true,
       },
     ],
+    'react-native-reanimated/plugin', // Reanimated 3.x도 필요
   ],
 };

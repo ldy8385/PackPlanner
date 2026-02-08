@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import {
   View,
   StyleSheet,
@@ -50,6 +50,14 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   const [imageUri, setImageUri] = useState<string | null>(
     editingGear?.imageUrl || null,
   );
+  const [container, setContainer] = useState<boolean>(
+    editingGear?.container ??
+      (editingGear?.category === GearCategory.BAG ||
+        editingGear?.category === GearCategory.POUCH),
+  );
+  const [quantity, setQuantity] = useState<string>(
+    editingGear?.quantity?.toString() || '1',
+  );
 
   // Autocomplete 상태
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
@@ -59,6 +67,15 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
     width: 0,
     height: 0,
   });
+
+  // 카테고리 변경 시 container 자동 설정 (배낭/파우치는 기본 true)
+  useEffect(() => {
+    if (!isEditMode && category) {
+      const shouldBeContainer =
+        category === GearCategory.BAG || category === GearCategory.POUCH;
+      setContainer(shouldBeContainer);
+    }
+  }, [category, isEditMode]);
 
   // 태그 검색어 필터링
   const filteredTags = useMemo(() => {
@@ -169,6 +186,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       return;
     }
 
+    const quantityNum = parseInt(quantity, 10) || 1;
+
     const newGear: Gear = {
       id: editingGear?.id || Date.now().toString(),
       name: gearName,
@@ -178,6 +197,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       description: description.trim() || undefined,
       tags,
       imageUrl: imageUri || undefined,
+      container: container || undefined,
+      quantity: quantityNum > 1 ? quantityNum : undefined, // 1보다 클 때만 저장
     };
 
     onSave(newGear);
@@ -375,6 +396,73 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             </View>
           )}
 
+          {/* 수납 여부 (Container) */}
+          <Text variant="titleMedium" style={styles.sectionTitle}>
+            수납 여부
+          </Text>
+          <View style={styles.containerToggleRow}>
+            <TouchableOpacity
+              style={[
+                styles.containerToggle,
+                container && styles.containerToggleActive,
+              ]}
+              onPress={() => setContainer(true)}>
+              <Icon
+                name="package-variant-closed"
+                size={24}
+                color={container ? '#FFFFFF' : '#2E7D32'}
+              />
+              <Text
+                variant="bodyLarge"
+                style={[
+                  styles.containerToggleText,
+                  container && styles.containerToggleTextActive,
+                ]}>
+                수납 가능
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.containerToggle,
+                !container && styles.containerToggleActive,
+              ]}
+              onPress={() => setContainer(false)}>
+              <Icon
+                name="package-variant"
+                size={24}
+                color={!container ? '#FFFFFF' : '#49454F'}
+              />
+              <Text
+                variant="bodyLarge"
+                style={[
+                  styles.containerToggleText,
+                  !container && styles.containerToggleTextActive,
+                ]}>
+                수납 불가
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 수량 설정 */}
+          <Text variant="titleMedium" style={styles.sectionTitle}>
+            수량
+          </Text>
+          <TextInput
+            mode="outlined"
+            label="수량"
+            placeholder="보유 수량을 입력하세요 (기본값: 1)"
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="numeric"
+            style={styles.input}
+            outlineColor="#ddd"
+            activeOutlineColor="#2E7D32"
+          />
+          <Text variant="bodySmall" style={styles.helperText}>
+            패킹 계효ი 해당 장비를 얼마나 가지고 있는지 표시합니다. (예: 스패너
+            2개, 티셔츠 3개)
+          </Text>
+
           <TextInput
             mode="outlined"
             label="설명 (선택사항)"
@@ -459,6 +547,11 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 8,
     backgroundColor: '#fff',
+  },
+  helperText: {
+    color: '#666',
+    marginBottom: 16,
+    marginLeft: 4,
   },
   manufacturerSelector: {
     flexDirection: 'row',
@@ -573,6 +666,34 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     backgroundColor: '#4CAF50',
+  },
+  containerToggleRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  containerToggle: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  containerToggleActive: {
+    backgroundColor: '#2E7D32',
+  },
+  containerToggleText: {
+    color: '#1C1B1F',
+    fontWeight: '500',
+  },
+  containerToggleTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   imageContainer: {
     backgroundColor: '#fff',

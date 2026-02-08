@@ -7,6 +7,8 @@ export interface Gear {
   description?: string;
   imageUrl?: string;
   tags: string[];
+  container?: boolean; // 수납 여부 (배낭/파우치 등에 담을 수 있는지)
+  quantity?: number; // 수량 (기본값: 1)
 }
 
 export enum GearCategory {
@@ -72,6 +74,9 @@ export interface PlanItem {
   gear: Gear;
   isChecked: boolean;
   quantity: number;
+  children?: PlanItem[]; // 자식 장비 (계층 구조)
+  parentId?: string; // 부모 장비 ID
+  expanded?: boolean; // UI에서 펼침/접힘 상태
 }
 
 export interface GearTemplate {

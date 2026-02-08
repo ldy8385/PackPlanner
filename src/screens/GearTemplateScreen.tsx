@@ -293,39 +293,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
     );
   };
 
-  const renderGearSelectionItem = ({item}: {item: Gear}) => {
-    const isSelected = formData.selectedGearIds.includes(item.id);
-
-    return (
-      <List.Item
-        title={item.name}
-        description={`${item.manufacturer || '제조사 없음'} · ${
-          item.weight
-        }kg · ${item.category}`}
-        left={props => (
-          <View style={styles.gearSelectionLeft}>
-            <Checkbox
-              status={isSelected ? 'checked' : 'unchecked'}
-              onPress={() => toggleGearSelection(item.id)}
-            />
-            <Surface style={styles.gearIcon} elevation={1}>
-              <Icon
-                name={getGearCategoryIcon(item.category)}
-                size={20}
-                color="#666"
-              />
-            </Surface>
-          </View>
-        )}
-        onPress={() => toggleGearSelection(item.id)}
-        style={[
-          styles.gearSelectionItem,
-          isSelected && styles.gearSelectionItemSelected,
-        ]}
-      />
-    );
-  };
-
   const selectedGearsCount = formData.selectedGearIds.length;
   const selectedGearsWeight = useMemo(() => {
     return gears

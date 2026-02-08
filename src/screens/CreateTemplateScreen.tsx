@@ -1,11 +1,5 @@
 import React, {useState, useMemo} from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import {View, StyleSheet, ScrollView, Alert} from 'react-native';
 import {
   Text,
   Button,

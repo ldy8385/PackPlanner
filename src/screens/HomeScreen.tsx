@@ -10,11 +10,9 @@ import {
   Card,
   Text,
   Button,
-  Chip,
   ProgressBar,
   Surface,
   IconButton,
-  Divider,
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Plan, Gear, PlanType} from '../types';

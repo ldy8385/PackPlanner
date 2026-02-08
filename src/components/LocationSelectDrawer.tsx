@@ -45,6 +45,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
         setSearchResults([]);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, initialQuery]);
 
   const searchLocation = useCallback(async (query: string) => {

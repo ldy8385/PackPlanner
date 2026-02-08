@@ -348,7 +348,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
                 onTouchStart={e => handleTouch(e.nativeEvent.locationY)}
                 onTouchMove={e => handleTouch(e.nativeEvent.locationY)}>
                 <View style={styles.navBarContent}>
-                  {navigationKeys.map((key, index) => (
+                  {navigationKeys.map((key, _index) => (
                     <View
                       key={key}
                       style={[

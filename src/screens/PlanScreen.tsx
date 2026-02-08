@@ -9,17 +9,7 @@ import {
   BackHandler,
   TouchableOpacity,
 } from 'react-native';
-import {
-  Card,
-  Text,
-  Button,
-  Chip,
-  ProgressBar,
-  Surface,
-  IconButton,
-  FAB,
-  Divider,
-} from 'react-native-paper';
+import {Card, Text, Button, ProgressBar, Surface} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Plan, Gear, PlanItem, PlanType} from '../types';
 import GearSelectScreen from './GearSelectScreen';
@@ -32,6 +22,122 @@ interface PlanScreenProps {
   onEditPlan?: (plan: Plan) => void;
   onCreateNewPlan?: () => void;
 }
+
+// 계층적 PlanItem 렌더링 컴포넌트
+interface PlanItemListProps {
+  items: PlanItem[];
+  planId: string;
+  onToggleCheck: (planId: string, itemId: string) => void;
+  depth?: number;
+}
+
+const PlanItemList: React.FC<PlanItemListProps> = ({
+  items,
+  planId,
+  onToggleCheck,
+  depth = 0,
+}) => {
+  // 초기에 자식이 있는 모든 아이템을 펼친 상태로 설정
+  const getInitialExpandedIds = (itemList: PlanItem[]): Set<string> => {
+    const ids = new Set<string>();
+    const traverse = (list: PlanItem[]) => {
+      list.forEach(item => {
+        if (item.children && item.children.length > 0) {
+          ids.add(item.id);
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(itemList);
+    return ids;
+  };
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
+    getInitialExpandedIds(items),
+  );
+
+  const toggleExpand = (itemId: string) => {
+    setExpandedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  return (
+    <>
+      {items.map(item => {
+        const isExpanded = expandedIds.has(item.id);
+        const hasChildren = item.children && item.children.length > 0;
+        const isContainer = item.gear.container;
+
+        return (
+          <View key={item.id}>
+            <View style={[styles.itemRow, {paddingLeft: depth * 24}]}>
+              {/* 확장/접힘 버튼 (컨테이너이고 자식이 있을 때만) */}
+              {isContainer && hasChildren ? (
+                <TouchableOpacity
+                  onPress={() => toggleExpand(item.id)}
+                  style={styles.expandButton}>
+                  <Icon
+                    name={isExpanded ? 'chevron-down' : 'chevron-right'}
+                    size={24}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.expandButtonPlaceholder} />
+              )}
+
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => onToggleCheck(planId, item.id)}
+                activeOpacity={0.6}>
+                <Icon
+                  name={
+                    item.isChecked
+                      ? 'check-circle'
+                      : 'checkbox-blank-circle-outline'
+                  }
+                  size={32}
+                  color={item.isChecked ? '#2E7D32' : '#CAC4D0'}
+                />
+              </TouchableOpacity>
+              <View style={styles.itemInfo}>
+                <Text
+                  variant="bodyLarge"
+                  style={[
+                    styles.itemName,
+                    item.isChecked && styles.itemNameChecked,
+                  ]}>
+                  {item.gear.name}
+                </Text>
+                <Text variant="bodySmall" style={styles.itemCategory}>
+                  {item.gear.category} · {item.gear.weight}kg
+                  {hasChildren ? ` · ${item.children?.length}개 포함` : ''}
+                </Text>
+              </View>
+            </View>
+
+            {/* 자식 아이템 렌더링 */}
+            {isExpanded && hasChildren && (
+              <PlanItemList
+                items={item.children!}
+                planId={planId}
+                onToggleCheck={onToggleCheck}
+                depth={depth + 1}
+              />
+            )}
+          </View>
+        );
+      })}
+    </>
+  );
+};
 
 const PlanScreen: React.FC<PlanScreenProps> = ({
   plans,
@@ -53,6 +159,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     } else if (initialPlanId === null) {
       setSelectedPlan(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPlanId]);
 
   useEffect(() => {
@@ -133,34 +240,58 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     }
   };
 
-  const handleAddGears = (selectedGearIds: string[]) => {
+  // gear를 PlanItem으로 변환 (flat 구조로 - 계층은 사용자가 나중에 설정)
+  const convertGearToPlanItem = (gear: Gear): PlanItem => {
+    return {
+      id: `${Date.now()}_${gear.id}_${Math.random().toString(36).substr(2, 9)}`,
+      gearId: gear.id,
+      gear: gear,
+      isChecked: false,
+      quantity: 1,
+    };
+  };
+
+  const handleAddGears = (
+    selectedGearIds: string[],
+    updatedItems?: PlanItem[],
+  ) => {
     if (!selectedPlan) return;
+
+    // updatedItems가 있으면 계층 구조를 유지한 채 사용
+    if (updatedItems && updatedItems.length > 0) {
+      const updatedPlans = plans.map(plan => {
+        if (plan.id === selectedPlan.id) {
+          return {
+            ...plan,
+            items: updatedItems,
+          };
+        }
+        return plan;
+      });
+      onUpdatePlans(updatedPlans);
+
+      const updatedPlan = updatedPlans.find(p => p.id === selectedPlan.id);
+      if (updatedPlan) {
+        setSelectedPlan(updatedPlan);
+      }
+
+      setShowGearSelect(false);
+      return;
+    }
+
+    // Fallback: 기존 로직 (계층 구조 없이 IDs만 받은 경우)
+    const selectedGears = gears.filter(g => selectedGearIds.includes(g.id));
+    const existingItemIds = new Set(
+      selectedPlan.items.map(item => item.gearId),
+    );
+    const newGears = selectedGears.filter(g => !existingItemIds.has(g.id));
 
     const updatedPlans = plans.map(plan => {
       if (plan.id === selectedPlan.id) {
-        const keptItems = plan.items.filter(item =>
-          selectedGearIds.includes(item.gearId),
-        );
-
-        const newItems: PlanItem[] = [];
-        selectedGearIds.forEach((gearId, index) => {
-          if (!plan.items.some(item => item.gearId === gearId)) {
-            const gear = gears.find(g => g.id === gearId);
-            if (gear) {
-              newItems.push({
-                id: `${Date.now()}_${index}`,
-                gearId: gear.id,
-                gear: gear,
-                isChecked: false,
-                quantity: 1,
-              });
-            }
-          }
-        });
-
+        const newItems = newGears.map(gear => convertGearToPlanItem(gear));
         return {
           ...plan,
-          items: [...keptItems, ...newItems],
+          items: [...plan.items, ...newItems],
         };
       }
       return plan;
@@ -395,45 +526,11 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   </Text>
                 </Surface>
               ) : (
-                selectedPlan.items.map(item => (
-                  <View key={item.id} style={styles.itemRow}>
-                    <TouchableOpacity
-                      style={styles.checkboxContainer}
-                      onPress={() => toggleItemCheck(selectedPlan.id, item.id)}
-                      activeOpacity={0.6}>
-                      <Icon
-                        name={
-                          item.isChecked
-                            ? 'check-circle'
-                            : 'checkbox-blank-circle-outline'
-                        }
-                        size={32}
-                        color={item.isChecked ? '#2E7D32' : '#CAC4D0'}
-                      />
-                    </TouchableOpacity>
-                    <View style={styles.itemInfo}>
-                      <Text
-                        variant="bodyLarge"
-                        style={[
-                          styles.itemName,
-                          item.isChecked && styles.itemNameChecked,
-                        ]}>
-                        {item.gear.name}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.itemCategory}>
-                        {item.gear.category} · {item.gear.weight}kg
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() =>
-                        removeItemFromPlan(selectedPlan.id, item.id)
-                      }
-                      activeOpacity={0.6}>
-                      <Icon name="delete" size={24} color="#B3261E" />
-                    </TouchableOpacity>
-                  </View>
-                ))
+                <PlanItemList
+                  items={selectedPlan.items}
+                  planId={selectedPlan.id}
+                  onToggleCheck={toggleItemCheck}
+                />
               )}
             </Card.Content>
           </Card>
@@ -463,7 +560,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     return (
       <GearSelectScreen
         gears={gears}
-        selectedGearIds={selectedPlan.items.map(i => i.gearId)}
+        selectedItems={selectedPlan.items}
         onSave={handleAddGears}
         onCancel={() => setShowGearSelect(false)}
       />
@@ -720,6 +817,14 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
     marginLeft: 4,
+  },
+  expandButton: {
+    padding: 4,
+    marginRight: 4,
+  },
+  expandButtonPlaceholder: {
+    width: 32,
+    marginRight: 4,
   },
   emptyItems: {
     alignItems: 'center',

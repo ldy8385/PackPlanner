@@ -8,14 +8,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import {
-  Text,
-  Button,
-  Chip,
-  Surface,
-  IconButton,
-  Divider,
-} from 'react-native-paper';
+import {Text, Chip, Surface, IconButton, Divider} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Gear, GearCategory, GearTemplate} from '../types';
 import {gearCategories} from '../data/mockData';
@@ -35,7 +28,7 @@ interface GearScreenProps {
 
 const GearScreen: React.FC<GearScreenProps> = ({
   gears,
-  onUpdateGears,
+  onUpdateGears: _onUpdateGears,
   templates,
   onUpdateTemplates,
   onCreateGear,
@@ -152,9 +145,9 @@ const GearScreen: React.FC<GearScreenProps> = ({
 
     let alertMessage = `"${gear.name}" 장비를 삭제하시겠습니까?`;
     if (planCount > 0) {
-      alertMessage += `\n\n⚠️ 주의: 이 장비는 ${planCount}개의 계획에서 사용 중입니다.\n`;
-      alertMessage += `(${planNames})\n\n`;
-      alertMessage += `삭제 시 해당 계획에서도 제거됩니다.`;
+      alertMessage += `\n\n⚠️ 주의: 이 장비는 ${planCount}개의 계획에서 사용 중입니다.`;
+      alertMessage += `\n(${planNames})`;
+      alertMessage += `\n삭제 시 해당 계획에서도 제거됩니다.`;
     }
 
     Alert.alert(
@@ -227,6 +220,29 @@ const GearScreen: React.FC<GearScreenProps> = ({
                 )}
               </View>
             )}
+            {/* 수납 여부 및 수량 표시 */}
+            <View style={styles.badgesRow}>
+              {item.container && (
+                <View style={styles.containerBadge}>
+                  <Icon
+                    name="package-variant-closed"
+                    size={12}
+                    color="#2E7D32"
+                  />
+                  <Text variant="labelSmall" style={styles.containerText}>
+                    수납
+                  </Text>
+                </View>
+              )}
+              {item.quantity && item.quantity > 1 && (
+                <View style={styles.quantityBadge}>
+                  <Icon name="numeric" size={12} color="#1976D2" />
+                  <Text variant="labelSmall" style={styles.quantityText}>
+                    수량: {item.quantity}개
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
           <View style={styles.weightContainer}>
             <Icon name="weight-kilogram" size={16} color="#2E7D32" />
@@ -815,6 +831,34 @@ const styles = StyleSheet.create({
   moreTags: {
     color: '#79747E',
     paddingVertical: 4,
+  },
+  containerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  containerText: {
+    color: '#2E7D32',
+    fontWeight: '500',
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  quantityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  quantityText: {
+    color: '#1976D2',
+    fontWeight: '500',
   },
   weightContainer: {
     flexDirection: 'row',

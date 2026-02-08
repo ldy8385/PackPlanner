@@ -1,5 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Plan, Gear, GearTemplate} from '../types';
+import {
+  flattenPlanItemHierarchy,
+  restorePlanItemHierarchy,
+} from './gearHierarchy';
 
 const STORAGE_KEYS = {
   PLANS: 'packplanner_plans',
@@ -12,7 +16,12 @@ export const storage = {
   // Plans 저장
   savePlans: async (plans: Plan[]): Promise<void> => {
     try {
-      const jsonValue = JSON.stringify(plans);
+      // 계층 구조를 평탄화하여 저장
+      const plansToSave = plans.map(plan => ({
+        ...plan,
+        items: flattenPlanItemHierarchy(plan.items),
+      }));
+      const jsonValue = JSON.stringify(plansToSave);
       await AsyncStorage.setItem(STORAGE_KEYS.PLANS, jsonValue);
     } catch (error) {
       console.error('Error saving plans:', error);
@@ -25,18 +34,20 @@ export const storage = {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.PLANS);
       if (jsonValue != null) {
         const plans = JSON.parse(jsonValue);
-        // Date 객체 복원
+        // Date 객체 복원 및 계층 구조 복원
         return plans.map((plan: any) => ({
           ...plan,
           startDate: new Date(plan.startDate),
           endDate: new Date(plan.endDate),
           createdAt: new Date(plan.createdAt),
-          items: plan.items.map((item: any) => ({
-            ...item,
-            gear: {
-              ...item.gear,
-            },
-          })),
+          items: restorePlanItemHierarchy(
+            plan.items.map((item: any) => ({
+              ...item,
+              gear: {
+                ...item.gear,
+              },
+            })),
+          ),
         }));
       }
       return null;
@@ -46,7 +57,7 @@ export const storage = {
     }
   },
 
-  // Gears 저장
+  // Gears 저장 (평면 구조)
   saveGears: async (gears: Gear[]): Promise<void> => {
     try {
       const jsonValue = JSON.stringify(gears);
@@ -56,7 +67,7 @@ export const storage = {
     }
   },
 
-  // Gears 불러오기
+  // Gears 불러오기 (평면 구조)
   loadGears: async (): Promise<Gear[] | null> => {
     try {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.GEARS);

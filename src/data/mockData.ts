@@ -1,6 +1,56 @@
-import {GearCategory, PlanType} from '../types';
+import {GearCategory, PlanType, Gear} from '../types';
 
 export const mockPlans: any[] = [];
+
+export const mockGears: Gear[] = [
+  {
+    id: '1',
+    name: '네이처하이크 텐트',
+    category: GearCategory.TENT,
+    weight: 2.5,
+    quantity: 1,
+    container: true,
+    manufacturer: '네이처하이크',
+    tags: ['3인용', '경량'],
+  },
+  {
+    id: '2',
+    name: '침낭 (다운)',
+    category: GearCategory.SLEEPING_BAG,
+    weight: 0.8,
+    quantity: 2,
+    manufacturer: '씨투써밋',
+    tags: ['겨울용', '초경량'],
+  },
+  {
+    id: '3',
+    name: '등산 배낭 65L',
+    category: GearCategory.BAG,
+    weight: 1.8,
+    quantity: 1,
+    container: true,
+    manufacturer: '오스프리',
+    tags: ['백패킹', '대용량'],
+  },
+  {
+    id: '4',
+    name: '경량 의자',
+    category: GearCategory.CHAIR,
+    weight: 0.6,
+    quantity: 4,
+    manufacturer: '헬리녹스',
+    tags: ['캠핑의자', '경량'],
+  },
+  {
+    id: '5',
+    name: '캠핑 랜턴',
+    category: GearCategory.LIGHTING,
+    weight: 0.3,
+    quantity: 3,
+    manufacturer: '루메나',
+    tags: ['LED', '밝기조절'],
+  },
+];
 
 export const gearCategories = Object.values(GearCategory);
 export const planTypes = Object.values(PlanType);

@@ -22,7 +22,7 @@ import GearScreen from './src/screens/GearScreen';
 import CreatePlanScreen from './src/screens/CreatePlanScreen';
 import CreateGearScreen from './src/screens/CreateGearScreen';
 
-import {Plan, Gear, GearTemplate} from './src/types';
+import {Plan, Gear, GearTemplate, PlanItem} from './src/types';
 import {storage} from './src/utils/storage';
 
 // Material Design 3 테마
@@ -152,18 +152,43 @@ const App = () => {
     gearId: string,
     affectedPlanIds: string[],
   ) => {
-    // 1. 장비 삭제
+    // 1. 장비 삭제 (단순 filter)
     const updatedGears = gears.filter(gear => gear.id !== gearId);
     setGears(updatedGears);
     await storage.saveGears(updatedGears);
 
-    // 2. 연결된 계획에서 해당 장비 제거
+    // 2. 연결된 계획에서 해당 장비 제거 (PlanItem 계층 구조 유지하며 제거)
     if (affectedPlanIds.length > 0) {
+      const removeItemsFromPlan = (items: PlanItem[]): PlanItem[] => {
+        return items
+          .map(item => {
+            if (item.gearId === gearId) {
+              // 해당 아이템 제거 (자식들은 승격)
+              return item.children || null;
+            }
+            if (item.children) {
+              const updatedChildren = removeItemsFromPlan(item.children);
+              const filteredChildren = updatedChildren.filter(
+                (i): i is PlanItem => i !== null,
+              );
+              if (filteredChildren.length === 0) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const {children: _, ...rest} = item;
+                return rest;
+              }
+              return {...item, children: filteredChildren};
+            }
+            return item;
+          })
+          .flat()
+          .filter((i): i is PlanItem => i !== null);
+      };
+
       const updatedPlans = plans.map(plan => {
         if (affectedPlanIds.includes(plan.id)) {
           return {
             ...plan,
-            items: plan.items.filter(item => item.gearId !== gearId),
+            items: removeItemsFromPlan(plan.items),
           };
         }
         return plan;
