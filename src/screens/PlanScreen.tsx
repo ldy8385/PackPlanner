@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -8,13 +8,72 @@ import {
   ScrollView,
   BackHandler,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { Card, Text, Button, ProgressBar, Surface, useTheme, IconButton } from 'react-native-paper';
+import {
+  Card,
+  Text,
+  Button,
+  ProgressBar,
+  Surface,
+  useTheme,
+  IconButton,
+} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useTranslation } from 'react-i18next';
-import { Plan, Gear, PlanItem, PlanType } from '../types';
+import {useTranslation} from 'react-i18next';
+import {Plan, Gear, PlanItem, PlanType} from '../types';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
+import {OPENWEATHER_KEY} from '../config/apiKeys';
+
+interface DailyWeather {
+  date: string;
+  temp: number;
+  tempMin: number;
+  tempMax: number;
+  description: string;
+  icon: string;
+  humidity: number;
+}
+
+const getWeatherIcon = (iconCode: string): string => {
+  if (iconCode === 'unavailable') {
+    return 'weather-cloudy';
+  }
+  const map: {[key: string]: string} = {
+    '01d': 'weather-sunny',
+    '01n': 'weather-night',
+    '02d': 'weather-partly-cloudy',
+    '02n': 'weather-night-partly-cloudy',
+    '03d': 'weather-cloudy',
+    '03n': 'weather-cloudy',
+    '04d': 'weather-cloudy',
+    '04n': 'weather-cloudy',
+    '09d': 'weather-rainy',
+    '09n': 'weather-rainy',
+    '10d': 'weather-pouring',
+    '10n': 'weather-pouring',
+    '11d': 'weather-lightning',
+    '11n': 'weather-lightning',
+    '13d': 'weather-snowy',
+    '13n': 'weather-snowy',
+    '50d': 'weather-fog',
+    '50n': 'weather-fog',
+  };
+  return map[iconCode] || 'weather-cloudy';
+};
+
+const getWeatherIconColor = (iconCode: string): string => {
+  if (iconCode === 'unavailable') return '#BDBDBD';
+  if (iconCode.startsWith('01')) return '#FFA726';
+  if (iconCode.startsWith('02')) return '#FFB74D';
+  if (iconCode.startsWith('03') || iconCode.startsWith('04')) return '#90A4AE';
+  if (iconCode.startsWith('09') || iconCode.startsWith('10')) return '#42A5F5';
+  if (iconCode.startsWith('11')) return '#7E57C2';
+  if (iconCode.startsWith('13')) return '#B3E5FC';
+  if (iconCode.startsWith('50')) return '#B0BEC5';
+  return '#90A4AE';
+};
 
 interface PlanScreenProps {
   plans: Plan[];
@@ -40,7 +99,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
   depth = 0,
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const {t} = useTranslation();
 
   // 초기에 자식이 있는 모든 아이템을 펼친 상태로 설정
   const getInitialExpandedIds = (itemList: PlanItem[]): Set<string> => {
@@ -87,12 +146,23 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                 styles.itemRow,
                 {
                   paddingLeft: depth * 16, // Reduced indentation step
-                  backgroundColor: depth > 0 ? theme.colors.background : 'transparent', // Subtle distinction
+                  backgroundColor:
+                    depth > 0 ? theme.colors.background : 'transparent', // Subtle distinction
                   paddingVertical: 8,
-                }
+                },
               ]}>
               {/* Depth Indicator Line */}
-              {depth > 0 && <View style={[styles.depthLine, { left: (depth * 16) - 10, backgroundColor: theme.colors.outlineVariant }]} />}
+              {depth > 0 && (
+                <View
+                  style={[
+                    styles.depthLine,
+                    {
+                      left: depth * 16 - 10,
+                      backgroundColor: theme.colors.outlineVariant,
+                    },
+                  ]}
+                />
+              )}
 
               <TouchableOpacity
                 style={styles.checkboxContainer}
@@ -105,7 +175,11 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                       : 'checkbox-blank-circle-outline'
                   }
                   size={24}
-                  color={item.isChecked ? theme.colors.secondary : theme.colors.outline}
+                  color={
+                    item.isChecked
+                      ? theme.colors.secondary
+                      : theme.colors.outline
+                  }
                 />
               </TouchableOpacity>
 
@@ -114,14 +188,19 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                   variant="bodyLarge"
                   style={[
                     styles.itemName,
-                    item.isChecked && { color: theme.colors.outline, textDecorationLine: 'line-through' },
-                    !item.isChecked && { color: theme.colors.onSurface }
+                    item.isChecked && {
+                      color: theme.colors.outline,
+                      textDecorationLine: 'line-through',
+                    },
+                    !item.isChecked && {color: theme.colors.onSurface},
                   ]}>
                   {item.gear.name}
                 </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                <Text variant="bodySmall" style={{color: theme.colors.outline}}>
                   {item.gear.category} · {item.gear.weight}kg
-                  {hasChildren ? ` · ${item.children?.length} ${t('plan.gearCount')}` : ''}
+                  {hasChildren
+                    ? ` · ${item.children?.length} ${t('plan.gearCount')}`
+                    : ''}
                 </Text>
               </View>
 
@@ -149,7 +228,14 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
               />
             )}
             {/* Divider for top level items */}
-            {depth === 0 && <View style={[styles.itemDivider, { backgroundColor: theme.colors.surfaceVariant }]} />}
+            {depth === 0 && (
+              <View
+                style={[
+                  styles.itemDivider,
+                  {backgroundColor: theme.colors.surfaceVariant},
+                ]}
+              />
+            )}
           </View>
         );
       })}
@@ -166,10 +252,136 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   onCreateNewPlan,
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const {t, i18n} = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showGearSelect, setShowGearSelect] = useState(false);
   const [showPastPlans, setShowPastPlans] = useState(false);
+  const [weatherData, setWeatherData] = useState<DailyWeather[]>([]);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherStatus, setWeatherStatus] = useState<
+    'available' | 'past' | 'tooFar' | 'noLocation' | 'error' | 'idle'
+  >('idle');
+
+  const fetchWeather = useCallback(
+    async (plan: Plan) => {
+      if (!plan.location) {
+        setWeatherStatus('noLocation');
+        setWeatherData([]);
+        return;
+      }
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const planStart = new Date(plan.startDate);
+      planStart.setHours(0, 0, 0, 0);
+      const planEnd = new Date(plan.endDate);
+      planEnd.setHours(0, 0, 0, 0);
+
+      // 지난 일정인 경우
+      if (planEnd < now) {
+        setWeatherStatus('past');
+        setWeatherData([]);
+        return;
+      }
+
+      // 5일 이후 시작 일정인 경우
+      const fiveDaysLater = new Date(now);
+      fiveDaysLater.setDate(fiveDaysLater.getDate() + 5);
+      if (planStart > fiveDaysLater) {
+        setWeatherStatus('tooFar');
+        setWeatherData([]);
+        return;
+      }
+
+      setWeatherLoading(true);
+      setWeatherStatus('idle');
+
+      try {
+        const lang = i18n.language === 'ko' ? 'kr' : 'en';
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/forecast?lat=${plan.location.latitude}&lon=${plan.location.longitude}&appid=${OPENWEATHER_KEY}&units=metric&lang=${lang}`,
+        );
+
+        if (!response.ok) {
+          throw new Error('Weather fetch failed');
+        }
+
+        const data = await response.json();
+
+        // 3시간 간격 데이터를 일별로 그룹핑
+        const dailyMap = new Map<string, any[]>();
+        for (const item of data.list) {
+          const dateKey = item.dt_txt.split(' ')[0];
+          if (!dailyMap.has(dateKey)) {
+            dailyMap.set(dateKey, []);
+          }
+          dailyMap.get(dateKey)!.push(item);
+        }
+
+        // 일정의 모든 날짜 생성
+        const allDates: DailyWeather[] = [];
+        const currentDate = new Date(planStart);
+
+        while (currentDate <= planEnd) {
+          const dateKey = currentDate.toISOString().split('T')[0];
+          const items = dailyMap.get(dateKey);
+
+          if (items) {
+            // 날씨 데이터가 있는 경우
+            const noonItem =
+              items.find((i: any) => i.dt_txt.includes('12:00:00')) ||
+              items[Math.floor(items.length / 2)];
+            const temps = items.map((i: any) => i.main.temp);
+            allDates.push({
+              date: dateKey,
+              temp: Math.round(noonItem.main.temp),
+              tempMin: Math.round(Math.min(...temps)),
+              tempMax: Math.round(Math.max(...temps)),
+              description: noonItem.weather[0].description,
+              icon: noonItem.weather[0].icon,
+              humidity: noonItem.main.humidity,
+            });
+          } else {
+            // 5일 예보 범위를 벗어난 날짜는 unavailable 표시
+            allDates.push({
+              date: dateKey,
+              temp: 0,
+              tempMin: 0,
+              tempMax: 0,
+              description: t('plan.weatherUnavailableShort'),
+              icon: 'unavailable',
+              humidity: 0,
+            });
+          }
+
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        if (allDates.length > 0) {
+          setWeatherData(allDates);
+          setWeatherStatus('available');
+        } else {
+          setWeatherStatus('tooFar');
+          setWeatherData([]);
+        }
+      } catch {
+        setWeatherStatus('error');
+        setWeatherData([]);
+      } finally {
+        setWeatherLoading(false);
+      }
+    },
+    [i18n.language, t],
+  );
+
+  useEffect(() => {
+    if (selectedPlan) {
+      fetchWeather(selectedPlan);
+    } else {
+      setWeatherData([]);
+      setWeatherStatus('idle');
+    }
+  }, [selectedPlan, fetchWeather]);
 
   // 계획 필터링: 지난 계획 표시 여부에 따라
   const filteredPlans = useMemo(() => {
@@ -218,19 +430,23 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   }, [selectedPlan, showGearSelect]);
 
   const deletePlan = (plan: Plan) => {
-    Alert.alert(t('plan.deleteConfirmTitle'), t('plan.deleteConfirmMessage', { name: plan.name }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => {
-          onUpdatePlans(plans.filter(p => p.id !== plan.id));
-          if (selectedPlan?.id === plan.id) {
-            setSelectedPlan(null);
-          }
+    Alert.alert(
+      t('plan.deleteConfirmTitle'),
+      t('plan.deleteConfirmMessage', {name: plan.name}),
+      [
+        {text: t('common.cancel'), style: 'cancel'},
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            onUpdatePlans(plans.filter(p => p.id !== plan.id));
+            if (selectedPlan?.id === plan.id) {
+              setSelectedPlan(null);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const toggleItemCheck = (planId: string, itemId: string) => {
@@ -240,10 +456,10 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         const toggleInTree = (items: PlanItem[]): PlanItem[] => {
           return items.map(item => {
             if (item.id === itemId) {
-              return { ...item, isChecked: !item.isChecked };
+              return {...item, isChecked: !item.isChecked};
             }
             if (item.children) {
-              return { ...item, children: toggleInTree(item.children) };
+              return {...item, children: toggleInTree(item.children)};
             }
             return item;
           });
@@ -377,7 +593,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   };
 
   const getPlanTypeIcon = (type: PlanType): string => {
-    const iconMap: { [key: string]: string } = {
+    const iconMap: {[key: string]: string} = {
       [PlanType.AUTO_CAMPING]: 'car',
       [PlanType.MOTO_CAMPING]: 'motorbike',
       [PlanType.BACKPACKING]: 'bag-personal',
@@ -413,7 +629,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     }
   };
 
-  const renderPlanItem = ({ item }: { item: Plan }) => {
+  const renderPlanItem = ({item}: {item: Plan}) => {
     const checkedCount = item.items.filter(i => i.isChecked).length;
     const progress =
       item.items.length > 0 ? checkedCount / item.items.length : 0;
@@ -513,8 +729,11 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     );
 
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Surface style={[styles.detailHeader, { backgroundColor: theme.colors.surface }]} elevation={0}>
+      <SafeAreaView
+        style={[styles.container, {backgroundColor: theme.colors.background}]}>
+        <Surface
+          style={[styles.detailHeader, {backgroundColor: theme.colors.surface}]}
+          elevation={0}>
           <View style={styles.detailHeaderTop}>
             <IconButton
               icon="arrow-left"
@@ -523,7 +742,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             />
             <Text
               variant="titleLarge"
-              style={[styles.detailTitle, { color: theme.colors.onSurface }]}
+              style={[styles.detailTitle, {color: theme.colors.onSurface}]}
               numberOfLines={1}>
               {selectedPlan.name}
             </Text>
@@ -539,32 +758,63 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         <ScrollView
           style={styles.detailContent}
           showsVerticalScrollIndicator={false}>
-
           {/* Main Info Card */}
-          <Card style={[styles.detailInfoCard, { backgroundColor: theme.colors.surface }]} mode="contained">
+          <Card
+            style={[
+              styles.detailInfoCard,
+              {backgroundColor: theme.colors.surface},
+            ]}
+            mode="contained">
             <Card.Content>
               <View style={styles.detailInfoGrid}>
                 <View style={styles.detailInfoRow}>
-                  <Icon name={getPlanTypeIcon(selectedPlan.type)} size={20} color={theme.colors.primary} />
-                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                  <Icon
+                    name={getPlanTypeIcon(selectedPlan.type)}
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="bodyLarge"
+                    style={{color: theme.colors.onSurface}}>
                     {selectedPlan.type}
                   </Text>
                 </View>
                 <View style={styles.detailInfoRow}>
-                  <Icon name="map-marker-outline" size={20} color={theme.colors.primary} />
-                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                  <Icon
+                    name="map-marker-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="bodyLarge"
+                    style={{color: theme.colors.onSurface}}>
                     {selectedPlan.destination}
                   </Text>
                 </View>
                 <View style={styles.detailInfoRow}>
-                  <Icon name="calendar-range-outline" size={20} color={theme.colors.primary} />
-                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
-                    {formatDateRange(selectedPlan.startDate, selectedPlan.endDate)}
+                  <Icon
+                    name="calendar-range-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="bodyLarge"
+                    style={{color: theme.colors.onSurface}}>
+                    {formatDateRange(
+                      selectedPlan.startDate,
+                      selectedPlan.endDate,
+                    )}
                   </Text>
                 </View>
                 <View style={styles.detailInfoRow}>
-                  <Icon name="weight-kilogram" size={20} color={theme.colors.primary} />
-                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                  <Icon
+                    name="weight-kilogram"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="bodyLarge"
+                    style={{color: theme.colors.onSurface}}>
                     {t('plan.total')}: {totalWeight.toFixed(1)}kg
                   </Text>
                 </View>
@@ -583,19 +833,195 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             </Card.Content>
           </Card>
 
-          <Card style={[styles.itemsSection, { backgroundColor: theme.colors.surface }]} mode="contained">
+          {/* Weather Section */}
+          <Card
+            style={[
+              styles.weatherCard,
+              {backgroundColor: theme.colors.surface},
+            ]}
+            mode="contained">
+            <Card.Content>
+              <View style={styles.weatherHeader}>
+                <Icon
+                  name="weather-partly-cloudy"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.weatherTitle,
+                    {color: theme.colors.onSurface},
+                  ]}>
+                  {t('plan.weather')}
+                </Text>
+              </View>
+
+              {weatherLoading ? (
+                <View style={styles.weatherMessage}>
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                      marginLeft: 8,
+                    }}>
+                    {t('plan.weatherLoading')}
+                  </Text>
+                </View>
+              ) : weatherStatus === 'noLocation' ? (
+                <View style={styles.weatherMessage}>
+                  <Icon
+                    name="map-marker-off-outline"
+                    size={18}
+                    color={theme.colors.outline}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                      marginLeft: 8,
+                      flex: 1,
+                    }}>
+                    {t('plan.weatherNoLocation')}
+                  </Text>
+                </View>
+              ) : weatherStatus === 'past' ? (
+                <View style={styles.weatherMessage}>
+                  <Icon
+                    name="calendar-remove-outline"
+                    size={18}
+                    color={theme.colors.outline}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                      marginLeft: 8,
+                      flex: 1,
+                    }}>
+                    {t('plan.weatherPast')}
+                  </Text>
+                </View>
+              ) : weatherStatus === 'tooFar' ? (
+                <View style={styles.weatherMessage}>
+                  <Icon
+                    name="calendar-clock-outline"
+                    size={18}
+                    color={theme.colors.outline}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                      marginLeft: 8,
+                      flex: 1,
+                    }}>
+                    {t('plan.weatherUnavailable')}
+                  </Text>
+                </View>
+              ) : weatherStatus === 'error' ? (
+                <View style={styles.weatherMessage}>
+                  <Icon
+                    name="alert-circle-outline"
+                    size={18}
+                    color={theme.colors.error}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{color: theme.colors.error, marginLeft: 8, flex: 1}}>
+                    {t('plan.weatherError')}
+                  </Text>
+                </View>
+              ) : weatherData.length > 0 ? (
+                <View style={styles.weatherList}>
+                  {weatherData.map(day => {
+                    const dayDate = new Date(day.date);
+                    const dayLabel = dayDate.toLocaleDateString(
+                      i18n.language === 'ko' ? 'ko-KR' : 'en-US',
+                      {
+                        month: 'short',
+                        day: 'numeric',
+                        weekday: 'short',
+                      },
+                    );
+                    const isUnavailable = day.icon === 'unavailable';
+                    return (
+                      <View
+                        key={day.date}
+                        style={[
+                          styles.weatherDayRow,
+                          {borderBottomColor: theme.colors.surfaceVariant},
+                        ]}>
+                        <Text
+                          variant="bodyMedium"
+                          style={[
+                            styles.weatherDayLabel,
+                            {color: theme.colors.onSurface},
+                          ]}>
+                          {dayLabel}
+                        </Text>
+                        <Icon
+                          name={getWeatherIcon(day.icon)}
+                          size={28}
+                          color={getWeatherIconColor(day.icon)}
+                        />
+                        <View style={styles.weatherDayInfo}>
+                          {isUnavailable ? (
+                            <Text
+                              variant="bodyMedium"
+                              style={{
+                                color: theme.colors.onSurfaceVariant,
+                                fontWeight: '600',
+                              }}>
+                              {day.description}
+                            </Text>
+                          ) : (
+                            <>
+                              <Text
+                                variant="bodyMedium"
+                                style={{
+                                  color: theme.colors.onSurface,
+                                  fontWeight: '600',
+                                }}>
+                                {day.tempMax}° / {day.tempMin}°
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={{color: theme.colors.onSurfaceVariant}}>
+                                {day.description} · {t('plan.weatherHumidity')}{' '}
+                                {day.humidity}%
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </Card.Content>
+          </Card>
+
+          <Card
+            style={[
+              styles.itemsSection,
+              {backgroundColor: theme.colors.surface},
+            ]}
+            mode="contained">
             <Card.Content>
               <View style={styles.itemsSectionHeader}>
-                <Text variant="titleMedium" style={[styles.itemsSectionTitle, { color: theme.colors.onSurface }]}>
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.itemsSectionTitle,
+                    {color: theme.colors.onSurface},
+                  ]}>
                   {t('plan.gearList')}
                 </Text>
-                <Button
-                  mode="text"
-                  icon="plus"
-                  textColor={theme.colors.primary}
-                  onPress={() => setShowGearSelect(true)}>
-                  {t('plan.manageGears')}
-                </Button>
               </View>
 
               {selectedPlan.items.length === 0 ? (
@@ -605,10 +1031,18 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                     size={48}
                     color={theme.colors.outline} // Using theme outline
                   />
-                  <Text variant="bodyLarge" style={[styles.emptyItemsText, { color: theme.colors.onSurface }]}>
+                  <Text
+                    variant="bodyLarge"
+                    style={[
+                      styles.emptyItemsText,
+                      {color: theme.colors.onSurface},
+                    ]}>
                     {t('plan.noGearsAdded')}
                   </Text>
-                  <Button mode="contained-tonal" style={{ marginTop: 16 }} onPress={() => setShowGearSelect(true)}>
+                  <Button
+                    mode="contained-tonal"
+                    style={{marginTop: 16}}
+                    onPress={() => setShowGearSelect(true)}>
                     {t('plan.addGears')}
                   </Button>
                 </Surface>
@@ -625,11 +1059,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           <Button
             mode="outlined"
             textColor={theme.colors.error}
-            style={[styles.deletePlanButton, { borderColor: theme.colors.errorContainer }]}
+            style={[
+              styles.deletePlanButton,
+              {borderColor: theme.colors.errorContainer},
+            ]}
             onPress={() => deletePlan(selectedPlan)}>
             {t('plan.deletePlan')}
           </Button>
-          <View style={{ height: 48 }} />
+          <View style={{height: 48}} />
         </ScrollView>
       </SafeAreaView>
     );
@@ -651,10 +1088,15 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={0}>
+    <SafeAreaView
+      style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Surface
+        style={[styles.header, {backgroundColor: theme.colors.surface}]}
+        elevation={0}>
         <View style={styles.headerContent}>
-          <Text variant="headlineSmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="headlineSmall"
+            style={[styles.headerTitle, {color: theme.colors.onSurface}]}>
             {t('plan.title')}
           </Text>
           <TouchableOpacity
@@ -668,7 +1110,12 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               size={24}
               color={theme.colors.primary}
             />
-            <Text variant="bodyMedium" style={[styles.pastPlansToggleText, { color: theme.colors.primary }]}>
+            <Text
+              variant="bodyMedium"
+              style={[
+                styles.pastPlansToggleText,
+                {color: theme.colors.primary},
+              ]}>
               {t('plan.showPastPlans')}
             </Text>
           </TouchableOpacity>
@@ -683,14 +1130,26 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Icon name="tent" size={64} color={theme.colors.outlineVariant} />
-            <Text variant="titleMedium" style={[styles.emptyStateText, { color: theme.colors.onSurfaceVariant }]}>
-              {showPastPlans ? t('plan.noPlansFound') : t('plan.noUpcomingPlans')}
+            <Text
+              variant="titleMedium"
+              style={[
+                styles.emptyStateText,
+                {color: theme.colors.onSurfaceVariant},
+              ]}>
+              {showPastPlans
+                ? t('plan.noPlansFound')
+                : t('plan.noUpcomingPlans')}
             </Text>
-            <Text variant="bodyMedium" style={[styles.emptyStateSubtext, { color: theme.colors.outline }]}>
+            <Text
+              variant="bodyMedium"
+              style={[styles.emptyStateSubtext, {color: theme.colors.outline}]}>
               {t('plan.createPlanToStart')}
             </Text>
             {onCreateNewPlan && (
-              <Button mode="contained" onPress={onCreateNewPlan} style={{ marginTop: 16 }}>
+              <Button
+                mode="contained"
+                onPress={onCreateNewPlan}
+                style={{marginTop: 16}}>
                 {t('plan.createPlan')}
               </Button>
             )}
@@ -700,12 +1159,18 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 
       {/* FAB - 새 계획 추가 */}
       {onCreateNewPlan && filteredPlans.length > 0 && (
-        <Surface style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]} elevation={4}>
+        <Surface
+          style={[styles.fab, {backgroundColor: theme.colors.primaryContainer}]}
+          elevation={4}>
           <TouchableOpacity
             style={styles.fabTouchable}
             onPress={onCreateNewPlan}
             activeOpacity={0.8}>
-            <Icon name="plus" size={28} color={theme.colors.onPrimaryContainer} />
+            <Icon
+              name="plus"
+              size={28}
+              color={theme.colors.onPrimaryContainer}
+            />
           </TouchableOpacity>
         </Surface>
       )}
@@ -1022,6 +1487,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
+  },
+  // Weather styles
+  weatherCard: {
+    marginBottom: 20,
+    borderRadius: 16,
+  },
+  weatherHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  weatherTitle: {
+    fontWeight: '700',
+  },
+  weatherMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  weatherList: {
+    gap: 0,
+  },
+  weatherDayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  weatherDayLabel: {
+    width: 80,
+    fontWeight: '500',
+  },
+  weatherDayInfo: {
+    flex: 1,
   },
 });
 

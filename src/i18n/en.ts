@@ -61,6 +61,15 @@ export default {
     deleteConfirmMessage: 'Are you sure you want to delete "{{name}}"?',
     total: 'Total',
     itemsCount: '{{count}} Items',
+    weather: 'Weather',
+    weatherUnavailable:
+      'Weather info is only available for dates within 5 days.',
+    weatherPast: 'Weather info is not available for past dates.',
+    weatherNoLocation: 'No location set to check weather.',
+    weatherLoading: 'Loading weather...',
+    weatherError: 'Unable to fetch weather info.',
+    weatherHumidity: 'Humidity',
+    weatherUnavailableShort: 'Unavailable',
   },
   createPlan: {
     newPlan: 'New Plan',
@@ -97,7 +106,8 @@ export default {
     remove: 'Remove',
     deleteGearTitle: 'Delete Gear',
     deleteGearMessage: 'Are you sure you want to delete "{{name}}"?',
-    deleteGearWarning: '\n\n⚠️ Warning: This gear is used in {{count}} plan(s).',
+    deleteGearWarning:
+      '\n\n⚠️ Warning: This gear is used in {{count}} plan(s).',
     deleteGearPlans: '\n({{plans}})',
     deleteGearAffected: '\nIt will be removed from those plans too.',
     deleteTemplateTitle: 'Delete Template',
