@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   StyleSheet,
@@ -12,7 +13,6 @@ import {
   Button,
   ProgressBar,
   Surface,
-  IconButton,
   useTheme,
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -38,6 +38,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigateToPlanDetail,
   onNavigateToGearsWithTag,
 }) => {
+  const { t } = useTranslation();
   const activePlans = plans.filter(p => !p.isCompleted);
 
   const recentPlan = useMemo(() => {
@@ -113,7 +114,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           <View>
             <Logo size={32} />
             <Text variant="bodyLarge" style={[styles.headerSubtitle, { color: theme.colors.primary, marginTop: 4 }]}>
-              Ready for your next adventure?
+              {t('home.subtitle')}
             </Text>
           </View>
           <Surface style={[styles.profileButton, { backgroundColor: theme.colors.primaryContainer }]} elevation={0}>
@@ -125,23 +126,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
             {/* 장비 Stats */}
-            <Surface style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
-              <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
-                <MaterialCommunityIcons
-                  name="briefcase-outline"
-                  size={24}
-                  color={theme.colors.secondary}
-                />
-              </View>
-              <View>
-                <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
-                  {gears.length}
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                  Total Gears
-                </Text>
-              </View>
-            </Surface>
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={onNavigateToGears}
+              activeOpacity={0.7}>
+              <Surface style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+                  <MaterialCommunityIcons
+                    name="briefcase-outline"
+                    size={24}
+                    color={theme.colors.secondary}
+                  />
+                </View>
+                <View>
+                  <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                    {gears.length}
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                    {t('home.totalGears')}
+                  </Text>
+                </View>
+              </Surface>
+            </TouchableOpacity>
 
             {/* 무게 Stats */}
             <Surface style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
@@ -157,36 +163,40 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   {stats.totalWeight.toFixed(1)}
                 </Text>
                 <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                  Total Kg
+                  {t('home.totalKg')}
                 </Text>
               </View>
             </Surface>
           </View>
 
           {/* 계획 Stats (Wide) */}
-          <Surface style={[styles.statCardWide, { backgroundColor: theme.colors.surface }]} elevation={0}>
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+          <TouchableOpacity
+            onPress={onNavigateToPlans}
+            activeOpacity={0.7}>
+            <Surface style={[styles.statCardWide, { backgroundColor: theme.colors.surface }]} elevation={0}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                <MaterialCommunityIcons
+                  name="calendar-check-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <View style={styles.statContentWide}>
+                <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                  {plans.length}
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+                  {t('home.activePlans')}
+                </Text>
+              </View>
               <MaterialCommunityIcons
-                name="calendar-check-outline"
+                name="chevron-right"
                 size={24}
-                color={theme.colors.primary}
+                color={theme.colors.outlineVariant}
+                style={{ marginLeft: 'auto' }}
               />
-            </View>
-            <View style={styles.statContentWide}>
-              <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
-                {plans.length}
-              </Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
-                Active Plans
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={theme.colors.outlineVariant}
-              style={{ marginLeft: 'auto' }}
-            />
-          </Surface>
+            </Surface>
+          </TouchableOpacity>
         </View>
 
         {/* 최근 계획 카드 - Glass/Clean Look */}
@@ -194,14 +204,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
-                Upcoming Trip
+                {t('home.upcomingTrip')}
               </Text>
               <Button
                 mode="text"
                 onPress={onNavigateToPlans}
                 textColor={theme.colors.primary}
                 compact>
-                View All
+                {t('home.viewAll')}
               </Button>
             </View>
             <Card
@@ -263,7 +273,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <View style={styles.progressContainer}>
                     <View style={styles.progressInfo}>
                       <Text variant="bodySmall" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                        Packing Progress
+                        {t('home.packingProgress')}
                       </Text>
                       <Text variant="bodySmall" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
                         {Math.round((recentPlan.items.filter(i => i.isChecked).length / recentPlan.items.length) * 100)}%
@@ -287,7 +297,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* 빠른 액션 - Minimal Buttons */}
         <View style={styles.sectionContainer}>
           <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
-            Quick Actions
+            {t('home.quickActions')}
           </Text>
           <View style={styles.quickActionsGrid}>
             <TouchableOpacity
@@ -302,7 +312,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 />
               </View>
               <Text variant="titleMedium" style={[styles.actionBtnLabel, { color: theme.colors.onSurface }]}>
-                Add Plan
+                {t('home.addPlan')}
               </Text>
             </TouchableOpacity>
 
@@ -318,7 +328,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 />
               </View>
               <Text variant="titleMedium" style={[styles.actionBtnLabel, { color: theme.colors.onSurface }]}>
-                My Gears
+                {t('home.myGears')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -328,7 +338,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={[styles.sectionContainer, styles.lastSection]}>
           <View style={styles.sectionHeader}>
             <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
-              Popular Tags
+              {t('home.popularTags')}
             </Text>
           </View>
           <View style={styles.tagsWrapper}>
@@ -345,7 +355,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               </TouchableOpacity>
             ))}
             {topTags.length === 0 && (
-              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>No tags found yet.</Text>
+              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>{t('home.noTags')}</Text>
             )}
           </View>
         </View>

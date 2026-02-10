@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   Text,
   Button,
@@ -19,10 +20,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const handleEmailLogin = () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter email and password.');
+      Alert.alert(t('common.error'), t('login.errorEmpty'));
       return;
     }
     console.log('Email login:', email);
@@ -49,14 +51,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           PackPlanner
         </Text>
         <Text variant="bodyLarge" style={{ color: theme.colors.secondary }}>
-          Ready for your next adventure?
+          {t('login.tagline')}
         </Text>
       </Surface>
 
       <View style={styles.formContainer}>
         <TextInput
           mode="outlined"
-          label="Email"
+          label={t('login.email')}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -68,7 +70,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         />
         <TextInput
           mode="outlined"
-          label="Password"
+          label={t('login.password')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -85,7 +87,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           buttonColor={theme.colors.primary}
           textColor={theme.colors.onPrimary}
           contentStyle={{ height: 48 }}>
-          {isLoginMode ? 'Login' : 'Sign Up'}
+          {isLoginMode ? t('login.loginBtn') : t('login.signUpBtn')}
         </Button>
 
         <Button
@@ -94,13 +96,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           style={styles.toggleMode}
           textColor={theme.colors.secondary}>
           {isLoginMode
-            ? "Don't have an account? Sign Up"
-            : 'Already have an account? Login'}
+            ? t('login.noAccount')
+            : t('login.hasAccount')}
         </Button>
 
         <View style={styles.dividerContainer}>
           <Divider style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>OR</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>{t('common.or')}</Text>
           <Divider style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
         </View>
 
@@ -110,7 +112,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           onPress={handleGoogleLogin}
           style={[styles.socialButton, { borderColor: theme.colors.outline }]}
           textColor={theme.colors.onSurface}>
-          Continue with Google
+          {t('login.continueGoogle')}
         </Button>
 
         <Button
@@ -120,12 +122,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           textColor="#fff"
           onPress={handleAppleLogin}
           style={styles.socialButton}>
-          Continue with Apple
+          {t('login.continueApple')}
         </Button>
       </View>
 
       <Text variant="bodySmall" style={[styles.footer, { color: theme.colors.outline }]}>
-        By logging in, you agree to our Terms & Privacy Policy.
+        {t('login.footer')}
       </Text>
     </View>
   );

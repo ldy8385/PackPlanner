@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
   GEARS: 'packplanner_gears',
   TEMPLATES: 'packplanner_templates',
   IS_FIRST_LAUNCH: 'packplanner_is_first_launch',
+  THEME: 'packplanner_theme',
+  LANGUAGE: 'packplanner_language',
 };
 
 export const storage = {
@@ -130,6 +132,48 @@ export const storage = {
     }
   },
 
+  // 테마 저장
+  saveTheme: async (theme: 'light' | 'dark' | 'system'): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.THEME, theme);
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
+  },
+
+  // 테마 불러오기
+  loadTheme: async (): Promise<'light' | 'dark' | 'system' | null> => {
+    try {
+      const theme = await AsyncStorage.getItem(STORAGE_KEYS.THEME);
+      if (theme === 'light' || theme === 'dark' || theme === 'system') {
+        return theme;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading theme:', error);
+      return null;
+    }
+  },
+
+  // 언어 저장
+  saveLanguage: async (language: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
+    } catch (error) {
+      console.error('Error saving language:', error);
+    }
+  },
+
+  // 언어 불러오기
+  loadLanguage: async (): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(STORAGE_KEYS.LANGUAGE);
+    } catch (error) {
+      console.error('Error loading language:', error);
+      return null;
+    }
+  },
+
   // 모든 데이터 초기화
   clearAll: async (): Promise<void> => {
     try {
@@ -138,6 +182,8 @@ export const storage = {
         STORAGE_KEYS.GEARS,
         STORAGE_KEYS.TEMPLATES,
         STORAGE_KEYS.IS_FIRST_LAUNCH,
+        STORAGE_KEYS.THEME,
+        STORAGE_KEYS.LANGUAGE,
       ]);
     } catch (error) {
       console.error('Error clearing storage:', error);

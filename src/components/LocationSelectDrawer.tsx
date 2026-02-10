@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Text, Button, Surface, IconButton, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { KAKAO_API_KEY } from '../config/apiKeys';
 import { Location } from '../types';
 import KakaoMap from './KakaoMap';
@@ -28,6 +29,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
   initialQuery = '',
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -159,7 +161,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
             <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-              Select Location
+              {t('location.selectLocation')}
             </Text>
             <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
@@ -174,7 +176,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
             />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.onSurface }]}
-              placeholder="Search location..."
+              placeholder={t('location.searchPlaceholder')}
               placeholderTextColor={theme.colors.outline}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -210,7 +212,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.colors.primary} />
                 <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
-                  Searching...
+                  {t('location.searching')}
                 </Text>
               </View>
             ) : searchResults.length === 0 ? (
@@ -218,8 +220,8 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
                 <Icon name="map-search" size={48} color={theme.colors.outlineVariant} />
                 <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
                   {searchQuery.length < 2
-                    ? 'Search for a place'
-                    : 'No results found'}
+                    ? t('location.searchForPlace')
+                    : t('location.noResults')}
                 </Text>
               </View>
             ) : (
@@ -240,7 +242,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
               onPress={onClose}
               style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
               textColor={theme.colors.onSurface}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               mode="contained"
@@ -248,7 +250,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
               style={styles.selectButton}
               buttonColor={theme.colors.primary}
               disabled={!selectedLocation}>
-              Select
+              {t('location.select')}
             </Button>
           </View>
         </Surface>

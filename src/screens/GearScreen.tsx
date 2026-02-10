@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Text, Chip, Surface, IconButton, Divider, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory, GearTemplate } from '../types';
 import { gearCategories } from '../data/mockData';
 import CreateTemplateScreen from './CreateTemplateScreen';
@@ -38,6 +39,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
   plans = [],
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'gears' | 'templates'>('gears');
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
     null,
@@ -144,23 +146,23 @@ const GearScreen: React.FC<GearScreenProps> = ({
     const planNames = affectedPlans.map(plan => plan.name).join(', ');
     const planCount = affectedPlans.length;
 
-    let alertMessage = `"${gear.name}" 장비를 삭제하시겠습니까?`;
+    let alertMessage = t('gear.deleteGearMessage', { name: gear.name });
     if (planCount > 0) {
-      alertMessage += `\n\n⚠️ 주의: 이 장비는 ${planCount}개의 계획에서 사용 중입니다.`;
-      alertMessage += `\n(${planNames})`;
-      alertMessage += `\n삭제 시 해당 계획에서도 제거됩니다.`;
+      alertMessage += t('gear.deleteGearWarning', { count: planCount });
+      alertMessage += t('gear.deleteGearPlans', { plans: planNames });
+      alertMessage += t('gear.deleteGearAffected');
     }
 
     Alert.alert(
-      '장비 삭제',
+      t('gear.deleteGearTitle'),
       alertMessage,
       [
         {
-          text: '취소',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: '삭제',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => {
             const affectedPlanIds = affectedPlans.map(plan => plan.id);
@@ -231,7 +233,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                     color={theme.colors.onTertiaryContainer}
                   />
                   <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: '500' }}>
-                    Packed
+                    {t('gear.packed')}
                   </Text>
                 </View>
               )}
@@ -262,7 +264,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
         activeOpacity={0.7}>
         <Icon name="delete-outline" size={20} color={theme.colors.error} />
         <Text variant="bodySmall" style={{ color: theme.colors.error, fontWeight: '500' }}>
-          Remove
+          {t('gear.remove')}
         </Text>
       </TouchableOpacity>
     </View>
@@ -285,7 +287,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
               color: activeTab === 'gears' ? theme.colors.primary : theme.colors.onSurfaceVariant,
               fontWeight: activeTab === 'gears' ? '600' : '500',
             }}>
-            Gear List
+            {t('gear.gearList')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -300,7 +302,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
               color: activeTab === 'templates' ? theme.colors.primary : theme.colors.onSurfaceVariant,
               fontWeight: activeTab === 'templates' ? '600' : '500',
             }}>
-            Templates
+            {t('gear.templates')}
           </Text>
         </TouchableOpacity>
       </Surface>
@@ -319,7 +321,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                 style={{ backgroundColor: !selectedCategory ? theme.colors.secondaryContainer : theme.colors.surfaceVariant }}
                 textStyle={{ color: !selectedCategory ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant }}
                 showSelectedOverlay>
-                All
+                {t('common.all')}
               </Chip>
               {gearCategories.map(category => (
                 <Chip
@@ -344,7 +346,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                   onPress={() => setSelectedTags([])}
                   style={{ backgroundColor: selectedTags.length === 0 ? theme.colors.tertiaryContainer : theme.colors.surfaceVariant }}
                   textStyle={{ color: selectedTags.length === 0 ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant }}>
-                  All Tags
+                  {t('common.allTags')}
                 </Chip>
                 {allTags.map(tag => (
                   <Chip
@@ -376,7 +378,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                     {filteredGears.length}
                   </Text>
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                    Items
+                    {t('gear.items')}
                   </Text>
                 </View>
               </Surface>
@@ -390,7 +392,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                     {allTags.length}
                   </Text>
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                    Tags
+                    {t('gear.tags')}
                   </Text>
                 </View>
               </Surface>
@@ -404,7 +406,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                     {totalWeight.toFixed(1)}
                   </Text>
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                    Total Kg
+                    {t('gear.totalKg')}
                   </Text>
                 </View>
               </Surface>
@@ -422,8 +424,8 @@ const GearScreen: React.FC<GearScreenProps> = ({
             {filteredGears.length === 0 && (
               <View style={styles.emptyState}>
                 <Icon name="bag-personal-off-outline" size={48} color={theme.colors.outlineVariant} />
-                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>No items found</Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>Try adjusting filters or add new gear</Text>
+                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>{t('gear.noItemsFound')}</Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>{t('gear.adjustFilters')}</Text>
               </View>
             )}
           </ScrollView>
@@ -469,8 +471,8 @@ const GearScreen: React.FC<GearScreenProps> = ({
             {templates.length === 0 ? (
               <View style={styles.emptyState}>
                 <Icon name="playlist-plus" size={48} color={theme.colors.outlineVariant} />
-                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>No templates yet</Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>Create templates for quick packing</Text>
+                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>{t('gear.noTemplates')}</Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>{t('gear.createTemplatesHint')}</Text>
               </View>
             ) : (
               templates.map(template => {
@@ -520,7 +522,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                               <Text
                                 variant="bodySmall"
                                 style={{ color: theme.colors.outline }}>
-                                {template.gearIds.length} items
+                                {t('gear.itemsCount', { count: template.gearIds.length })}
                               </Text>
                             </View>
                             <View style={styles.templateStat}>
@@ -543,12 +545,12 @@ const GearScreen: React.FC<GearScreenProps> = ({
                           iconColor={theme.colors.error}
                           onPress={() => {
                             Alert.alert(
-                              'Delete Template',
-                              `Delete '${template.name}'?`,
+                              t('gear.deleteTemplateTitle'),
+                              t('gear.deleteTemplateMessage', { name: template.name }),
                               [
-                                { text: 'Cancel', style: 'cancel' },
+                                { text: t('common.cancel'), style: 'cancel' },
                                 {
-                                  text: 'Delete',
+                                  text: t('common.delete'),
                                   style: 'destructive',
                                   onPress: () => {
                                     onUpdateTemplates(

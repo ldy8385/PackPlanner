@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   Text,
   Button,
@@ -31,6 +32,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   editingTemplate,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const isEditMode = !!editingTemplate;
 
   const [name, setName] = useState(editingTemplate?.name || '');
@@ -70,12 +72,12 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert('오류', '템플릿 이름을 입력해주세요.');
+      Alert.alert(t('common.error'), t('createTemplate.errorName'));
       return;
     }
 
     if (selectedGearIds.length === 0) {
-      Alert.alert('오류', '최소 한 개 이상의 장비를 선택해주세요.');
+      Alert.alert(t('common.error'), t('createTemplate.errorGear'));
       return;
     }
 
@@ -114,7 +116,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
       <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
         <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onSurface} />
         <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-          {isEditMode ? 'Edit Template' : 'New Template'}
+          {isEditMode ? t('createTemplate.editTemplate') : t('createTemplate.newTemplate')}
         </Text>
         <Button
           mode="contained"
@@ -122,7 +124,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
           disabled={!name.trim() || selectedGearIds.length === 0}
           style={styles.saveHeaderButton}
           buttonColor={theme.colors.primary}>
-          Save
+          {t('common.save')}
         </Button>
       </Surface>
 
@@ -130,8 +132,8 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
         <View style={styles.form}>
           <TextInput
             mode="outlined"
-            label="Template Name *"
-            placeholder="e.g. Backpacking Essentials"
+            label={t('createTemplate.templateName')}
+            placeholder={t('createTemplate.templateNamePlaceholder')}
             value={name}
             onChangeText={setName}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -142,8 +144,8 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 
           <TextInput
             mode="outlined"
-            label="Description"
-            placeholder="Describe this template..."
+            label={t('createTemplate.description')}
+            placeholder={t('createTemplate.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -156,8 +158,8 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 
           <TextInput
             mode="outlined"
-            label="Category"
-            placeholder="e.g. Backpacking, Car Camping"
+            label={t('createTemplate.category')}
+            placeholder={t('createTemplate.categoryPlaceholder')}
             value={category}
             onChangeText={setCategory}
             left={<TextInput.Icon icon="folder-outline" color={theme.colors.onSurfaceVariant} />}
@@ -170,7 +172,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
           {existingCategories.length > 0 && (
             <>
               <Text variant="bodyMedium" style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
-                Existing Categories
+                {t('createTemplate.existingCategories')}
               </Text>
               <View style={styles.categoriesContainer}>
                 {existingCategories
@@ -194,14 +196,14 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
           {/* Gear Selection Section */}
           <View style={styles.gearSection}>
             <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-              Select Gear
+              {t('createTemplate.selectGear')}
             </Text>
 
             <Surface style={[styles.selectedInfo, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <View style={styles.selectedStat}>
                 <Icon name="package-variant" size={20} color={theme.colors.secondary} />
                 <Text style={[styles.selectedStatText, { color: theme.colors.onSurfaceVariant }]}>
-                  {selectedGearsCount} Items
+                  {selectedGearsCount} {t('gear.items')}
                 </Text>
               </View>
               <View style={styles.selectedStat}>
@@ -218,14 +220,14 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
               onPress={() => setShowGearSelect(true)}
               style={[styles.selectGearButton, { backgroundColor: theme.colors.secondary }]}
               buttonColor={theme.colors.secondary}>
-              Select Gear
+              {t('createTemplate.selectGear')}
             </Button>
 
             {/* Selected Gear List */}
             {selectedGears.length > 0 && (
               <Surface style={[styles.selectedGearsContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
                 <Text variant="bodyMedium" style={[styles.selectedGearsTitle, { color: theme.colors.onSurfaceVariant }]}>
-                  Selected Items
+                  {t('createTemplate.selectedItems')}
                 </Text>
                 {selectedGears.map(gear => (
                   <View key={gear.id} style={[styles.selectedGearItem, { borderBottomColor: theme.colors.outlineVariant }]}>
@@ -258,7 +260,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             onPress={onCancel}
             style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
             textColor={theme.colors.onSurfaceVariant}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         </View>
       </ScrollView>

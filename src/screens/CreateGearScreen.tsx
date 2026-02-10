@@ -10,6 +10,7 @@ import {
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory } from '../types';
 import { gearCategories, manufacturers } from '../data/mockData';
 import ManufacturerSelectDrawer from '../components/ManufacturerSelectDrawer';
@@ -29,6 +30,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   tags: availableTags = [],
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const isEditMode = !!editingGear;
 
   const [name, setName] = useState(editingGear?.name || '');
@@ -172,18 +174,18 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
     const gearName = name.trim();
 
     if (!gearName) {
-      Alert.alert('오류', '장비 이름을 입력해주세요.');
+      Alert.alert(t('common.error'), t('createGear.errorName'));
       return;
     }
 
     const weightNum = parseFloat(weight);
     if (isNaN(weightNum) || weightNum < 0) {
-      Alert.alert('오류', '올바른 무게를 입력해주세요.');
+      Alert.alert(t('common.error'), t('createGear.errorWeight'));
       return;
     }
 
     if (!category) {
-      Alert.alert('오류', '카테고리를 선택해주세요.');
+      Alert.alert(t('common.error'), t('createGear.errorCategory'));
       return;
     }
 
@@ -210,7 +212,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
         <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onSurface} />
         <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-          {isEditMode ? 'Edit Gear' : 'Add New Gear'}
+          {isEditMode ? t('createGear.editGear') : t('createGear.addNewGear')}
         </Text>
         <View style={{ width: 48 }} />
       </Surface>
@@ -222,8 +224,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
         <View style={styles.form}>
           <TextInput
             mode="outlined"
-            label="Gear Name *"
-            placeholder="e.g. Hiking Boots"
+            label={t('createGear.gearName')}
+            placeholder={t('createGear.gearNamePlaceholder')}
             value={name}
             onChangeText={setName}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -234,7 +236,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
           {/* Photo Selection */}
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Photo (Optional)
+            {t('createGear.photo')}
           </Text>
           <TouchableOpacity
             style={[styles.imageContainer, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
@@ -253,7 +255,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
               <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
                 <Icon name="camera-plus" size={40} color={theme.colors.outline} />
                 <Text variant="bodyMedium" style={[styles.imagePlaceholderText, { color: theme.colors.outline }]}>
-                  Add Photo
+                  {t('createGear.addPhoto')}
                 </Text>
               </View>
             )}
@@ -261,7 +263,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
           {/* Category Selection */}
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Category *
+            {t('createGear.category')}
           </Text>
           <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
             <TouchableOpacity
@@ -277,7 +279,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                   </View>
                 ) : (
                   <Text variant="bodyLarge" style={{ color: theme.colors.outline }}>
-                    Select Category
+                    {t('createGear.selectCategory')}
                   </Text>
                 )}
               </View>
@@ -287,8 +289,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
           <TextInput
             mode="outlined"
-            label="Weight (kg) *"
-            placeholder="e.g. 2.5"
+            label={t('createGear.weight')}
+            placeholder={t('createGear.weightPlaceholder')}
             value={weight}
             onChangeText={setWeight}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -301,7 +303,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
           {/* Manufacturer Selection */}
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Manufacturer (Optional)
+            {t('createGear.manufacturer')}
           </Text>
           <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
             <TouchableOpacity
@@ -309,7 +311,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
               onPress={() => setShowManufacturerDrawer(true)}>
               <View style={styles.selectorContent}>
                 <Text variant="bodyLarge" style={{ color: manufacturer ? theme.colors.onSurface : theme.colors.outline, fontWeight: manufacturer ? '500' : '400' }}>
-                  {manufacturer || 'Select Manufacturer'}
+                  {manufacturer || t('createGear.selectManufacturer')}
                 </Text>
               </View>
               <Icon name="chevron-right" size={24} color={theme.colors.outline} />
@@ -320,12 +322,12 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             <TouchableOpacity
               style={styles.clearManufacturer}
               onPress={() => setManufacturer('')}>
-              <Text style={{ color: theme.colors.error }}>Clear Selection</Text>
+              <Text style={{ color: theme.colors.error }}>{t('createGear.clearSelection')}</Text>
             </TouchableOpacity>
           )}
 
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Tags
+            {t('createGear.tagsLabel')}
           </Text>
 
           {/* Tag Input */}
@@ -333,8 +335,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             <View style={styles.tagInputContainer} onLayout={onTagInputLayout}>
               <TextInput
                 mode="outlined"
-                label="Add Tags"
-                placeholder="Type to search or add"
+                label={t('createGear.addTags')}
+                placeholder={t('createGear.tagsPlaceholder')}
                 outlineColor={theme.colors.outline}
                 activeOutlineColor={theme.colors.primary}
                 value={tagInput}
@@ -355,7 +357,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                 onPress={handleAddTag}
                 style={[styles.addTagButton, { backgroundColor: theme.colors.primaryContainer }]}
                 labelStyle={{ color: theme.colors.onPrimaryContainer }}>
-                Add
+                {t('common.add')}
               </Button>
             </View>
 
@@ -405,7 +407,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
           {/* Packing Options */}
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Packing Options
+            {t('createGear.packingOptions')}
           </Text>
           <View style={styles.containerToggleRow}>
             <TouchableOpacity
@@ -426,7 +428,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                   color: container ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant,
                   fontWeight: container ? '600' : '400'
                 }}>
-                Packed Inside
+                {t('createGear.packedInside')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -447,7 +449,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                   color: !container ? theme.colors.onSecondary : theme.colors.onSurfaceVariant,
                   fontWeight: !container ? '600' : '400'
                 }}>
-                Standalone
+                {t('createGear.standalone')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -455,8 +457,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           {/* Quantity */}
           <TextInput
             mode="outlined"
-            label="Quantity"
-            placeholder="Default: 1"
+            label={t('createGear.quantity')}
+            placeholder={t('createGear.quantityPlaceholder')}
             value={quantity}
             onChangeText={setQuantity}
             keyboardType="numeric"
@@ -466,13 +468,13 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             textColor={theme.colors.onSurface}
           />
           <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.outline }]}>
-            Set the number of items you own (e.g., 2 hiking poles).
+            {t('createGear.quantityHelper')}
           </Text>
 
           <TextInput
             mode="outlined"
-            label="Description (Optional)"
-            placeholder="Add details about this gear..."
+            label={t('createGear.descriptionLabel')}
+            placeholder={t('createGear.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -490,14 +492,14 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             onPress={onCancel}
             style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
             textColor={theme.colors.onSurfaceVariant}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             mode="contained"
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
             buttonColor={theme.colors.primary}>
-            Save Gear
+            {t('createGear.saveGear')}
           </Button>
         </View>
       </ScrollView>

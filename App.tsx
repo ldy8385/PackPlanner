@@ -1,4 +1,6 @@
+import './src/i18n';
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   StyleSheet,
@@ -9,6 +11,7 @@ import {
 import {
   Provider as PaperProvider,
   DefaultTheme,
+  MD3DarkTheme,
   Text,
   ActivityIndicator,
 } from 'react-native-paper';
@@ -21,13 +24,15 @@ import PlanScreen from './src/screens/PlanScreen';
 import GearScreen from './src/screens/GearScreen';
 import CreatePlanScreen from './src/screens/CreatePlanScreen';
 import CreateGearScreen from './src/screens/CreateGearScreen';
+import MyPageScreen from './src/screens/MyPageScreen';
 
 import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
 import { storage } from './src/utils/storage';
+import { ThemeProvider, useThemeMode } from './src/contexts/ThemeContext';
 
 // Material Design 3 테마
 // Modern Clean 테마 (Indigo & Emerald & Stone)
-const theme = {
+const lightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
@@ -64,12 +69,56 @@ const theme = {
       level5: '#D1D5DB',
     },
   },
-  roundness: 3, // More modern, slightly tighter rounding for inputs
+  roundness: 3,
 };
 
-const App = () => {
+// 다크 테마
+const darkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: '#818CF8', // Indigo 400
+    onPrimary: '#1E1B4B', // Indigo 950
+    primaryContainer: '#3730A3', // Indigo 800
+    onPrimaryContainer: '#E0E7FF', // Indigo 100
+    secondary: '#34D399', // Emerald 400
+    onSecondary: '#022C22', // Emerald 950
+    secondaryContainer: '#065F46', // Emerald 800
+    onSecondaryContainer: '#D1FAE5', // Emerald 100
+    tertiary: '#FBBF24', // Amber 400
+    onTertiary: '#451A03', // Amber 950
+    tertiaryContainer: '#92400E', // Amber 800
+    onTertiaryContainer: '#FEF3C7', // Amber 100
+    background: '#111827', // Gray 900
+    onBackground: '#F9FAFB', // Gray 50
+    surface: '#1F2937', // Gray 800
+    onSurface: '#F3F4F6', // Gray 100
+    surfaceVariant: '#374151', // Gray 700
+    onSurfaceVariant: '#D1D5DB', // Gray 300
+    outline: '#6B7280', // Gray 500
+    outlineVariant: '#4B5563', // Gray 600
+    error: '#F87171', // Red 400
+    onError: '#450A0A', // Red 950
+    errorContainer: '#991B1B', // Red 800
+    onErrorContainer: '#FEE2E2', // Red 100
+    elevation: {
+      level0: 'transparent',
+      level1: '#1F2937', // Gray 800
+      level2: '#374151', // Gray 700
+      level3: '#4B5563', // Gray 600
+      level4: '#6B7280', // Gray 500
+      level5: '#9CA3AF', // Gray 400
+    },
+  },
+  roundness: 3,
+};
+
+const AppContent = () => {
+  const { isDarkMode, themeMode, setThemeMode } = useThemeMode();
+  const { t } = useTranslation();
+  const theme = isDarkMode ? darkTheme : lightTheme;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'gear'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'gear' | 'mypage'>('home');
   const [showCreatePlan, setShowCreatePlan] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [showCreateGear, setShowCreateGear] = useState(false);
@@ -272,21 +321,21 @@ const App = () => {
         return true;
       }
 
-      // 4. 계획 탭이나 장비 탭인 경우 → 홈으로 이동
-      if (activeTab === 'plan' || activeTab === 'gear') {
+      // 4. 계획 탭이나 장비 탭이나 마이페이지 탭인 경우 → 홈으로 이동
+      if (activeTab === 'plan' || activeTab === 'gear' || activeTab === 'mypage') {
         setActiveTab('home');
         return true;
       }
 
       // 5. 홈 화면인 경우 → 앱 종료 확인
       if (activeTab === 'home') {
-        Alert.alert('앱 종료', 'PackPlanner를 종료하시겠습니까?', [
+        Alert.alert(t('app.exitTitle'), t('app.exitMessage'), [
           {
-            text: '취소',
+            text: t('common.cancel'),
             onPress: () => null,
             style: 'cancel',
           },
-          { text: '종료', onPress: () => BackHandler.exitApp() },
+          { text: t('app.exit'), onPress: () => BackHandler.exitApp() },
         ]);
         return true;
       }
@@ -321,9 +370,9 @@ const App = () => {
     return (
       <SafeAreaProvider>
         <PaperProvider theme={theme}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#4CAF50" />
-            <Text style={styles.loadingText}>데이터 로딩 중...</Text>
+          <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>{t('common.loading')}</Text>
           </View>
         </PaperProvider>
       </SafeAreaProvider>
@@ -424,6 +473,13 @@ const App = () => {
             plans={plans}
           />
         );
+      case 'mypage':
+        return (
+          <MyPageScreen
+            themeMode={themeMode}
+            onChangeThemeMode={setThemeMode}
+          />
+        );
       default:
         return null;
     }
@@ -432,9 +488,9 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <View style={styles.content}>{renderContent()}</View>
-          <View style={styles.tabBar}>
+          <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
             <TouchableOpacity
               style={[
                 styles.tabButton,
@@ -444,14 +500,14 @@ const App = () => {
               <Icon
                 name="home"
                 size={24}
-                color={activeTab === 'home' ? '#4CAF50' : '#999'}
+                color={activeTab === 'home' ? theme.colors.primary : theme.colors.outline}
               />
               <Text
                 style={[
                   styles.tabLabel,
-                  activeTab === 'home' && styles.tabLabelActive,
+                  { color: activeTab === 'home' ? theme.colors.primary : theme.colors.outline },
                 ]}>
-                홈
+                {t('tabs.home')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -463,14 +519,14 @@ const App = () => {
               <Icon
                 name="calendar-check"
                 size={24}
-                color={activeTab === 'plan' ? '#4CAF50' : '#999'}
+                color={activeTab === 'plan' ? theme.colors.primary : theme.colors.outline}
               />
               <Text
                 style={[
                   styles.tabLabel,
-                  activeTab === 'plan' && styles.tabLabelActive,
+                  { color: activeTab === 'plan' ? theme.colors.primary : theme.colors.outline },
                 ]}>
-                계획
+                {t('tabs.plan')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -482,14 +538,33 @@ const App = () => {
               <Icon
                 name="briefcase"
                 size={24}
-                color={activeTab === 'gear' ? '#4CAF50' : '#999'}
+                color={activeTab === 'gear' ? theme.colors.primary : theme.colors.outline}
               />
               <Text
                 style={[
                   styles.tabLabel,
-                  activeTab === 'gear' && styles.tabLabelActive,
+                  { color: activeTab === 'gear' ? theme.colors.primary : theme.colors.outline },
                 ]}>
-                장비
+                {t('tabs.gear')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === 'mypage' && styles.tabButtonActive,
+              ]}
+              onPress={() => setActiveTab('mypage')}>
+              <Icon
+                name="account"
+                size={24}
+                color={activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline}
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline },
+                ]}>
+                {t('tabs.mypage')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -499,10 +574,17 @@ const App = () => {
   );
 };
 
+const App = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   content: {
     flex: 1,
@@ -511,21 +593,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    height: 65, // Slightly shorter for a sleeker look
+    height: 65,
     paddingBottom: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6', // Subtle border instead of shadow
-    elevation: 0, // Flat design
+    elevation: 0,
     shadowOpacity: 0,
   },
   tabButton: {
@@ -535,18 +613,13 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabButtonActive: {
-    // 
+    //
   },
   tabLabel: {
-    fontSize: 11, // Smaller, cleaner font
-    color: '#9CA3AF',
+    fontSize: 11,
     marginTop: 4,
     fontWeight: '500',
     letterSpacing: 0.2,
-  },
-  tabLabelActive: {
-    color: '#4F46E5', // Primary Color
-    fontWeight: '600',
   },
 });
 

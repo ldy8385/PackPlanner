@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Text, Button, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 
 interface ManufacturerSelectDrawerProps {
   visible: boolean;
@@ -174,6 +175,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
   selectedManufacturer,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSection, setCurrentSection] = useState('');
   const sectionListRef = useRef<SectionList<string, ManufacturerSection>>(null);
@@ -293,7 +295,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
           {/* 헤더 */}
           <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
             <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-              Select Brand
+              {t('manufacturer.selectBrand')}
             </Text>
             <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
@@ -308,7 +310,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
             />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.onSurface }]}
-              placeholder="Search brand..."
+              placeholder={t('manufacturer.searchPlaceholder')}
               placeholderTextColor={theme.colors.outline}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -400,7 +402,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
               }}
               style={[styles.clearButton, { borderColor: theme.colors.outline }]}
               textColor={theme.colors.onSurface}>
-              Clear
+              {t('common.clear')}
             </Button>
             <Button
               mode="contained"
@@ -408,7 +410,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
               style={styles.closeButton}
               buttonColor={theme.colors.primary}
               textColor={theme.colors.onPrimary}>
-              Close
+              {t('common.close')}
             </Button>
           </View>
         </Surface>

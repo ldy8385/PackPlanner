@@ -10,9 +10,11 @@ import { Text, Button, Chip, IconButton, Surface, useTheme } from 'react-native-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory, PlanItem } from '../types';
 import { gearCategories } from '../data/mockData';
 import { deepClonePlanItems } from '../utils/gearHierarchy';
+import { t } from 'i18next';
 
 interface GearSelectScreenProps {
   gears: Gear[];
@@ -49,6 +51,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   onCancel,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
@@ -335,10 +338,10 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
             <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onPrimaryContainer} />
             <View style={styles.headerCenter}>
               <Text variant="titleMedium" style={[styles.dropZoneTitle, { color: theme.colors.onPrimaryContainer }]}>
-                Packing List
+                {t('gearSelect.packingList')}
               </Text>
               <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
-                {planItems.length} items · {totalSelectedWeight.toFixed(1)}kg
+                {t('gearSelect.itemsWeight', { count: planItems.length, weight: totalSelectedWeight.toFixed(1) })}
               </Text>
             </View>
             <Button
@@ -347,7 +350,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               buttonColor={theme.colors.primary}
               compact
               style={styles.saveBtn}>
-              Save
+              {t('common.save')}
             </Button>
           </View>
 
@@ -358,10 +361,10 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               <View style={styles.emptyDropZone}>
                 <Icon name="package-variant" size={48} color={theme.colors.outlineVariant} />
                 <Text variant="titleSmall" style={[styles.emptyTitle, { color: theme.colors.primary }]}>
-                  Add Gear Below
+                  {t('gearSelect.addGearBelow')}
                 </Text>
                 <Text variant="bodySmall" style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
-                  Select items from the list or drag to move
+                  {t('gearSelect.selectOrDrag')}
                 </Text>
               </View>
             ) : (
@@ -390,7 +393,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               <Surface style={[styles.moveInfo, { backgroundColor: theme.colors.inverseSurface }]} elevation={5}>
                 <Icon name="arrow-all" size={24} color={theme.colors.inverseOnSurface} />
                 <Text variant="bodyMedium" style={{ color: theme.colors.inverseOnSurface, marginLeft: 8 }}>
-                  Moving {movingItem.gear.name}...
+                  {t('gearSelect.moving', { name: movingItem.gear.name })}
                 </Text>
               </Surface>
 
@@ -403,7 +406,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                   }}>
                   <Icon name="arrow-up" size={20} color={theme.colors.onPrimary} />
                   <Text variant="bodyMedium" style={{ color: theme.colors.onPrimary, marginTop: 4 }}>
-                    To Root
+                    {t('gearSelect.toRoot')}
                   </Text>
                 </TouchableOpacity>
 
@@ -412,7 +415,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                   onPress={() => setMovingId(null)}>
                   <Icon name="close" size={20} color={theme.colors.onSecondary} />
                   <Text variant="bodyMedium" style={{ color: theme.colors.onSecondary, marginTop: 4 }}>
-                    Cancel
+                    {t('common.cancel')}
                   </Text>
                 </TouchableOpacity>
 
@@ -424,7 +427,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                   }}>
                   <Icon name="delete" size={20} color={theme.colors.onError} />
                   <Text variant="bodyMedium" style={{ color: theme.colors.onError, marginTop: 4 }}>
-                    Remove
+                    {t('common.remove')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -442,7 +445,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
             color={theme.colors.onSurfaceVariant}
           />
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginHorizontal: 8 }}>
-            {isBottomExpanded ? 'Collapse Gear List' : 'Expand Gear List'}
+            {isBottomExpanded ? t('gearSelect.collapseGearList') : t('gearSelect.expandGearList')}
           </Text>
           <View style={styles.badgeContainer}>
             <Surface style={[styles.countBadge, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
@@ -472,7 +475,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                   }}
                   showSelectedOverlay={true}
                   selected={!selectedCategory}>
-                  All
+                  {t('common.all')}
                 </Chip>
                 {gearCategories.map(category => (
                   <Chip
@@ -508,7 +511,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                     }}
                     showSelectedOverlay={true}
                     selected={selectedTags.length === 0}>
-                    All Tags
+                    {t('common.allTags')}
                   </Chip>
                   {allTags.map(tag => (
                     <Chip
@@ -538,7 +541,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
 
             <ScrollView style={styles.gearList}>
               <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                Available Gear ({filteredGears.length})
+                {t('gearSelect.availableGear', { count: filteredGears.length })}
               </Text>
 
               {filteredGears.map(gear => {
@@ -557,7 +560,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {gear.weight}kg · {gear.category}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                          Used: {usedQuantity} / {maxQuantity} · Remaining: {remaining}
+                          {t('gearSelect.used', { used: usedQuantity, max: maxQuantity, remaining: remaining })}
                         </Text>
                       </View>
 
@@ -574,7 +577,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               {filteredGears.length === 0 && (
                 <View style={styles.noGearsMessage}>
                   <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
-                    No gear found
+                    {t('gearSelect.noGearFound')}
                   </Text>
                 </View>
               )}
@@ -689,7 +692,7 @@ const PlanItemView: React.FC<{
                 }}>
                 <Icon name="arrow-down-circle" size={20} color="#fff" />
                 <Text variant="bodyMedium" style={styles.dropButtonText}>
-                  여기에 넣기
+                  {t('gearSelect.putHere')}
                 </Text>
               </TouchableOpacity>
             )}

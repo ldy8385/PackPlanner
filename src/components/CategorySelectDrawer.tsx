@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Text, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { GearCategory } from '../types';
 
 interface CategorySelectDrawerProps {
@@ -29,6 +30,7 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
   getCategoryIcon,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { height } = Dimensions.get('window');
 
   const handleSelect = (category: GearCategory) => {
@@ -47,7 +49,7 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
             <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-              Select Category
+              {t('category.selectCategory')}
             </Text>
             <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Card, Text, Button, ProgressBar, Surface, useTheme, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { Plan, Gear, PlanItem, PlanType } from '../types';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
@@ -39,6 +40,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
   depth = 0,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   // 초기에 자식이 있는 모든 아이템을 펼친 상태로 설정
   const getInitialExpandedIds = (itemList: PlanItem[]): Set<string> => {
@@ -119,7 +121,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                 </Text>
                 <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                   {item.gear.category} · {item.gear.weight}kg
-                  {hasChildren ? ` · ${item.children?.length} Items` : ''}
+                  {hasChildren ? ` · ${item.children?.length} ${t('plan.gearCount')}` : ''}
                 </Text>
               </View>
 
@@ -164,6 +166,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   onCreateNewPlan,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showGearSelect, setShowGearSelect] = useState(false);
   const [showPastPlans, setShowPastPlans] = useState(false);
@@ -215,10 +218,10 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   }, [selectedPlan, showGearSelect]);
 
   const deletePlan = (plan: Plan) => {
-    Alert.alert('삭제 확인', `"${plan.name}" 계획을 삭제하시겠습니까?`, [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('plan.deleteConfirmTitle'), t('plan.deleteConfirmMessage', { name: plan.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
           onUpdatePlans(plans.filter(p => p.id !== plan.id));
@@ -466,7 +469,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 {checkedCount}/{item.items.length}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
-                준비
+                {t('plan.ready')}
               </Text>
             </View>
             <View style={styles.statDivider} />
@@ -475,7 +478,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 {totalWeight.toFixed(1)}kg
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
-                무게
+                {t('plan.weight')}
               </Text>
             </View>
             <View style={styles.statDivider} />
@@ -484,7 +487,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 {item.items.length}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
-                장비
+                {t('plan.gearCount')}
               </Text>
             </View>
           </View>
@@ -528,7 +531,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               mode="text"
               onPress={() => handleEditPress(selectedPlan)}
               textColor={theme.colors.primary}>
-              Edit
+              {t('common.edit')}
             </Button>
           </View>
         </Surface>
@@ -562,7 +565,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 <View style={styles.detailInfoRow}>
                   <Icon name="weight-kilogram" size={20} color={theme.colors.primary} />
                   <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
-                    Total: {totalWeight.toFixed(1)}kg
+                    {t('plan.total')}: {totalWeight.toFixed(1)}kg
                   </Text>
                 </View>
               </View>
@@ -584,14 +587,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <Card.Content>
               <View style={styles.itemsSectionHeader}>
                 <Text variant="titleMedium" style={[styles.itemsSectionTitle, { color: theme.colors.onSurface }]}>
-                  Gear List
+                  {t('plan.gearList')}
                 </Text>
                 <Button
                   mode="text"
                   icon="plus"
                   textColor={theme.colors.primary}
                   onPress={() => setShowGearSelect(true)}>
-                  Manage Gears
+                  {t('plan.manageGears')}
                 </Button>
               </View>
 
@@ -603,10 +606,10 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                     color={theme.colors.outline} // Using theme outline
                   />
                   <Text variant="bodyLarge" style={[styles.emptyItemsText, { color: theme.colors.onSurface }]}>
-                    No gears added yet.
+                    {t('plan.noGearsAdded')}
                   </Text>
                   <Button mode="contained-tonal" style={{ marginTop: 16 }} onPress={() => setShowGearSelect(true)}>
-                    Add Gears
+                    {t('plan.addGears')}
                   </Button>
                 </Surface>
               ) : (
@@ -624,7 +627,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             textColor={theme.colors.error}
             style={[styles.deletePlanButton, { borderColor: theme.colors.errorContainer }]}
             onPress={() => deletePlan(selectedPlan)}>
-            Delete Plan
+            {t('plan.deletePlan')}
           </Button>
           <View style={{ height: 48 }} />
         </ScrollView>
@@ -652,7 +655,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
       <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={0}>
         <View style={styles.headerContent}>
           <Text variant="headlineSmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-            Camping Plans
+            {t('plan.title')}
           </Text>
           <TouchableOpacity
             style={styles.pastPlansToggle}
@@ -666,7 +669,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               color={theme.colors.primary}
             />
             <Text variant="bodyMedium" style={[styles.pastPlansToggleText, { color: theme.colors.primary }]}>
-              Show Past Plans
+              {t('plan.showPastPlans')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -681,14 +684,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           <View style={styles.emptyState}>
             <Icon name="tent" size={64} color={theme.colors.outlineVariant} />
             <Text variant="titleMedium" style={[styles.emptyStateText, { color: theme.colors.onSurfaceVariant }]}>
-              {showPastPlans ? 'No plans found.' : 'No upcoming plans.'}
+              {showPastPlans ? t('plan.noPlansFound') : t('plan.noUpcomingPlans')}
             </Text>
             <Text variant="bodyMedium" style={[styles.emptyStateSubtext, { color: theme.colors.outline }]}>
-              Create a new camping plan to get started.
+              {t('plan.createPlanToStart')}
             </Text>
             {onCreateNewPlan && (
               <Button mode="contained" onPress={onCreateNewPlan} style={{ marginTop: 16 }}>
-                Create Plan
+                {t('plan.createPlan')}
               </Button>
             )}
           </View>
