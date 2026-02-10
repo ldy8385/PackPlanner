@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,9 +9,9 @@ import {
   BackHandler,
   TouchableOpacity,
 } from 'react-native';
-import {Card, Text, Button, ProgressBar, Surface} from 'react-native-paper';
+import { Card, Text, Button, ProgressBar, Surface, useTheme, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Plan, Gear, PlanItem, PlanType} from '../types';
+import { Plan, Gear, PlanItem, PlanType } from '../types';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
 
@@ -38,6 +38,8 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
   onToggleCheck,
   depth = 0,
 }) => {
+  const theme = useTheme();
+
   // 초기에 자식이 있는 모든 아이템을 펼친 상태로 설정
   const getInitialExpandedIds = (itemList: PlanItem[]): Set<string> => {
     const ids = new Set<string>();
@@ -78,21 +80,17 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
 
         return (
           <View key={item.id}>
-            <View style={[styles.itemRow, {paddingLeft: depth * 24}]}>
-              {/* 확장/접힘 버튼 (컨테이너이고 자식이 있을 때만) */}
-              {isContainer && hasChildren ? (
-                <TouchableOpacity
-                  onPress={() => toggleExpand(item.id)}
-                  style={styles.expandButton}>
-                  <Icon
-                    name={isExpanded ? 'chevron-down' : 'chevron-right'}
-                    size={24}
-                    color="#666"
-                  />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.expandButtonPlaceholder} />
-              )}
+            <View
+              style={[
+                styles.itemRow,
+                {
+                  paddingLeft: depth * 16, // Reduced indentation step
+                  backgroundColor: depth > 0 ? theme.colors.background : 'transparent', // Subtle distinction
+                  paddingVertical: 8,
+                }
+              ]}>
+              {/* Depth Indicator Line */}
+              {depth > 0 && <View style={[styles.depthLine, { left: (depth * 16) - 10, backgroundColor: theme.colors.outlineVariant }]} />}
 
               <TouchableOpacity
                 style={styles.checkboxContainer}
@@ -101,27 +99,42 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                 <Icon
                   name={
                     item.isChecked
-                      ? 'check-circle'
+                      ? 'checkbox-marked-circle'
                       : 'checkbox-blank-circle-outline'
                   }
-                  size={32}
-                  color={item.isChecked ? '#2E7D32' : '#CAC4D0'}
+                  size={24}
+                  color={item.isChecked ? theme.colors.secondary : theme.colors.outline}
                 />
               </TouchableOpacity>
+
               <View style={styles.itemInfo}>
                 <Text
                   variant="bodyLarge"
                   style={[
                     styles.itemName,
-                    item.isChecked && styles.itemNameChecked,
+                    item.isChecked && { color: theme.colors.outline, textDecorationLine: 'line-through' },
+                    !item.isChecked && { color: theme.colors.onSurface }
                   ]}>
                   {item.gear.name}
                 </Text>
-                <Text variant="bodySmall" style={styles.itemCategory}>
+                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                   {item.gear.category} · {item.gear.weight}kg
-                  {hasChildren ? ` · ${item.children?.length}개 포함` : ''}
+                  {hasChildren ? ` · ${item.children?.length} Items` : ''}
                 </Text>
               </View>
+
+              {/* 확장/접힘 버튼 */}
+              {isContainer && hasChildren && (
+                <TouchableOpacity
+                  onPress={() => toggleExpand(item.id)}
+                  style={styles.expandButton}>
+                  <Icon
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={24}
+                    color={theme.colors.onSurfaceVariant}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* 자식 아이템 렌더링 */}
@@ -133,6 +146,8 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                 depth={depth + 1}
               />
             )}
+            {/* Divider for top level items */}
+            {depth === 0 && <View style={[styles.itemDivider, { backgroundColor: theme.colors.surfaceVariant }]} />}
           </View>
         );
       })}
@@ -148,8 +163,24 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   onEditPlan,
   onCreateNewPlan,
 }) => {
+  const theme = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showGearSelect, setShowGearSelect] = useState(false);
+  const [showPastPlans, setShowPastPlans] = useState(false);
+
+  // 계획 필터링: 지난 계획 표시 여부에 따라
+  const filteredPlans = useMemo(() => {
+    if (showPastPlans) {
+      return plans;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return plans.filter(plan => {
+      const planEnd = new Date(plan.endDate);
+      planEnd.setHours(0, 0, 0, 0);
+      return planEnd >= today;
+    });
+  }, [plans, showPastPlans]);
 
   useEffect(() => {
     if (initialPlanId) {
@@ -185,7 +216,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 
   const deletePlan = (plan: Plan) => {
     Alert.alert('삭제 확인', `"${plan.name}" 계획을 삭제하시겠습니까?`, [
-      {text: '취소', style: 'cancel'},
+      { text: '취소', style: 'cancel' },
       {
         text: '삭제',
         style: 'destructive',
@@ -206,10 +237,10 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         const toggleInTree = (items: PlanItem[]): PlanItem[] => {
           return items.map(item => {
             if (item.id === itemId) {
-              return {...item, isChecked: !item.isChecked};
+              return { ...item, isChecked: !item.isChecked };
             }
             if (item.children) {
-              return {...item, children: toggleInTree(item.children)};
+              return { ...item, children: toggleInTree(item.children) };
             }
             return item;
           });
@@ -232,50 +263,49 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     }
   };
 
-  const removeItemFromPlan = (planId: string, itemId: string) => {
-    const updatedPlans = plans.map(plan => {
-      if (plan.id === planId) {
-        // 재귀적으로 모든 레벨의 아이템에서 제거
-        const removeFromTree = (items: PlanItem[]): PlanItem[] => {
-          return items
-            .map(item => {
-              if (item.id === itemId) {
-                // 자식들을 승격시키거나 삭제
-                return null;
-              }
-              if (item.children) {
-                const updatedChildren = removeFromTree(item.children);
-                const filtered = updatedChildren.filter(
-                  (i): i is PlanItem => i !== null,
-                );
-                if (filtered.length === 0) {
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const {children: _, ...rest} = item;
-                  return rest;
-                }
-                return {...item, children: filtered};
-              }
-              return item;
-            })
-            .filter((i): i is PlanItem => i !== null);
-        };
-
-        return {
-          ...plan,
-          items: removeFromTree(plan.items),
-        };
-      }
-      return plan;
-    });
-    onUpdatePlans(updatedPlans);
-
-    if (selectedPlan && selectedPlan.id === planId) {
-      const updatedPlan = updatedPlans.find(p => p.id === planId);
-      if (updatedPlan) {
-        setSelectedPlan(updatedPlan);
-      }
-    }
-  };
+  // 삭제 기능은 체크박스로 대첵되었으므로 현재 미사용
+  // const removeItemFromPlan = (planId: string, itemId: string) => {
+  //   const updatedPlans = plans.map(plan => {
+  //     if (plan.id === planId) {
+  //       const removeFromTree = (items: PlanItem[]): PlanItem[] => {
+  //         return items
+  //           .map(item => {
+  //             if (item.id === itemId) {
+  //               return null;
+  //             }
+  //             if (item.children) {
+  //               const updatedChildren = removeFromTree(item.children);
+  //               const filtered = updatedChildren.filter(
+  //                 (i): i is PlanItem => i !== null,
+  //               );
+  //               if (filtered.length === 0) {
+  //                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //                 const {children: _, ...rest} = item;
+  //                 return rest;
+  //               }
+  //               return {...item, children: filtered};
+  //             }
+  //             return item;
+  //           })
+  //           .filter((i): i is PlanItem => i !== null);
+  //       };
+  //
+  //       return {
+  //         ...plan,
+  //         items: removeFromTree(plan.items),
+  //       };
+  //     }
+  //     return plan;
+  //   });
+  //   onUpdatePlans(updatedPlans);
+  //
+  //   if (selectedPlan && selectedPlan.id === planId) {
+  //     const updatedPlan = updatedPlans.find(p => p.id === planId);
+  //     if (updatedPlan) {
+  //       setSelectedPlan(updatedPlan);
+  //     }
+  //   }
+  // };
 
   // gear를 PlanItem으로 변환 (flat 구조로 - 계층은 사용자가 나중에 설정)
   const convertGearToPlanItem = (gear: Gear): PlanItem => {
@@ -344,7 +374,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   };
 
   const getPlanTypeIcon = (type: PlanType): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       [PlanType.AUTO_CAMPING]: 'car',
       [PlanType.MOTO_CAMPING]: 'motorbike',
       [PlanType.BACKPACKING]: 'bag-personal',
@@ -380,7 +410,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     }
   };
 
-  const renderPlanItem = ({item}: {item: Plan}) => {
+  const renderPlanItem = ({ item }: { item: Plan }) => {
     const checkedCount = item.items.filter(i => i.isChecked).length;
     const progress =
       item.items.length > 0 ? checkedCount / item.items.length : 0;
@@ -480,50 +510,61 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     );
 
     return (
-      <SafeAreaView style={styles.container}>
-        <Surface style={styles.detailHeader} elevation={1}>
-          <Button
-            mode="text"
-            onPress={() => setSelectedPlan(null)}
-            icon="arrow-left"
-            textColor="#2E7D32">
-            뒤로
-          </Button>
-          <Text
-            variant="titleMedium"
-            style={styles.detailTitle}
-            numberOfLines={1}>
-            {selectedPlan.name}
-          </Text>
-          <Button
-            mode="text"
-            onPress={() => handleEditPress(selectedPlan)}
-            textColor="#2E7D32">
-            수정
-          </Button>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Surface style={[styles.detailHeader, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <View style={styles.detailHeaderTop}>
+            <IconButton
+              icon="arrow-left"
+              iconColor={theme.colors.onSurface}
+              onPress={() => setSelectedPlan(null)}
+            />
+            <Text
+              variant="titleLarge"
+              style={[styles.detailTitle, { color: theme.colors.onSurface }]}
+              numberOfLines={1}>
+              {selectedPlan.name}
+            </Text>
+            <Button
+              mode="text"
+              onPress={() => handleEditPress(selectedPlan)}
+              textColor={theme.colors.primary}>
+              Edit
+            </Button>
+          </View>
         </Surface>
 
         <ScrollView
           style={styles.detailContent}
           showsVerticalScrollIndicator={false}>
-          <Card style={styles.detailInfoCard} mode="elevated">
+
+          {/* Main Info Card */}
+          <Card style={[styles.detailInfoCard, { backgroundColor: theme.colors.surface }]} mode="contained">
             <Card.Content>
-              <Surface style={styles.detailTypeBadge} elevation={0}>
-                <Icon
-                  name={getPlanTypeIcon(selectedPlan.type)}
-                  size={16}
-                  color="#2E7D32"
-                  style={styles.detailTypeIcon}
-                />
-                <Text variant="labelMedium" style={styles.detailTypeText}>
-                  {selectedPlan.type}
-                </Text>
-              </Surface>
-              <View style={styles.detailInfoRow}>
-                <Icon name="map-marker" size={18} color="#49454F" />
-                <Text variant="bodyLarge" style={styles.detailInfoText}>
-                  {selectedPlan.destination}
-                </Text>
+              <View style={styles.detailInfoGrid}>
+                <View style={styles.detailInfoRow}>
+                  <Icon name={getPlanTypeIcon(selectedPlan.type)} size={20} color={theme.colors.primary} />
+                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                    {selectedPlan.type}
+                  </Text>
+                </View>
+                <View style={styles.detailInfoRow}>
+                  <Icon name="map-marker-outline" size={20} color={theme.colors.primary} />
+                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                    {selectedPlan.destination}
+                  </Text>
+                </View>
+                <View style={styles.detailInfoRow}>
+                  <Icon name="calendar-range-outline" size={20} color={theme.colors.primary} />
+                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                    {formatDateRange(selectedPlan.startDate, selectedPlan.endDate)}
+                  </Text>
+                </View>
+                <View style={styles.detailInfoRow}>
+                  <Icon name="weight-kilogram" size={20} color={theme.colors.primary} />
+                  <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                    Total: {totalWeight.toFixed(1)}kg
+                  </Text>
+                </View>
               </View>
 
               {/* 지도 표시 - 위치 정보가 있을 때만 */}
@@ -536,43 +577,37 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   />
                 </View>
               )}
-
-              <View style={styles.detailInfoRow}>
-                <Icon name="calendar" size={18} color="#49454F" />
-                <Text variant="bodyLarge" style={styles.detailInfoText}>
-                  {formatDateRange(
-                    selectedPlan.startDate,
-                    selectedPlan.endDate,
-                  )}
-                </Text>
-              </View>
-              <View style={styles.detailInfoRow}>
-                <Icon name="weight-kilogram" size={18} color="#49454F" />
-                <Text variant="bodyLarge" style={styles.detailInfoText}>
-                  총 무게: {totalWeight.toFixed(1)}kg
-                </Text>
-              </View>
             </Card.Content>
           </Card>
 
-          <Card style={styles.itemsSection} mode="elevated">
+          <Card style={[styles.itemsSection, { backgroundColor: theme.colors.surface }]} mode="contained">
             <Card.Content>
-              <Text variant="titleMedium" style={styles.itemsSectionTitle}>
-                장비 목록
-              </Text>
+              <View style={styles.itemsSectionHeader}>
+                <Text variant="titleMedium" style={[styles.itemsSectionTitle, { color: theme.colors.onSurface }]}>
+                  Gear List
+                </Text>
+                <Button
+                  mode="text"
+                  icon="plus"
+                  textColor={theme.colors.primary}
+                  onPress={() => setShowGearSelect(true)}>
+                  Manage Gears
+                </Button>
+              </View>
+
               {selectedPlan.items.length === 0 ? (
                 <Surface style={styles.emptyItems} elevation={0}>
                   <Icon
-                    name="clipboard-text-outline"
+                    name="bag-personal-outline"
                     size={48}
-                    color="#79747E"
+                    color={theme.colors.outline} // Using theme outline
                   />
-                  <Text variant="bodyLarge" style={styles.emptyItemsText}>
-                    아직 장비가 없습니다.
+                  <Text variant="bodyLarge" style={[styles.emptyItemsText, { color: theme.colors.onSurface }]}>
+                    No gears added yet.
                   </Text>
-                  <Text variant="bodySmall" style={styles.emptyItemsSubtext}>
-                    아래에서 장비를 추가하세요.
-                  </Text>
+                  <Button mode="contained-tonal" style={{ marginTop: 16 }} onPress={() => setShowGearSelect(true)}>
+                    Add Gears
+                  </Button>
                 </Surface>
               ) : (
                 <PlanItemList
@@ -585,22 +620,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           </Card>
 
           <Button
-            mode="contained"
-            icon="plus"
-            onPress={() => setShowGearSelect(true)}
-            style={styles.addGearButton}
-            buttonColor="#2E7D32">
-            장비 변경
+            mode="outlined"
+            textColor={theme.colors.error}
+            style={[styles.deletePlanButton, { borderColor: theme.colors.errorContainer }]}
+            onPress={() => deletePlan(selectedPlan)}>
+            Delete Plan
           </Button>
+          <View style={{ height: 48 }} />
         </ScrollView>
-
-        <Button
-          mode="outlined"
-          textColor="#B3261E"
-          style={styles.deletePlanButton}
-          onPress={() => deletePlan(selectedPlan)}>
-          계획 삭제
-        </Button>
       </SafeAreaView>
     );
   };
@@ -621,39 +648,63 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Surface style={styles.header} elevation={1}>
-        <Text variant="headlineSmall" style={styles.headerTitle}>
-          캠핑 계획
-        </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={0}>
+        <View style={styles.headerContent}>
+          <Text variant="headlineSmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+            Camping Plans
+          </Text>
+          <TouchableOpacity
+            style={styles.pastPlansToggle}
+            onPress={() => setShowPastPlans(!showPastPlans)}
+            activeOpacity={0.7}>
+            <Icon
+              name={
+                showPastPlans ? 'checkbox-marked' : 'checkbox-blank-outline'
+              }
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text variant="bodyMedium" style={[styles.pastPlansToggleText, { color: theme.colors.primary }]}>
+              Show Past Plans
+            </Text>
+          </TouchableOpacity>
+        </View>
       </Surface>
 
       <FlatList
-        data={plans}
+        data={filteredPlans}
         keyExtractor={item => item.id}
         renderItem={renderPlanItem}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
-          <Surface style={styles.emptyState} elevation={1}>
-            <Icon name="clipboard-text-outline" size={64} color="#79747E" />
-            <Text variant="titleMedium" style={styles.emptyStateText}>
-              계획이 없습니다.
+          <View style={styles.emptyState}>
+            <Icon name="tent" size={64} color={theme.colors.outlineVariant} />
+            <Text variant="titleMedium" style={[styles.emptyStateText, { color: theme.colors.onSurfaceVariant }]}>
+              {showPastPlans ? 'No plans found.' : 'No upcoming plans.'}
             </Text>
-            <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
-              새 캠핑 계획을 만들어보세요.
+            <Text variant="bodyMedium" style={[styles.emptyStateSubtext, { color: theme.colors.outline }]}>
+              Create a new camping plan to get started.
             </Text>
-          </Surface>
+            {onCreateNewPlan && (
+              <Button mode="contained" onPress={onCreateNewPlan} style={{ marginTop: 16 }}>
+                Create Plan
+              </Button>
+            )}
+          </View>
         }
       />
 
       {/* FAB - 새 계획 추가 */}
-      {onCreateNewPlan && (
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={onCreateNewPlan}
-          activeOpacity={0.7}>
-          <Icon name="plus" size={24} color="#fff" />
-        </TouchableOpacity>
+      {onCreateNewPlan && filteredPlans.length > 0 && (
+        <Surface style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]} elevation={4}>
+          <TouchableOpacity
+            style={styles.fabTouchable}
+            onPress={onCreateNewPlan}
+            activeOpacity={0.8}>
+            <Icon name="plus" size={28} color={theme.colors.onPrimaryContainer} />
+          </TouchableOpacity>
+        </Surface>
       )}
     </SafeAreaView>
   );
@@ -662,60 +713,92 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
-    padding: 16,
-    backgroundColor: '#FEF7FF',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontWeight: '600',
-    color: '#1C1B1F',
+    fontWeight: '700',
   },
   listContainer: {
-    padding: 16,
+    padding: 20,
+    paddingBottom: 100,
   },
   planCard: {
-    marginBottom: 16,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cardHeaderStrip: {
+    height: 6,
+    width: '100%',
+  },
+  cardContent: {
+    padding: 16,
   },
   planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  planHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
+    gap: 8,
   },
   planTypeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#C8E6C9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
   },
   planTypeIcon: {
     marginRight: 0,
   },
   planTypeText: {
-    color: '#1B5E20',
     fontWeight: '600',
   },
   ddayBadge: {
-    backgroundColor: '#F9DEDC',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 8,
   },
   ddayText: {
-    color: '#B3261E',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   planName: {
-    fontWeight: '600',
-    color: '#1C1B1F',
+    fontWeight: '700',
     marginBottom: 8,
+  },
+  planMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#ccc',
+    marginHorizontal: 8,
   },
   planDestination: {
     flexDirection: 'row',
@@ -724,7 +807,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   destinationText: {
-    color: '#49454F',
+    // color: '#49454F',
   },
   planDateRow: {
     flexDirection: 'row',
@@ -733,195 +816,209 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   planDate: {
-    color: '#79747E',
+    // color: '#79747E',
   },
   planStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 16,
   },
+  planStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
   statItem: {
     alignItems: 'center',
   },
+  statItemCompact: {
+    alignItems: 'center',
+    flex: 1,
+  },
   statValue: {
     fontWeight: '600',
-    color: '#1C1B1F',
+    // color: '#1C1B1F',
   },
   statLabel: {
-    color: '#49454F',
+    // color: '#49454F',
     marginTop: 2,
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#E7E0EC',
+    height: '100%',
+    // backgroundColor: '#E7E0EC',
   },
   progressContainer: {
     marginTop: 8,
   },
   progressBar: {
-    height: 8,
-    borderRadius: 4,
+    height: 6,
+    borderRadius: 3,
   },
-  emptyState: {
+  // Item List Styles
+  itemRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 60,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
-    margin: 16,
+    paddingVertical: 4,
+    minHeight: 48,
   },
-  emptyStateText: {
+  depthLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1,
+  },
+  itemDivider: {
+    height: 1,
+    marginLeft: 56,
+  },
+  expandButton: {
+    padding: 8,
+  },
+  expandButtonPlaceholder: {
+    width: 40,
+  },
+  checkboxContainer: {
+    padding: 8,
+  },
+  itemInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  itemName: {
     fontWeight: '500',
-    color: '#1C1B1F',
-    marginTop: 16,
-    marginBottom: 8,
   },
-  emptyStateSubtext: {
-    color: '#49454F',
-    textAlign: 'center',
+  itemNameChecked: {
+    textDecorationLine: 'line-through',
+    opacity: 0.6,
   },
+  itemCategory: {
+    marginTop: 2,
+  },
+  // Detail View Styles
   detailHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  detailHeaderTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FEF7FF',
   },
   detailTitle: {
-    fontWeight: '600',
-    color: '#1C1B1F',
     flex: 1,
     textAlign: 'center',
+    fontWeight: '700',
   },
   detailContent: {
     flex: 1,
+    padding: 20,
   },
   detailInfoCard: {
-    margin: 16,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    marginBottom: 20,
+    borderRadius: 16,
   },
-  detailTypeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#C8E6C9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginBottom: 16,
-    gap: 6,
-  },
-  detailTypeIcon: {
-    marginRight: 0,
-  },
-  detailTypeText: {
-    color: '#1B5E20',
-    fontWeight: '600',
+  detailInfoGrid: {
+    gap: 12,
   },
   detailInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 10,
-  },
-  detailInfoText: {
-    color: '#1C1B1F',
+    gap: 12,
   },
   itemsSection: {
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    marginBottom: 80,
+    borderRadius: 16,
   },
-  itemsSectionTitle: {
-    fontWeight: '600',
-    color: '#1C1B1F',
+  itemsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    color: '#1C1B1F',
-    marginBottom: 2,
-  },
-  itemNameChecked: {
-    textDecorationLine: 'line-through',
-    color: '#79747E',
-  },
-  itemCategory: {
-    color: '#49454F',
-  },
-  checkboxContainer: {
-    padding: 8,
-    marginRight: 4,
-  },
-  deleteButton: {
-    padding: 8,
-    marginLeft: 4,
-  },
-  expandButton: {
-    padding: 4,
-    marginRight: 4,
-  },
-  expandButtonPlaceholder: {
-    width: 32,
-    marginRight: 4,
+  itemsSectionTitle: {
+    fontWeight: '700',
   },
   emptyItems: {
     alignItems: 'center',
-    padding: 40,
-    borderRadius: 16,
-    backgroundColor: '#F5F5F5',
+    padding: 32,
+    justifyContent: 'center',
   },
   emptyItemsText: {
-    color: '#49454F',
-    marginTop: 16,
-    marginBottom: 4,
+    marginTop: 12,
+    fontWeight: '600',
   },
   emptyItemsSubtext: {
-    color: '#79747E',
+    marginTop: 4,
   },
   addGearButton: {
-    margin: 16,
-    marginTop: 0,
-    paddingVertical: 8,
-    borderRadius: 20,
+    marginVertical: 16,
+    borderRadius: 8,
   },
   deletePlanButton: {
-    margin: 16,
-    borderRadius: 20,
-    borderColor: '#B3261E',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderWidth: 1,
   },
+  // Empty State
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    marginTop: 40,
+  },
+  emptyStateText: {
+    marginTop: 16,
+    fontWeight: '700',
+  },
+  emptyStateSubtext: {
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  // FAB
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
+    margin: 24,
+    right: 0,
+    bottom: 0,
     borderRadius: 16,
-    backgroundColor: '#2E7D32',
-    justifyContent: 'center',
+    width: 64,
+    height: 64,
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    justifyContent: 'center',
   },
+  fabTouchable: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pastPlansToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: 8,
+  },
+  pastPlansToggleText: {
+    fontWeight: '500',
+  },
+  detailTypeBadge: {
+    // Legacy support if needed
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailTypeIcon: {},
+  detailTypeText: {},
+  detailInfoText: {},
   mapContainer: {
-    marginVertical: 12,
+    marginTop: 16,
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(0,0,0,0.1)',
   },
 });
 

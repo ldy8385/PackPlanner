@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import {Text, Button, TextInput, Chip, IconButton} from 'react-native-paper';
+import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DatePicker from 'react-native-date-picker';
-import {Plan, PlanType, Location} from '../types';
-import {planTypes} from '../data/mockData';
+import { Plan, PlanType, Location } from '../types';
+import { planTypes } from '../data/mockData';
 import LocationSelectDrawer from '../components/LocationSelectDrawer';
 import KakaoMap from '../components/KakaoMap';
 
@@ -25,6 +25,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   onCancel,
   editingPlan,
 }) => {
+  const theme = useTheme();
   const isEditMode = !!editingPlan;
 
   const [name, setName] = useState(editingPlan?.name || '');
@@ -101,28 +102,31 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={onCancel} />
-        <Text variant="titleLarge" style={styles.headerTitle}>
-          {isEditMode ? '계획 수정' : '새 계획 만들기'}
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onSurface} />
+        <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+          {isEditMode ? 'Edit Plan' : 'New Plan'}
         </Text>
-        <View style={{width: 48}} />
-      </View>
+        <View style={{ width: 48 }} />
+      </Surface>
 
       <ScrollView style={styles.scrollView}>
         <View style={styles.form}>
           <TextInput
             mode="outlined"
-            label="계획 이름"
-            placeholder="계획 이름을 입력하세요 (미입력 시 '이름 없는 계획')"
+            label="Plan Name"
+            placeholder="e.g. Weekend Camping"
             value={name}
             onChangeText={setName}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            캠핑 유형
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Camping Type
           </Text>
           <View style={styles.typeContainer}>
             {planTypes.map(planType => (
@@ -132,53 +136,59 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                 onPress={() => setType(planType)}
                 style={[
                   styles.typeChip,
-                  type === planType && styles.typeChipSelected,
+                  {
+                    backgroundColor: type === planType ? theme.colors.primaryContainer : theme.colors.surface,
+                    borderColor: type === planType ? theme.colors.primary : theme.colors.outline,
+                  }
                 ]}
-                textStyle={
-                  type === planType ? styles.typeChipTextSelected : undefined
-                }>
+                textStyle={{
+                  color: type === planType ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+                }}
+                showSelectedOverlay={true}>
                 {planType}
               </Chip>
             ))}
           </View>
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            목적지
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Destination
           </Text>
 
           {!selectedLocation ? (
-            <TouchableOpacity
-              style={styles.locationSelector}
-              onPress={() => setShowLocationDrawer(true)}>
-              <View style={styles.locationContent}>
-                <Icon name="map-marker" size={20} color="#999" />
-                <Text variant="bodyLarge" style={styles.locationPlaceholder}>
-                  목적지 선택하기
-                </Text>
-              </View>
-              <Icon name="chevron-right" size={24} color="#999" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.selectedLocationCard}>
+            <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <TouchableOpacity
-                style={styles.selectedLocationHeader}
+                style={styles.locationSelector}
+                onPress={() => setShowLocationDrawer(true)}>
+                <View style={styles.locationContent}>
+                  <Icon name="map-marker" size={20} color={theme.colors.primary} />
+                  <Text variant="bodyLarge" style={[styles.locationPlaceholder, { color: theme.colors.outline }]}>
+                    Select Destination
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={24} color={theme.colors.outline} />
+              </TouchableOpacity>
+            </Surface>
+          ) : (
+            <Surface style={[styles.selectedLocationCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
+              <TouchableOpacity
+                style={[styles.selectedLocationHeader, { borderBottomColor: theme.colors.outlineVariant }]}
                 onPress={() => setShowLocationDrawer(true)}>
                 <View style={styles.selectedLocationInfo}>
                   <Text
                     variant="titleMedium"
-                    style={styles.selectedLocationName}>
+                    style={[styles.selectedLocationName, { color: theme.colors.onSurface }]}>
                     {selectedLocation.name}
                   </Text>
                   <Text
                     variant="bodySmall"
-                    style={styles.selectedLocationAddress}>
+                    style={{ color: theme.colors.onSurfaceVariant }}>
                     {selectedLocation.address}
                   </Text>
                 </View>
-                <Icon name="pencil" size={20} color="#2E7D32" />
+                <Icon name="pencil" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
 
-              {selectedLocation.latitude && selectedLocation.longitude && (
+              {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
                 <KakaoMap
                   latitude={selectedLocation.latitude}
                   longitude={selectedLocation.longitude}
@@ -189,31 +199,47 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
               <TouchableOpacity
                 style={styles.clearLocationButton}
                 onPress={handleClearLocation}>
-                <Icon name="close-circle" size={16} color="#B3261E" />
-                <Text variant="bodySmall" style={styles.clearLocationText}>
-                  선택 해제
+                <Icon name="close-circle" size={16} color={theme.colors.error} />
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  Remove Location
                 </Text>
               </TouchableOpacity>
-            </View>
+            </Surface>
           )}
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            일정
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Schedule
           </Text>
 
-          <TouchableOpacity
-            style={styles.dateSelector}
-            onPress={() => setOpenStartDatePicker(true)}>
-            <View style={styles.dateContent}>
-              <Text variant="bodyLarge" style={styles.dateLabel}>
-                시작일
-              </Text>
-              <Text variant="titleMedium" style={styles.dateValue}>
-                {formatDateDisplay(startDate)}
-              </Text>
-            </View>
-            <Icon name="calendar" size={24} color="#999" />
-          </TouchableOpacity>
+          <View style={styles.dateRow}>
+            <TouchableOpacity
+              style={[styles.dateSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+              onPress={() => setOpenStartDatePicker(true)}>
+              <View style={styles.dateContent}>
+                <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+                  Start Date
+                </Text>
+                <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+                  {formatDateDisplay(startDate)}
+                </Text>
+              </View>
+              <Icon name="calendar-start" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.dateSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+              onPress={() => setOpenEndDatePicker(true)}>
+              <View style={styles.dateContent}>
+                <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+                  End Date
+                </Text>
+                <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+                  {formatDateDisplay(endDate)}
+                </Text>
+              </View>
+              <Icon name="calendar-end" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
 
           <DatePicker
             modal
@@ -228,21 +254,11 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             }}
             mode="date"
             locale="ko"
+            theme="light"
+            confirmText="Confirm"
+            cancelText="Cancel"
+            title="Select Start Date"
           />
-
-          <TouchableOpacity
-            style={styles.dateSelector}
-            onPress={() => setOpenEndDatePicker(true)}>
-            <View style={styles.dateContent}>
-              <Text variant="bodyLarge" style={styles.dateLabel}>
-                종료일
-              </Text>
-              <Text variant="titleMedium" style={styles.dateValue}>
-                {formatDateDisplay(endDate)}
-              </Text>
-            </View>
-            <Icon name="calendar" size={24} color="#999" />
-          </TouchableOpacity>
 
           <DatePicker
             modal
@@ -257,17 +273,24 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             }}
             mode="date"
             locale="ko"
+            theme="light"
+            confirmText="Confirm"
+            cancelText="Cancel"
+            title="Select End Date"
           />
 
           <TextInput
             mode="outlined"
-            label="설명 (선택사항)"
-            placeholder="계획에 대한 설명을 입력하세요"
+            label="Description (Optional)"
+            placeholder="Add details about your trip..."
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface, marginTop: 12 }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
         </View>
 
@@ -275,14 +298,16 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
           <Button
             mode="outlined"
             onPress={onCancel}
-            style={styles.cancelButton}>
-            취소
+            style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+            textColor={theme.colors.onSurfaceVariant}>
+            Cancel
           </Button>
           <Button
             mode="contained"
             onPress={handleSave}
-            style={styles.saveButton}>
-            저장
+            style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+            buttonColor={theme.colors.primary}>
+            Save Plan
           </Button>
         </View>
       </ScrollView>
@@ -301,26 +326,22 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingVertical: 12,
   },
   headerTitle: {
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,
   },
   form: {
-    padding: 16,
+    padding: 20,
   },
   sectionTitle: {
     marginTop: 24,
@@ -336,50 +357,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   typeChip: {
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  typeChipSelected: {
-    backgroundColor: '#4CAF50',
-  },
-  typeChipTextSelected: {
-    color: '#fff',
-  },
-  searchResults: {
-    backgroundColor: '#fff',
     borderRadius: 8,
-    marginTop: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
   },
-  searchResultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  searchResultText: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  searchResultName: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  searchResultAddress: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+  selectorCard: {
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   locationSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
     padding: 16,
   },
   locationContent: {
@@ -389,12 +379,9 @@ const styles = StyleSheet.create({
   },
   locationPlaceholder: {
     marginLeft: 12,
-    color: '#999',
   },
   selectedLocationCard: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -403,70 +390,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   selectedLocationInfo: {
     flex: 1,
   },
   selectedLocationName: {
-    color: '#1C1B1F',
     fontWeight: '600',
     marginBottom: 2,
-  },
-  selectedLocationAddress: {
-    color: '#79747E',
   },
   clearLocationButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
-    gap: 4,
+    gap: 6,
   },
-  clearLocationText: {
-    color: '#B3261E',
-  },
-  dateDisplay: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-    marginBottom: 8,
+  dateRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
   },
   dateSelector: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 12,
   },
   dateContent: {
     flex: 1,
   },
-  dateLabel: {
-    color: '#666',
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  dateValue: {
-    color: '#333',
-    fontWeight: '600',
-  },
   buttonContainer: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 20,
     gap: 12,
     marginBottom: 32,
   },
   cancelButton: {
     flex: 1,
+    borderRadius: 12,
+    borderColor: '#e0e0e0',
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    borderRadius: 12,
   },
 });
 

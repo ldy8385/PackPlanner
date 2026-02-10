@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,10 +8,10 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import {Text, Chip, Surface, IconButton, Divider} from 'react-native-paper';
+import { Text, Chip, Surface, IconButton, Divider, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Gear, GearCategory, GearTemplate} from '../types';
-import {gearCategories} from '../data/mockData';
+import { Gear, GearCategory, GearTemplate } from '../types';
+import { gearCategories } from '../data/mockData';
 import CreateTemplateScreen from './CreateTemplateScreen';
 
 interface GearScreenProps {
@@ -23,7 +23,7 @@ interface GearScreenProps {
   onEditGear: (gear: Gear) => void;
   onDeleteGear?: (gearId: string, affectedPlans: string[]) => void;
   initialSelectedTags?: string[];
-  plans?: {id: string; name: string; items: {gearId: string}[]}[];
+  plans?: { id: string; name: string; items: { gearId: string }[] }[];
 }
 
 const GearScreen: React.FC<GearScreenProps> = ({
@@ -37,6 +37,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
   initialSelectedTags = [],
   plans = [],
 }) => {
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<'gears' | 'templates'>('gears');
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
     null,
@@ -103,7 +104,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
   }, [templates]);
 
   const getCategoryIcon = (category: GearCategory): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       [GearCategory.TENT]: 'tent',
       [GearCategory.TARP]: 'texture',
       [GearCategory.SLEEPING_BAG]: 'sleep',
@@ -167,39 +168,39 @@ const GearScreen: React.FC<GearScreenProps> = ({
           },
         },
       ],
-      {cancelable: true},
+      { cancelable: true },
     );
   };
 
-  const renderGearItem = ({item}: {item: Gear}) => (
-    <View style={styles.gearCard}>
+  const renderGearItem = ({ item }: { item: Gear }) => (
+    <View style={[styles.gearCard, { backgroundColor: theme.colors.surface }]}>
       <TouchableOpacity
         style={styles.gearContent}
         onPress={() => onEditGear(item)}
         activeOpacity={0.7}>
         <View style={styles.gearHeader}>
-          <Surface style={styles.gearIcon} elevation={0}>
+          <Surface style={[styles.gearIcon, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
             {item.imageUrl ? (
-              <Image source={{uri: item.imageUrl}} style={styles.gearImage} />
+              <Image source={{ uri: item.imageUrl }} style={styles.gearImage} />
             ) : (
               <Icon
                 name={getCategoryIcon(item.category)}
                 size={24}
-                color="#2E7D32"
+                color={theme.colors.onSecondaryContainer}
               />
             )}
           </Surface>
           <View style={styles.gearInfo}>
-            <Text variant="titleMedium" style={styles.gearName}>
+            <Text variant="titleMedium" style={[styles.gearName, { color: theme.colors.onSurface }]}>
               {item.name}
             </Text>
-            <Text variant="bodySmall" style={styles.gearCategory}>
+            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
               {item.category}
             </Text>
             {item.manufacturer && (
               <View style={styles.manufacturerRow}>
-                <Icon name="factory" size={12} color="#79747E" />
-                <Text variant="bodySmall" style={styles.gearManufacturer}>
+                <Icon name="factory" size={12} color={theme.colors.outline} />
+                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                   {item.manufacturer}
                 </Text>
               </View>
@@ -207,46 +208,46 @@ const GearScreen: React.FC<GearScreenProps> = ({
             {item.tags.length > 0 && (
               <View style={styles.tagsRow}>
                 {item.tags.slice(0, 3).map((tag, index) => (
-                  <Surface key={index} style={styles.tagBadge} elevation={0}>
-                    <Text variant="labelSmall" style={styles.tagText}>
+                  <Surface key={index} style={[styles.tagBadge, { backgroundColor: theme.colors.surfaceVariant }]} elevation={0}>
+                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                       {tag}
                     </Text>
                   </Surface>
                 ))}
                 {item.tags.length > 3 && (
-                  <Text variant="labelSmall" style={styles.moreTags}>
+                  <Text variant="labelSmall" style={{ color: theme.colors.outline, paddingVertical: 4 }}>
                     +{item.tags.length - 3}
                   </Text>
                 )}
               </View>
             )}
-            {/* 수납 여부 및 수량 표시 */}
+            {/* Badges Row */}
             <View style={styles.badgesRow}>
               {item.container && (
-                <View style={styles.containerBadge}>
+                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
                   <Icon
                     name="package-variant-closed"
                     size={12}
-                    color="#2E7D32"
+                    color={theme.colors.onTertiaryContainer}
                   />
-                  <Text variant="labelSmall" style={styles.containerText}>
-                    수납
+                  <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: '500' }}>
+                    Packed
                   </Text>
                 </View>
               )}
               {item.quantity && item.quantity > 1 && (
-                <View style={styles.quantityBadge}>
-                  <Icon name="numeric" size={12} color="#1976D2" />
-                  <Text variant="labelSmall" style={styles.quantityText}>
-                    수량: {item.quantity}개
+                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <Icon name="numeric" size={12} color={theme.colors.onPrimaryContainer} />
+                  <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, fontWeight: '500' }}>
+                    x{item.quantity}
                   </Text>
                 </View>
               )}
             </View>
           </View>
           <View style={styles.weightContainer}>
-            <Icon name="weight-kilogram" size={16} color="#2E7D32" />
-            <Text variant="titleSmall" style={styles.gearWeight}>
+            <Icon name="weight-kilogram" size={16} color={theme.colors.secondary} />
+            <Text variant="titleSmall" style={{ color: theme.colors.secondary, fontWeight: '600' }}>
               {item.weight}kg
             </Text>
           </View>
@@ -254,83 +255,80 @@ const GearScreen: React.FC<GearScreenProps> = ({
         {item.description && <Divider style={styles.descriptionDivider} />}
       </TouchableOpacity>
 
-      {/* 삭제 버튼 */}
+      {/* Delete Action */}
       <TouchableOpacity
-        style={styles.deleteGearButton}
+        style={[styles.deleteGearButton, { borderTopColor: theme.colors.outlineVariant }]}
         onPress={() => handleDeleteGear(item)}
         activeOpacity={0.7}>
-        <Icon name="delete" size={20} color="#B3261E" />
-        <Text variant="bodySmall" style={styles.deleteGearText}>
-          삭제
+        <Icon name="delete-outline" size={20} color={theme.colors.error} />
+        <Text variant="bodySmall" style={{ color: theme.colors.error, fontWeight: '500' }}>
+          Remove
         </Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeView style={styles.container}>
-      {/* 상단 탭 */}
-      <Surface style={styles.tabHeader} elevation={1}>
+
+    <SafeView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Top Tabs */}
+      <Surface style={[styles.tabHeader, { backgroundColor: theme.colors.surface }]} elevation={1}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'gears' && styles.tabActive]}
+          style={[
+            styles.tab,
+            activeTab === 'gears' && { borderBottomColor: theme.colors.primary },
+          ]}
           onPress={() => setActiveTab('gears')}>
           <Text
             variant="titleSmall"
-            style={[
-              styles.tabText,
-              activeTab === 'gears' && styles.tabTextActive,
-            ]}>
-            장비 목록
+            style={{
+              color: activeTab === 'gears' ? theme.colors.primary : theme.colors.onSurfaceVariant,
+              fontWeight: activeTab === 'gears' ? '600' : '500',
+            }}>
+            Gear List
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'templates' && styles.tabActive]}
+          style={[
+            styles.tab,
+            activeTab === 'templates' && { borderBottomColor: theme.colors.primary },
+          ]}
           onPress={() => setActiveTab('templates')}>
           <Text
             variant="titleSmall"
-            style={[
-              styles.tabText,
-              activeTab === 'templates' && styles.tabTextActive,
-            ]}>
-            구성 관리
+            style={{
+              color: activeTab === 'templates' ? theme.colors.primary : theme.colors.onSurfaceVariant,
+              fontWeight: activeTab === 'templates' ? '600' : '500',
+            }}>
+            Templates
           </Text>
         </TouchableOpacity>
       </Surface>
 
       {activeTab === 'gears' ? (
         <>
-          {/* 필터 헤더 */}
-          <View style={styles.fixedHeader}>
+          {/* Filters */}
+          <View style={[styles.fixedHeader, { backgroundColor: theme.colors.background }]}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.filterSection}
+              style={[styles.filterSection, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}
               contentContainerStyle={styles.filterContent}>
               <Chip
                 onPress={() => setSelectedCategory(null)}
-                style={[
-                  styles.filterChip,
-                  !selectedCategory && styles.filterChipSelected,
-                ]}
-                textStyle={
-                  !selectedCategory ? styles.filterChipTextSelected : undefined
-                }>
-                전체
+                style={{ backgroundColor: !selectedCategory ? theme.colors.secondaryContainer : theme.colors.surfaceVariant }}
+                textStyle={{ color: !selectedCategory ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant }}
+                showSelectedOverlay>
+                All
               </Chip>
               {gearCategories.map(category => (
                 <Chip
                   key={category}
                   onPress={() => setSelectedCategory(category)}
-                  style={[
-                    styles.filterChip,
-                    selectedCategory === category && styles.filterChipSelected,
-                  ]}
-                  textStyle={
-                    selectedCategory === category
-                      ? styles.filterChipTextSelected
-                      : undefined
-                  }
-                  icon={getCategoryIcon(category)}>
+                  style={{ backgroundColor: selectedCategory === category ? theme.colors.secondaryContainer : theme.colors.surfaceVariant }}
+                  textStyle={{ color: selectedCategory === category ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant }}
+                  icon={getCategoryIcon(category)}
+                  showSelectedOverlay>
                   {category}
                 </Chip>
               ))}
@@ -340,20 +338,13 @@ const GearScreen: React.FC<GearScreenProps> = ({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                style={styles.tagFilterSection}
+                style={[styles.tagFilterSection, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}
                 contentContainerStyle={styles.filterContent}>
                 <Chip
                   onPress={() => setSelectedTags([])}
-                  style={[
-                    styles.tagFilterChip,
-                    selectedTags.length === 0 && styles.tagFilterChipSelected,
-                  ]}
-                  textStyle={
-                    selectedTags.length === 0
-                      ? styles.tagFilterChipTextSelected
-                      : undefined
-                  }>
-                  모든 태그
+                  style={{ backgroundColor: selectedTags.length === 0 ? theme.colors.tertiaryContainer : theme.colors.surfaceVariant }}
+                  textStyle={{ color: selectedTags.length === 0 ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant }}>
+                  All Tags
                 </Chip>
                 {allTags.map(tag => (
                   <Chip
@@ -365,120 +356,87 @@ const GearScreen: React.FC<GearScreenProps> = ({
                         setSelectedTags([...selectedTags, tag]);
                       }
                     }}
-                    style={[
-                      styles.tagFilterChip,
-                      selectedTags.includes(tag) &&
-                        styles.tagFilterChipSelected,
-                    ]}
-                    textStyle={
-                      selectedTags.includes(tag)
-                        ? styles.tagFilterChipTextSelected
-                        : undefined
-                    }>
+                    style={{ backgroundColor: selectedTags.includes(tag) ? theme.colors.tertiaryContainer : theme.colors.surfaceVariant }}
+                    textStyle={{ color: selectedTags.includes(tag) ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant }}
+                    showSelectedOverlay>
                     #{tag}
                   </Chip>
                 ))}
               </ScrollView>
             )}
 
-            {allManufacturers.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.manufacturerFilterSection}
-                contentContainerStyle={styles.filterContent}>
-                <Chip
-                  onPress={() => setSelectedManufacturers([])}
-                  style={[
-                    styles.manufacturerFilterChip,
-                    selectedManufacturers.length === 0 &&
-                      styles.manufacturerFilterChipSelected,
-                  ]}
-                  textStyle={
-                    selectedManufacturers.length === 0
-                      ? styles.manufacturerFilterChipTextSelected
-                      : undefined
-                  }
-                  icon="factory">
-                  모든 제조사
-                </Chip>
-                {allManufacturers.map(manufacturer => (
-                  <Chip
-                    key={manufacturer}
-                    onPress={() => {
-                      if (selectedManufacturers.includes(manufacturer)) {
-                        setSelectedManufacturers(
-                          selectedManufacturers.filter(m => m !== manufacturer),
-                        );
-                      } else {
-                        setSelectedManufacturers([
-                          ...selectedManufacturers,
-                          manufacturer,
-                        ]);
-                      }
-                    }}
-                    style={[
-                      styles.manufacturerFilterChip,
-                      selectedManufacturers.includes(manufacturer) &&
-                        styles.manufacturerFilterChipSelected,
-                    ]}
-                    textStyle={
-                      selectedManufacturers.includes(manufacturer)
-                        ? styles.manufacturerFilterChipTextSelected
-                        : undefined
-                    }>
-                    {manufacturer}
-                  </Chip>
-                ))}
-              </ScrollView>
-            )}
-
-            {/* 통계 요약 */}
+            {/* Stats Summary */}
             <View style={styles.statsContainer}>
-              <Surface style={styles.statBox} elevation={1}>
-                <Icon name="briefcase" size={24} color="#2E7D32" />
-                <Text variant="titleLarge" style={styles.statNumber}>
-                  {filteredGears.length}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  장비
-                </Text>
+              <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={[styles.statIconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                  <Icon name="briefcase-outline" size={20} color={theme.colors.secondary} />
+                </View>
+                <View>
+                  <Text variant="titleMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>
+                    {filteredGears.length}
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                    Items
+                  </Text>
+                </View>
               </Surface>
-              <Surface style={styles.statBox} elevation={1}>
-                <Icon name="tag" size={24} color="#558B2F" />
-                <Text variant="titleLarge" style={styles.statNumber}>
-                  {allTags.length}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  태그
-                </Text>
+
+              <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={[styles.statIconCircle, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                  <Icon name="tag-outline" size={20} color={theme.colors.tertiary} />
+                </View>
+                <View>
+                  <Text variant="titleMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>
+                    {allTags.length}
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                    Tags
+                  </Text>
+                </View>
               </Surface>
-              <Surface style={styles.statBox} elevation={1}>
-                <Icon name="weight-kilogram" size={24} color="#00695C" />
-                <Text variant="titleLarge" style={styles.statNumber}>
-                  {totalWeight.toFixed(1)}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  kg
-                </Text>
+
+              <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={[styles.statIconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <Icon name="weight" size={20} color={theme.colors.primary} />
+                </View>
+                <View>
+                  <Text variant="titleMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>
+                    {totalWeight.toFixed(1)}
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                    Total Kg
+                  </Text>
+                </View>
               </Surface>
             </View>
           </View>
 
-          {/* 장비 목록 */}
+          {/* Gear List */}
           <ScrollView
             style={styles.listContainer}
+            contentContainerStyle={{ paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}>
             {filteredGears.map(gear => (
-              <View key={gear.id}>{renderGearItem({item: gear})}</View>
+              <View key={gear.id}>{renderGearItem({ item: gear })}</View>
             ))}
-            <View style={styles.listFooter} />
+            {filteredGears.length === 0 && (
+              <View style={styles.emptyState}>
+                <Icon name="bag-personal-off-outline" size={48} color={theme.colors.outlineVariant} />
+                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>No items found</Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>Try adjusting filters or add new gear</Text>
+              </View>
+            )}
           </ScrollView>
 
           {/* FAB */}
-          <TouchableOpacity style={styles.fab} onPress={onCreateGear}>
-            <Icon name="plus" size={24} color="#fff" />
-          </TouchableOpacity>
+          <Surface style={[styles.fab, { backgroundColor: theme.colors.primary, borderRadius: 16 }]} elevation={4}>
+            <TouchableOpacity
+              style={styles.fabTouchable}
+              onPress={onCreateGear}
+              activeOpacity={0.8}>
+              <Icon name="plus" size={28} color={theme.colors.onPrimary} />
+            </TouchableOpacity>
+          </Surface>
         </>
       ) : showCreateTemplate ? (
         <CreateTemplateScreen
@@ -506,131 +464,131 @@ const GearScreen: React.FC<GearScreenProps> = ({
         <View style={styles.container}>
           <ScrollView
             style={styles.listContainer}
+            contentContainerStyle={{ paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}>
             {templates.length === 0 ? (
-              <Surface style={styles.emptyCard} elevation={1}>
-                <Icon name="playlist-plus" size={64} color="#79747E" />
-                <Text variant="titleMedium" style={styles.emptyTitle}>
-                  등록된 템플릿이 없습니다
-                </Text>
-                <Text variant="bodyMedium" style={styles.emptySubtitle}>
-                  자주 사용하는 장비 조합을 템플릿으로 저장하세요
-                </Text>
-              </Surface>
+              <View style={styles.emptyState}>
+                <Icon name="playlist-plus" size={48} color={theme.colors.outlineVariant} />
+                <Text variant="titleMedium" style={{ marginTop: 16, color: theme.colors.onSurface }}>No templates yet</Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>Create templates for quick packing</Text>
+              </View>
             ) : (
               templates.map(template => {
                 const templateGears = gears.filter(g =>
                   template.gearIds.includes(g.id),
                 );
-                const totalWeight = templateGears.reduce(
+                const tWeight = templateGears.reduce(
                   (sum, g) => sum + g.weight,
                   0,
                 );
 
                 return (
-                  <TouchableOpacity
-                    key={template.id}
-                    style={styles.templateCard}
-                    onPress={() => {
-                      setEditingTemplate(template);
-                      setShowCreateTemplate(true);
-                    }}
-                    activeOpacity={0.7}>
-                    <View style={styles.templateHeader}>
-                      <Surface style={styles.templateIcon} elevation={0}>
-                        <Icon name="playlist-check" size={28} color="#2E7D32" />
-                      </Surface>
-                      <View style={styles.templateInfo}>
-                        <Text variant="titleMedium" style={styles.templateName}>
-                          {template.name}
-                        </Text>
-                        <View style={styles.templateMeta}>
-                          {template.category && (
-                            <Surface
-                              style={styles.templateCategoryBadge}
-                              elevation={0}>
+                  <Surface key={template.id} style={[styles.templateCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                    <TouchableOpacity
+                      style={{ padding: 16 }}
+                      onPress={() => {
+                        setEditingTemplate(template);
+                        setShowCreateTemplate(true);
+                      }}
+                      activeOpacity={0.7}>
+                      <View style={styles.templateHeader}>
+                        <Surface style={[styles.templateIcon, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
+                          <Icon name="playlist-check" size={24} color={theme.colors.onSecondaryContainer} />
+                        </Surface>
+                        <View style={styles.templateInfo}>
+                          <Text variant="titleMedium" style={[styles.templateName, { color: theme.colors.onSurface }]}>
+                            {template.name}
+                          </Text>
+                          <View style={styles.templateMeta}>
+                            {template.category && (
+                              <Surface
+                                style={[styles.templateCategoryBadge, { backgroundColor: theme.colors.surfaceVariant }]}
+                                elevation={0}>
+                                <Text
+                                  variant="labelSmall"
+                                  style={{ color: theme.colors.onSurfaceVariant }}>
+                                  {template.category}
+                                </Text>
+                              </Surface>
+                            )}
+                            <View style={styles.templateStat}>
+                              <Icon
+                                name="format-list-bulleted"
+                                size={14}
+                                color={theme.colors.outline}
+                              />
                               <Text
-                                variant="labelSmall"
-                                style={styles.templateCategoryText}>
-                                {template.category}
+                                variant="bodySmall"
+                                style={{ color: theme.colors.outline }}>
+                                {template.gearIds.length} items
                               </Text>
-                            </Surface>
-                          )}
-                          <View style={styles.templateStat}>
-                            <Icon
-                              name="package-variant"
-                              size={14}
-                              color="#49454F"
-                            />
-                            <Text
-                              variant="bodySmall"
-                              style={styles.templateStatText}>
-                              {template.gearIds.length}개
-                            </Text>
-                          </View>
-                          <View style={styles.templateStat}>
-                            <Icon
-                              name="weight-kilogram"
-                              size={14}
-                              color="#2E7D32"
-                            />
-                            <Text
-                              variant="bodySmall"
-                              style={styles.templateStatWeight}>
-                              {totalWeight.toFixed(1)}kg
-                            </Text>
+                            </View>
+                            <View style={styles.templateStat}>
+                              <Icon
+                                name="weight-kilogram"
+                                size={14}
+                                color={theme.colors.outline}
+                              />
+                              <Text
+                                variant="bodySmall"
+                                style={{ color: theme.colors.outline }}>
+                                {tWeight.toFixed(1)}kg
+                              </Text>
+                            </View>
                           </View>
                         </View>
-                      </View>
-                      <IconButton
-                        icon="delete"
-                        size={20}
-                        iconColor="#B3261E"
-                        onPress={() => {
-                          Alert.alert(
-                            '템플릿 삭제',
-                            `'${template.name}' 템플릿을 삭제하시겠습니까?`,
-                            [
-                              {text: '취소', style: 'cancel'},
-                              {
-                                text: '삭제',
-                                style: 'destructive',
-                                onPress: () => {
-                                  onUpdateTemplates(
-                                    templates.filter(t => t.id !== template.id),
-                                  );
+                        <IconButton
+                          icon="delete-outline"
+                          size={20}
+                          iconColor={theme.colors.error}
+                          onPress={() => {
+                            Alert.alert(
+                              'Delete Template',
+                              `Delete '${template.name}'?`,
+                              [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                  text: 'Delete',
+                                  style: 'destructive',
+                                  onPress: () => {
+                                    onUpdateTemplates(
+                                      templates.filter(t => t.id !== template.id),
+                                    );
+                                  },
                                 },
-                              },
-                            ],
-                          );
-                        }}
-                      />
-                    </View>
-                    {template.description && (
-                      <>
-                        <Divider style={styles.templateDivider} />
-                        <Text
-                          variant="bodySmall"
-                          style={styles.templateDescription}>
-                          {template.description}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                              ],
+                            );
+                          }}
+                        />
+                      </View>
+                      {template.description && (
+                        <>
+                          <Divider style={styles.templateDivider} />
+                          <Text
+                            variant="bodySmall"
+                            style={{ color: theme.colors.onSurfaceVariant }}>
+                            {template.description}
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </Surface>
                 );
               })
             )}
-            <View style={styles.listFooter} />
           </ScrollView>
 
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => {
-              setEditingTemplate(null);
-              setShowCreateTemplate(true);
-            }}>
-            <Icon name="plus" size={24} color="#fff" />
-          </TouchableOpacity>
+          <Surface style={[styles.fab, { backgroundColor: theme.colors.primary, borderRadius: 16 }]} elevation={4}>
+            <TouchableOpacity
+              style={styles.fabTouchable}
+              onPress={() => {
+                setEditingTemplate(null);
+                setShowCreateTemplate(true);
+              }}
+              activeOpacity={0.8}>
+              <Icon name="plus" size={28} color={theme.colors.onPrimary} />
+            </TouchableOpacity>
+          </Surface>
         </View>
       )}
     </SafeView>
@@ -642,49 +600,31 @@ const SafeView = SafeAreaView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   tabHeader: {
     flexDirection: 'row',
-    backgroundColor: '#FEF7FF',
   },
   tab: {
     flex: 1,
     paddingVertical: 16,
     alignItems: 'center',
-  },
-  tabActive: {
     borderBottomWidth: 3,
-    borderBottomColor: '#2E7D32',
-  },
-  tabText: {
-    color: '#49454F',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#2E7D32',
-    fontWeight: '600',
+    borderBottomColor: 'transparent',
   },
   fixedHeader: {
-    backgroundColor: '#F5F5F5',
+    zIndex: 1,
   },
   filterSection: {
     maxHeight: 70,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0EC',
   },
   tagFilterSection: {
     maxHeight: 60,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0EC',
   },
   manufacturerFilterSection: {
     maxHeight: 60,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0EC',
   },
   filterContent: {
     paddingHorizontal: 16,
@@ -693,36 +633,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  filterChip: {
-    backgroundColor: '#F5F5F5',
-  },
-  filterChipSelected: {
-    backgroundColor: '#C8E6C9',
-  },
-  filterChipTextSelected: {
-    color: '#1B5E20',
-    fontWeight: '600',
-  },
-  tagFilterChip: {
-    backgroundColor: '#F5F5F5',
-  },
-  tagFilterChipSelected: {
-    backgroundColor: '#DCEDC8',
-  },
-  tagFilterChipTextSelected: {
-    color: '#33691E',
-    fontWeight: '600',
-  },
-  manufacturerFilterChip: {
-    backgroundColor: '#F5F5F5',
-  },
-  manufacturerFilterChipSelected: {
-    backgroundColor: '#B2DFDB',
-  },
-  manufacturerFilterChipTextSelected: {
-    color: '#004D40',
-    fontWeight: '600',
-  },
   statsContainer: {
     flexDirection: 'row',
     padding: 16,
@@ -730,19 +640,18 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 16,
+    padding: 12,
+    gap: 12,
   },
-  statNumber: {
-    color: '#1C1B1F',
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  statLabel: {
-    color: '#49454F',
-    marginTop: 2,
+  statIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContainer: {
     flex: 1,
@@ -752,27 +661,12 @@ const styles = StyleSheet.create({
     height: 80,
   },
   gearCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 16,
     marginBottom: 12,
+    overflow: 'hidden',
   },
   gearContent: {
-    flex: 1,
-  },
-  deleteGearButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E7E0EC',
-    gap: 6,
-  },
-  deleteGearText: {
-    color: '#B3261E',
-    fontWeight: '500',
+    padding: 16,
   },
   gearHeader: {
     flexDirection: 'row',
@@ -782,7 +676,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#C8E6C9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -797,13 +690,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gearName: {
-    color: '#1C1B1F',
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 2,
-  },
-  gearCategory: {
-    color: '#49454F',
-    marginBottom: 4,
   },
   manufacturerRow: {
     flexDirection: 'row',
@@ -811,93 +699,51 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 6,
   },
-  gearManufacturer: {
-    color: '#79747E',
-  },
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    marginBottom: 6,
   },
   tagBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  tagText: {
-    color: '#1976D2',
-  },
-  moreTags: {
-    color: '#79747E',
-    paddingVertical: 4,
-  },
-  containerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-  },
-  containerText: {
-    color: '#2E7D32',
-    fontWeight: '500',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   badgesRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 6,
+    marginTop: 4,
   },
-  quantityBadge: {
+  badgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#E3F2FD',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
-  },
-  quantityText: {
-    color: '#1976D2',
-    fontWeight: '500',
+    borderRadius: 6,
   },
   weightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     marginLeft: 8,
-    gap: 4,
-  },
-  gearWeight: {
-    color: '#2E7D32',
-    fontWeight: '600',
+    gap: 2,
   },
   descriptionDivider: {
     marginVertical: 12,
   },
-  gearDescription: {
-    color: '#49454F',
-  },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 60,
+  deleteGearButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    margin: 16,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    gap: 6,
   },
-  emptyTitle: {
-    color: '#1C1B1F',
-    fontWeight: '500',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    color: '#49454F',
-    marginTop: 8,
-    textAlign: 'center',
-  },
+  // Template Styles
   templateCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 16,
     marginBottom: 12,
+    overflow: 'hidden',
   },
   templateHeader: {
     flexDirection: 'row',
@@ -907,7 +753,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#C8E6C9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -916,8 +761,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateName: {
-    color: '#1C1B1F',
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 6,
   },
   templateMeta: {
@@ -927,48 +771,40 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   templateCategoryBadge: {
-    backgroundColor: '#C8E6C9',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-  },
-  templateCategoryText: {
-    color: '#1B5E20',
-    fontWeight: '500',
   },
   templateStat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  templateStatText: {
-    color: '#49454F',
-  },
-  templateStatWeight: {
-    color: '#2E7D32',
-    fontWeight: '600',
-  },
   templateDivider: {
     marginVertical: 12,
   },
-  templateDescription: {
-    color: '#49454F',
+  // Empty State
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    marginTop: 20,
   },
+  // FAB
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 20,
     width: 56,
     height: 56,
-    borderRadius: 16,
-    backgroundColor: '#2E7D32',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+  },
+  fabTouchable: {
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

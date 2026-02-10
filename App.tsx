@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,7 +12,7 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native-paper';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import LoginScreen from './src/screens/LoginScreen';
@@ -22,48 +22,49 @@ import GearScreen from './src/screens/GearScreen';
 import CreatePlanScreen from './src/screens/CreatePlanScreen';
 import CreateGearScreen from './src/screens/CreateGearScreen';
 
-import {Plan, Gear, GearTemplate, PlanItem} from './src/types';
-import {storage} from './src/utils/storage';
+import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
+import { storage } from './src/utils/storage';
 
 // Material Design 3 테마
+// Modern Clean 테마 (Indigo & Emerald & Stone)
 const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#2E7D32',
+    primary: '#4F46E5', // Indigo 600
     onPrimary: '#FFFFFF',
-    primaryContainer: '#C8E6C9',
-    onPrimaryContainer: '#1B5E20',
-    secondary: '#558B2F',
+    primaryContainer: '#E0E7FF', // Indigo 100
+    onPrimaryContainer: '#3730A3', // Indigo 800
+    secondary: '#10B981', // Emerald 500
     onSecondary: '#FFFFFF',
-    secondaryContainer: '#DCEDC8',
-    onSecondaryContainer: '#33691E',
-    tertiary: '#00695C',
+    secondaryContainer: '#D1FAE5', // Emerald 100
+    onSecondaryContainer: '#065F46', // Emerald 800
+    tertiary: '#F59E0B', // Amber 500 (Accents)
     onTertiary: '#FFFFFF',
-    tertiaryContainer: '#B2DFDB',
-    onTertiaryContainer: '#004D40',
-    background: '#F5F5F5',
-    onBackground: '#1C1B1F',
+    tertiaryContainer: '#FEF3C7', // Amber 100
+    onTertiaryContainer: '#92400E', // Amber 800
+    background: '#F9FAFB', // Gray 50 (Cleaner background)
+    onBackground: '#111827', // Gray 900
     surface: '#FFFFFF',
-    onSurface: '#1C1B1F',
-    surfaceVariant: '#E7E0EC',
-    onSurfaceVariant: '#49454F',
-    outline: '#79747E',
-    outlineVariant: '#CAC4D0',
-    error: '#B3261E',
+    onSurface: '#1F2937', // Gray 800
+    surfaceVariant: '#F3F4F6', // Gray 100
+    onSurfaceVariant: '#4B5563', // Gray 600
+    outline: '#9CA3AF', // Gray 400
+    outlineVariant: '#E5E7EB', // Gray 200
+    error: '#EF4444', // Red 500
     onError: '#FFFFFF',
-    errorContainer: '#F9DEDC',
-    onErrorContainer: '#410E0B',
+    errorContainer: '#FEE2E2', // Red 100
+    onErrorContainer: '#991B1B', // Red 800
     elevation: {
       level0: 'transparent',
-      level1: '#F5F5F5',
-      level2: '#EEEEEE',
-      level3: '#E0E0E0',
-      level4: '#BDBDBD',
-      level5: '#9E9E9E',
+      level1: '#FFFFFF', // Clean cards
+      level2: '#F9FAFB',
+      level3: '#F3F4F6',
+      level4: '#E5E7EB',
+      level5: '#D1D5DB',
     },
   },
-  roundness: 4,
+  roundness: 3, // More modern, slightly tighter rounding for inputs
 };
 
 const App = () => {
@@ -173,10 +174,10 @@ const App = () => {
               );
               if (filteredChildren.length === 0) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const {children: _, ...rest} = item;
+                const { children: _, ...rest } = item;
                 return rest;
               }
-              return {...item, children: filteredChildren};
+              return { ...item, children: filteredChildren };
             }
             return item;
           })
@@ -285,7 +286,7 @@ const App = () => {
             onPress: () => null,
             style: 'cancel',
           },
-          {text: '종료', onPress: () => BackHandler.exitApp()},
+          { text: '종료', onPress: () => BackHandler.exitApp() },
         ]);
         return true;
       }
@@ -518,15 +519,14 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FEF7FF',
-    height: 80,
-    paddingBottom: 16,
-    paddingTop: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: -1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    backgroundColor: '#FFFFFF',
+    height: 65, // Slightly shorter for a sleeker look
+    paddingBottom: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6', // Subtle border instead of shadow
+    elevation: 0, // Flat design
+    shadowOpacity: 0,
   },
   tabButton: {
     flex: 1,
@@ -535,17 +535,17 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabButtonActive: {
-    // Material Design 3 스타일
+    // 
   },
   tabLabel: {
-    fontSize: 12,
-    color: '#49454F',
+    fontSize: 11, // Smaller, cleaner font
+    color: '#9CA3AF',
     marginTop: 4,
     fontWeight: '500',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
   tabLabelActive: {
-    color: '#2E7D32',
+    color: '#4F46E5', // Primary Color
     fontWeight: '600',
   },
 });

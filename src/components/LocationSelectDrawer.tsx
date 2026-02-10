@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,10 +8,10 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import {Text, Button, Surface, IconButton} from 'react-native-paper';
+import { Text, Button, Surface, IconButton, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {KAKAO_API_KEY} from '../config/apiKeys';
-import {Location} from '../types';
+import { KAKAO_API_KEY } from '../config/apiKeys';
+import { Location } from '../types';
 import KakaoMap from './KakaoMap';
 
 interface LocationSelectDrawerProps {
@@ -27,6 +27,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
   onSelect,
   initialQuery = '',
 }) => {
+  const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -104,18 +105,24 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
     }
   };
 
-  const renderSearchResult = ({item}: {item: Location}) => (
+  const renderSearchResult = ({ item }: { item: Location }) => (
     <TouchableOpacity
       style={[
         styles.resultItem,
-        selectedLocation?.placeId === item.placeId && styles.resultItemSelected,
+        { backgroundColor: theme.colors.surfaceVariant },
+        selectedLocation?.placeId === item.placeId && {
+          backgroundColor: theme.colors.primaryContainer,
+          borderColor: theme.colors.primary,
+        },
       ]}
       onPress={() => handleSelectLocation(item)}>
       <Icon
         name="map-marker"
         size={20}
         color={
-          selectedLocation?.placeId === item.placeId ? '#2E7D32' : '#79747E'
+          selectedLocation?.placeId === item.placeId
+            ? theme.colors.primary
+            : theme.colors.outline
         }
       />
       <View style={styles.resultTextContainer}>
@@ -123,17 +130,20 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           variant="bodyLarge"
           style={[
             styles.resultName,
-            selectedLocation?.placeId === item.placeId &&
-              styles.resultNameSelected,
+            { color: theme.colors.onSurface },
+            selectedLocation?.placeId === item.placeId && {
+              color: theme.colors.onPrimaryContainer,
+              fontWeight: '600',
+            },
           ]}>
           {item.name}
         </Text>
-        <Text variant="bodySmall" style={styles.resultAddress}>
+        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
           {item.address}
         </Text>
       </View>
       {selectedLocation?.placeId === item.placeId && (
-        <Icon name="check-circle" size={24} color="#2E7D32" />
+        <Icon name="check-circle" size={24} color={theme.colors.primary} />
       )}
     </TouchableOpacity>
   );
@@ -145,26 +155,27 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
       transparent={true}
       onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <Surface style={styles.drawer}>
+        <Surface style={[styles.drawer, { backgroundColor: theme.colors.surface }]} elevation={5}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text variant="titleLarge" style={styles.headerTitle}>
-              위치 선택
+          <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
+            <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+              Select Location
             </Text>
-            <IconButton icon="close" size={24} onPress={onClose} />
+            <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
 
           {/* Search Input */}
-          <View style={styles.searchContainer}>
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
             <Icon
               name="magnify"
               size={20}
-              color="#666"
+              color={theme.colors.onSurfaceVariant}
               style={styles.searchIcon}
             />
             <TextInput
-              style={styles.searchInput}
-              placeholder="장소를 검색하세요"
+              style={[styles.searchInput, { color: theme.colors.onSurface }]}
+              placeholder="Search location..."
+              placeholderTextColor={theme.colors.outline}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
@@ -172,14 +183,14 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Icon name="close-circle" size={20} color="#999" />
+                <Icon name="close-circle" size={20} color={theme.colors.outline} />
               </TouchableOpacity>
             )}
           </View>
 
           {/* Map Preview (when location selected) */}
           {selectedLocation && (
-            <View style={styles.mapContainer}>
+            <View style={[styles.mapContainer, { borderColor: theme.colors.outlineVariant, borderWidth: 1 }]}>
               <KakaoMap
                 latitude={selectedLocation.latitude}
                 longitude={selectedLocation.longitude}
@@ -197,18 +208,18 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           <View style={styles.resultsContainer}>
             {isSearching ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
-                <Text variant="bodyMedium" style={styles.loadingText}>
-                  검색 중...
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
+                  Searching...
                 </Text>
               </View>
             ) : searchResults.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Icon name="map-search" size={48} color="#79747E" />
-                <Text variant="bodyLarge" style={styles.emptyText}>
+                <Icon name="map-search" size={48} color={theme.colors.outlineVariant} />
+                <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
                   {searchQuery.length < 2
-                    ? '장소를 검색해보세요'
-                    : '검색 결과가 없습니다'}
+                    ? 'Search for a place'
+                    : 'No results found'}
                 </Text>
               </View>
             ) : (
@@ -223,21 +234,21 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           </View>
 
           {/* Bottom Buttons */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { borderTopColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}>
             <Button
               mode="outlined"
               onPress={onClose}
-              style={styles.cancelButton}
-              textColor="#49454F">
-              취소
+              style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+              textColor={theme.colors.onSurface}>
+              Cancel
             </Button>
             <Button
               mode="contained"
               onPress={handleConfirm}
               style={styles.selectButton}
-              buttonColor="#2E7D32"
+              buttonColor={theme.colors.primary}
               disabled={!selectedLocation}>
-              선택
+              Select
             </Button>
           </View>
         </Surface>
@@ -254,7 +265,6 @@ const styles = StyleSheet.create({
   },
   drawer: {
     height: '85%',
-    backgroundColor: '#fff',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: 'hidden',
@@ -266,18 +276,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0EC',
   },
   headerTitle: {
     fontWeight: '600',
-    color: '#1C1B1F',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     height: 48,
   },
@@ -288,18 +295,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     padding: 0,
-    color: '#1C1B1F',
   },
   mapContainer: {
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    elevation: 0,
   },
   mapOverlay: {
     position: 'absolute',
@@ -321,10 +323,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 12,
-    color: '#49454F',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -333,7 +331,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 16,
-    color: '#49454F',
     textAlign: 'center',
   },
   resultsList: {
@@ -343,43 +340,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     marginBottom: 8,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'transparent',
-  },
-  resultItemSelected: {
-    backgroundColor: '#C8E6C9',
-    borderColor: '#2E7D32',
   },
   resultTextContainer: {
     flex: 1,
     marginLeft: 12,
   },
   resultName: {
-    color: '#1C1B1F',
     fontWeight: '500',
     marginBottom: 2,
-  },
-  resultNameSelected: {
-    color: '#1B5E20',
-    fontWeight: '600',
-  },
-  resultAddress: {
-    color: '#79747E',
   },
   footer: {
     flexDirection: 'row',
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E7E0EC',
-    backgroundColor: '#fff',
   },
   cancelButton: {
     flex: 1,
-    borderColor: '#79747E',
   },
   selectButton: {
     flex: 1,

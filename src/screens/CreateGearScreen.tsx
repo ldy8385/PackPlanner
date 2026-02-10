@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {Text, Button, TextInput, Chip, IconButton} from 'react-native-paper';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Gear, GearCategory} from '../types';
-import {gearCategories, manufacturers} from '../data/mockData';
+import { Gear, GearCategory } from '../types';
+import { gearCategories, manufacturers } from '../data/mockData';
 import ManufacturerSelectDrawer from '../components/ManufacturerSelectDrawer';
 import CategorySelectDrawer from '../components/CategorySelectDrawer';
 
@@ -28,6 +28,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   editingGear,
   tags: availableTags = [],
 }) => {
+  const theme = useTheme();
   const isEditMode = !!editingGear;
 
   const [name, setName] = useState(editingGear?.name || '');
@@ -52,8 +53,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   );
   const [container, setContainer] = useState<boolean>(
     editingGear?.container ??
-      (editingGear?.category === GearCategory.BAG ||
-        editingGear?.category === GearCategory.POUCH),
+    (editingGear?.category === GearCategory.BAG ||
+      editingGear?.category === GearCategory.POUCH),
   );
   const [quantity, setQuantity] = useState<string>(
     editingGear?.quantity?.toString() || '1',
@@ -88,12 +89,12 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
   // 입력창 레이아웃 측정
   const onTagInputLayout = (event: any) => {
-    const {x, y, width, height} = event.nativeEvent.layout;
-    setInputLayout({x, y, width, height});
+    const { x, y, width, height } = event.nativeEvent.layout;
+    setInputLayout({ x, y, width, height });
   };
 
   const getCategoryIcon = (cat: GearCategory): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       [GearCategory.TENT]: 'tent',
       [GearCategory.TARP]: 'texture',
       [GearCategory.SLEEPING_BAG]: 'sleep',
@@ -205,14 +206,14 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={onCancel} />
-        <Text variant="titleLarge" style={styles.headerTitle}>
-          {isEditMode ? '장비 수정' : '새 장비 추가'}
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onSurface} />
+        <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+          {isEditMode ? 'Edit Gear' : 'Add New Gear'}
         </Text>
-        <View style={{width: 48}} />
-      </View>
+        <View style={{ width: 48 }} />
+      </Surface>
 
       <ScrollView
         style={styles.scrollView}
@@ -221,116 +222,121 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
         <View style={styles.form}>
           <TextInput
             mode="outlined"
-            label="장비 이름 *"
-            placeholder="장비 이름을 입력하세요"
+            label="Gear Name *"
+            placeholder="e.g. Hiking Boots"
             value={name}
             onChangeText={setName}
-            style={styles.input}
-            outlineColor="#ddd"
-            activeOutlineColor="#2E7D32"
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
-          {/* 사진 선택 */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            사진 (선택사항)
+          {/* Photo Selection */}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Photo (Optional)
           </Text>
           <TouchableOpacity
-            style={styles.imageContainer}
+            style={[styles.imageContainer, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
             onPress={handleSelectImage}
             activeOpacity={0.7}>
             {imageUri ? (
               <View style={styles.imageWrapper}>
-                <Image source={{uri: imageUri}} style={styles.image} />
+                <Image source={{ uri: imageUri || undefined }} style={styles.image} />
                 <TouchableOpacity
-                  style={styles.removeImageButton}
+                  style={[styles.removeImageButton, { backgroundColor: theme.colors.surface }]}
                   onPress={handleRemoveImage}>
-                  <Icon name="close-circle" size={24} color="#B3261E" />
+                  <Icon name="close-circle" size={24} color={theme.colors.error} />
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.imagePlaceholder}>
-                <Icon name="camera-plus" size={40} color="#999" />
-                <Text variant="bodyMedium" style={styles.imagePlaceholderText}>
-                  사진 추가하기
+              <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <Icon name="camera-plus" size={40} color={theme.colors.outline} />
+                <Text variant="bodyMedium" style={[styles.imagePlaceholderText, { color: theme.colors.outline }]}>
+                  Add Photo
                 </Text>
               </View>
             )}
           </TouchableOpacity>
 
-          {/* 카테고리 선택 - Drawer에서 선택 */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            카테고리 *
+          {/* Category Selection */}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Category *
           </Text>
-          <TouchableOpacity
-            style={styles.categorySelector}
-            onPress={() => setShowCategoryDrawer(true)}>
-            <View style={styles.categoryContent}>
-              <Text
-                variant="bodyLarge"
-                style={[
-                  styles.categoryText,
-                  !category && styles.categoryPlaceholder,
-                ]}>
-                {category || '카테고리 선택하기'}
-              </Text>
-            </View>
-            <Icon name="chevron-right" size={24} color="#999" />
-          </TouchableOpacity>
+          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <TouchableOpacity
+              style={styles.selectorTouchable}
+              onPress={() => setShowCategoryDrawer(true)}>
+              <View style={styles.selectorContent}>
+                {category ? (
+                  <View style={styles.selectedItem}>
+                    <Icon name={getCategoryIcon(category)} size={24} color={theme.colors.primary} />
+                    <Text variant="bodyLarge" style={{ color: theme.colors.onSurface, fontWeight: '500' }}>
+                      {category}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text variant="bodyLarge" style={{ color: theme.colors.outline }}>
+                    Select Category
+                  </Text>
+                )}
+              </View>
+              <Icon name="chevron-right" size={24} color={theme.colors.outline} />
+            </TouchableOpacity>
+          </Surface>
 
           <TextInput
             mode="outlined"
-            label="무게 (kg) *"
-            placeholder="예: 2.5"
+            label="Weight (kg) *"
+            placeholder="e.g. 2.5"
             value={weight}
             onChangeText={setWeight}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             keyboardType="decimal-pad"
             right={<TextInput.Affix text="kg" />}
-            outlineColor="#ddd"
-            activeOutlineColor="#2E7D32"
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
-          {/* 제조사 선택 - Drawer에서 선택 */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            제조사 (선택사항)
+          {/* Manufacturer Selection */}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Manufacturer (Optional)
           </Text>
-          <TouchableOpacity
-            style={styles.manufacturerSelector}
-            onPress={() => setShowManufacturerDrawer(true)}>
-            <View style={styles.manufacturerContent}>
-              <Text
-                variant="bodyLarge"
-                style={[
-                  styles.manufacturerText,
-                  manufacturer && styles.manufacturerTextSelected,
-                ]}>
-                {manufacturer || '제조사 선택하기'}
-              </Text>
-            </View>
-            <Icon name="chevron-right" size={24} color="#999" />
-          </TouchableOpacity>
+          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <TouchableOpacity
+              style={styles.selectorTouchable}
+              onPress={() => setShowManufacturerDrawer(true)}>
+              <View style={styles.selectorContent}>
+                <Text variant="bodyLarge" style={{ color: manufacturer ? theme.colors.onSurface : theme.colors.outline, fontWeight: manufacturer ? '500' : '400' }}>
+                  {manufacturer || 'Select Manufacturer'}
+                </Text>
+              </View>
+              <Icon name="chevron-right" size={24} color={theme.colors.outline} />
+            </TouchableOpacity>
+          </Surface>
 
           {manufacturer && (
             <TouchableOpacity
               style={styles.clearManufacturer}
               onPress={() => setManufacturer('')}>
-              <Text style={styles.clearManufacturerText}>선택 해제</Text>
+              <Text style={{ color: theme.colors.error }}>Clear Selection</Text>
             </TouchableOpacity>
           )}
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            태그
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Tags
           </Text>
 
-          {/* 태그 입력 with Autocomplete */}
+          {/* Tag Input */}
           <View style={styles.autocompleteWrapper}>
             <View style={styles.tagInputContainer} onLayout={onTagInputLayout}>
               <TextInput
                 mode="outlined"
-                label="태그 추가"
-                placeholder="태그를 입력하고 선택 또는 추가"
-                outlineColor="#ddd"
-                activeOutlineColor="#2E7D32"
+                label="Add Tags"
+                placeholder="Type to search or add"
+                outlineColor={theme.colors.outline}
+                activeOutlineColor={theme.colors.primary}
                 value={tagInput}
                 onChangeText={text => {
                   setTagInput(text);
@@ -338,48 +344,48 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                 }}
                 onFocus={() => setShowTagSuggestions(!!tagInput.trim())}
                 onBlur={() => {
-                  // iOS에서 터치 이벤트가 먼저 처리되도록 약간의 지연
                   setTimeout(() => setShowTagSuggestions(false), 200);
                 }}
-                style={[styles.input, {flex: 1}]}
+                style={[styles.input, { flex: 1, backgroundColor: theme.colors.surface }]}
+                textColor={theme.colors.onSurface}
                 onSubmitEditing={handleAddTag}
               />
               <Button
                 mode="contained"
                 onPress={handleAddTag}
-                style={styles.addTagButton}>
-                추가
+                style={[styles.addTagButton, { backgroundColor: theme.colors.primaryContainer }]}
+                labelStyle={{ color: theme.colors.onPrimaryContainer }}>
+                Add
               </Button>
             </View>
 
             {showTagSuggestions && filteredTags.length > 0 && (
-              <View
+              <Surface
                 style={[
                   styles.suggestionsContainer,
                   {
-                    position: 'absolute',
                     top: inputLayout.height + 8,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.outlineVariant,
                   },
-                ]}>
+                ]}
+                elevation={2}>
                 <ScrollView
                   nestedScrollEnabled={true}
                   keyboardShouldPersistTaps="handled"
-                  style={{maxHeight: 200}}>
+                  style={{ maxHeight: 200 }}>
                   {filteredTags.slice(0, 5).map((t, index) => (
                     <TouchableOpacity
                       key={index}
-                      style={styles.suggestionItem}
+                      style={[styles.suggestionItem, { borderBottomColor: theme.colors.outlineVariant }]}
                       onPress={() => selectTag(t)}
                       activeOpacity={0.7}>
-                      <Icon name="tag" size={16} color="#2196F3" />
-                      <Text style={styles.suggestionText}>#{t}</Text>
+                      <Icon name="tag" size={16} color={theme.colors.primary} />
+                      <Text style={[styles.suggestionText, { color: theme.colors.onSurface }]}>#{t}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-              </View>
+              </Surface>
             )}
           </View>
 
@@ -389,91 +395,92 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                 <Chip
                   key={index}
                   onClose={() => handleRemoveTag(tag)}
-                  style={styles.tagChip}>
+                  style={[styles.tagChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                  textStyle={{ color: theme.colors.onSecondaryContainer }}>
                   #{tag}
                 </Chip>
               ))}
             </View>
           )}
 
-          {/* 수납 여부 (Container) */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            수납 여부
+          {/* Packing Options */}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            Packing Options
           </Text>
           <View style={styles.containerToggleRow}>
             <TouchableOpacity
               style={[
                 styles.containerToggle,
-                container && styles.containerToggleActive,
+                container && { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                !container && { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }
               ]}
               onPress={() => setContainer(true)}>
               <Icon
                 name="package-variant-closed"
                 size={24}
-                color={container ? '#FFFFFF' : '#2E7D32'}
+                color={container ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant}
               />
               <Text
                 variant="bodyLarge"
-                style={[
-                  styles.containerToggleText,
-                  container && styles.containerToggleTextActive,
-                ]}>
-                수납 가능
+                style={{
+                  color: container ? theme.colors.onTertiaryContainer : theme.colors.onSurfaceVariant,
+                  fontWeight: container ? '600' : '400'
+                }}>
+                Packed Inside
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.containerToggle,
-                !container && styles.containerToggleActive,
+                !container && { backgroundColor: theme.colors.secondary, borderColor: 'transparent' },
+                container && { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }
               ]}
               onPress={() => setContainer(false)}>
               <Icon
                 name="package-variant"
                 size={24}
-                color={!container ? '#FFFFFF' : '#49454F'}
+                color={!container ? theme.colors.onSecondary : theme.colors.onSurfaceVariant}
               />
               <Text
                 variant="bodyLarge"
-                style={[
-                  styles.containerToggleText,
-                  !container && styles.containerToggleTextActive,
-                ]}>
-                수납 불가
+                style={{
+                  color: !container ? theme.colors.onSecondary : theme.colors.onSurfaceVariant,
+                  fontWeight: !container ? '600' : '400'
+                }}>
+                Standalone
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* 수량 설정 */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            수량
-          </Text>
+          {/* Quantity */}
           <TextInput
             mode="outlined"
-            label="수량"
-            placeholder="보유 수량을 입력하세요 (기본값: 1)"
+            label="Quantity"
+            placeholder="Default: 1"
             value={quantity}
             onChangeText={setQuantity}
             keyboardType="numeric"
-            style={styles.input}
-            outlineColor="#ddd"
-            activeOutlineColor="#2E7D32"
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
-          <Text variant="bodySmall" style={styles.helperText}>
-            패킹 계효ი 해당 장비를 얼마나 가지고 있는지 표시합니다. (예: 스패너
-            2개, 티셔츠 3개)
+          <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.outline }]}>
+            Set the number of items you own (e.g., 2 hiking poles).
           </Text>
 
           <TextInput
             mode="outlined"
-            label="설명 (선택사항)"
-            placeholder="장비에 대한 설명을 입력하세요"
+            label="Description (Optional)"
+            placeholder="Add details about this gear..."
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            style={styles.input}
-            outlineColor="#ddd"
-            activeOutlineColor="#2E7D32"
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
         </View>
 
@@ -481,19 +488,21 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <Button
             mode="outlined"
             onPress={onCancel}
-            style={styles.cancelButton}>
-            취소
+            style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+            textColor={theme.colors.onSurfaceVariant}>
+            Cancel
           </Button>
           <Button
             mode="contained"
             onPress={handleSave}
-            style={styles.saveButton}>
-            저장
+            style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+            buttonColor={theme.colors.primary}>
+            Save Gear
           </Button>
         </View>
       </ScrollView>
 
-      {/* 제조사 선택 Drawer */}
+      {/* Drawers */}
       <ManufacturerSelectDrawer
         visible={showManufacturerDrawer}
         onClose={() => setShowManufacturerDrawer(false)}
@@ -502,7 +511,6 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
         selectedManufacturer={manufacturer}
       />
 
-      {/* 카테고리 선택 Drawer */}
       <CategorySelectDrawer
         visible={showCategoryDrawer}
         onClose={() => setShowCategoryDrawer(false)}
@@ -518,26 +526,22 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingVertical: 12,
   },
   headerTitle: {
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,
   },
   form: {
-    padding: 16,
+    padding: 20,
   },
   sectionTitle: {
     marginTop: 24,
@@ -546,94 +550,59 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8,
-    backgroundColor: '#fff',
   },
   helperText: {
-    color: '#666',
     marginBottom: 16,
     marginLeft: 4,
   },
-  manufacturerSelector: {
+  selectorCard: {
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  selectorTouchable: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
     padding: 16,
-    marginBottom: 8,
   },
-  manufacturerContent: {
+  selectorContent: {
+    flex: 1,
+  },
+  selectedItem: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  manufacturerText: {
-    fontSize: 16,
-    color: '#999',
-  },
-  manufacturerTextSelected: {
-    color: '#333',
-    fontWeight: '500',
-  },
-  categorySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-  },
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  categoryPlaceholder: {
-    color: '#999',
-    fontWeight: 'normal',
+    gap: 8,
   },
   clearManufacturer: {
     alignSelf: 'flex-start',
     marginBottom: 8,
-  },
-  clearManufacturerText: {
-    color: '#F44336',
-    fontSize: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
   },
   autocompleteWrapper: {
     position: 'relative',
     zIndex: 1000,
   },
   suggestionsContainer: {
-    backgroundColor: '#fff',
+    position: 'absolute',
+    left: 0,
+    right: 0,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    zIndex: 1000,
+    overflow: 'hidden',
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   suggestionText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#333',
   },
   tagInputContainer: {
     flexDirection: 'row',
@@ -641,8 +610,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addTagButton: {
-    backgroundColor: '#4CAF50',
     marginBottom: 8,
+    justifyContent: 'center',
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -652,20 +621,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tagChip: {
-    backgroundColor: '#E3F2FD',
+    borderRadius: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 20,
     gap: 12,
     marginBottom: 32,
   },
   cancelButton: {
     flex: 1,
+    borderRadius: 12,
+    borderColor: '#e0e0e0',
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    borderRadius: 12,
   },
   containerToggleRow: {
     flexDirection: 'row',
@@ -678,27 +649,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f5f5f5',
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  containerToggleActive: {
-    backgroundColor: '#2E7D32',
-  },
-  containerToggleText: {
-    color: '#1C1B1F',
-    fontWeight: '500',
-  },
-  containerToggleTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    borderRadius: 16,
+    borderWidth: 1,
   },
   imageContainer: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderStyle: 'dashed',
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
@@ -717,18 +674,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
+    padding: 2,
   },
   imagePlaceholder: {
-    height: 120,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   imagePlaceholderText: {
     marginTop: 8,
-    color: '#666',
+    fontWeight: '500',
   },
 });
 

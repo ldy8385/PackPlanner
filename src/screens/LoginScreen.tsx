@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {View, StyleSheet, Alert} from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
 import {
   Text,
   Button,
@@ -14,7 +14,7 @@ interface LoginScreenProps {
   onLogin: () => void;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({onLogin}) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -22,7 +22,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({onLogin}) => {
 
   const handleEmailLogin = () => {
     if (!email || !password) {
-      Alert.alert('오류', '이메일과 비밀번호를 입력해주세요.');
+      Alert.alert('Error', 'Please enter email and password.');
       return;
     }
     console.log('Email login:', email);
@@ -40,60 +40,77 @@ const LoginScreen: React.FC<LoginScreenProps> = ({onLogin}) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Surface style={styles.logoContainer} elevation={4}>
-        <Icon name="bag-personal" size={80} color={theme.colors.primary} />
-        <Text variant="headlineLarge" style={styles.appName}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.logoContainer, { backgroundColor: theme.colors.surface }]} elevation={0}>
+        <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+          <Icon name="bag-personal" size={48} color={theme.colors.primary} />
+        </View>
+        <Text variant="headlineMedium" style={[styles.appName, { color: theme.colors.onSurface }]}>
           PackPlanner
         </Text>
-        <Text variant="bodyMedium" style={styles.tagline}>
-          캠핑 장비 패킹 체크리스트
+        <Text variant="bodyLarge" style={{ color: theme.colors.secondary }}>
+          Ready for your next adventure?
         </Text>
       </Surface>
 
       <View style={styles.formContainer}>
         <TextInput
           mode="outlined"
-          label="이메일"
+          label="Email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          style={styles.input}
+          style={[styles.input, { backgroundColor: theme.colors.surface }]}
+          outlineColor={theme.colors.outline}
+          activeOutlineColor={theme.colors.primary}
+          textColor={theme.colors.onSurface}
         />
         <TextInput
           mode="outlined"
-          label="비밀번호"
+          label="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={styles.input}
+          style={[styles.input, { backgroundColor: theme.colors.surface }]}
+          outlineColor={theme.colors.outline}
+          activeOutlineColor={theme.colors.primary}
+          textColor={theme.colors.onSurface}
         />
 
         <Button
           mode="contained"
           onPress={handleEmailLogin}
-          style={styles.loginButton}>
-          {isLoginMode ? '로그인' : '회원가입'}
+          style={styles.loginButton}
+          buttonColor={theme.colors.primary}
+          textColor={theme.colors.onPrimary}
+          contentStyle={{ height: 48 }}>
+          {isLoginMode ? 'Login' : 'Sign Up'}
         </Button>
 
         <Button
           mode="text"
           onPress={() => setIsLoginMode(!isLoginMode)}
-          style={styles.toggleMode}>
+          style={styles.toggleMode}
+          textColor={theme.colors.secondary}>
           {isLoginMode
-            ? '계정이 없으신가요? 회원가입'
-            : '이미 계정이 있으신가요? 로그인'}
+            ? "Don't have an account? Sign Up"
+            : 'Already have an account? Login'}
         </Button>
 
-        <Divider style={styles.divider} />
+        <View style={styles.dividerContainer}>
+          <Divider style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>OR</Text>
+          <Divider style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+        </View>
 
         <Button
           mode="outlined"
           icon="google"
           onPress={handleGoogleLogin}
-          style={styles.socialButton}>
-          Google로 계속하기
+          style={[styles.socialButton, { borderColor: theme.colors.outline }]}
+          textColor={theme.colors.onSurface}>
+          Continue with Google
         </Button>
 
         <Button
@@ -103,12 +120,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({onLogin}) => {
           textColor="#fff"
           onPress={handleAppleLogin}
           style={styles.socialButton}>
-          Apple로 계속하기
+          Continue with Apple
         </Button>
       </View>
 
-      <Text variant="bodySmall" style={styles.footer}>
-        로그인함으로써 이용약관 및 개인정보처리방침에 동의합니다.
+      <Text variant="bodySmall" style={[styles.footer, { color: theme.colors.outline }]}>
+        By logging in, you agree to our Terms & Privacy Policy.
       </Text>
     </View>
   );
@@ -117,50 +134,58 @@ const LoginScreen: React.FC<LoginScreenProps> = ({onLogin}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 24,
+    justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 60,
     marginBottom: 40,
-    padding: 24,
     borderRadius: 16,
-    backgroundColor: '#fff',
+    padding: 20,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   appName: {
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
+    fontWeight: '700',
     marginBottom: 8,
   },
-  tagline: {
-    color: '#666',
-  },
   formContainer: {
-    flex: 1,
+    width: '100%',
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   loginButton: {
     marginTop: 8,
-    paddingVertical: 8,
+    borderRadius: 12,
   },
   toggleMode: {
     marginTop: 16,
   },
-  divider: {
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 24,
+    gap: 16,
+  },
+  dividerLine: {
+    flex: 1,
   },
   socialButton: {
     marginBottom: 12,
-    paddingVertical: 8,
+    borderRadius: 12,
+    paddingVertical: 4,
   },
   footer: {
     textAlign: 'center',
-    color: '#999',
-    marginBottom: 24,
+    marginTop: 'auto',
+    marginBottom: 20,
   },
 });
 

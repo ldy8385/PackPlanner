@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useRef, useCallback} from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,7 +8,7 @@ import {
   SectionList,
   Dimensions,
 } from 'react-native';
-import {Text, Button, IconButton, Surface} from 'react-native-paper';
+import { Text, Button, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface ManufacturerSelectDrawerProps {
@@ -19,7 +19,7 @@ interface ManufacturerSelectDrawerProps {
   selectedManufacturer?: string;
 }
 
-const {height} = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 // 한글 초성 추출 함수
 const getKoreanInitial = (str: string): string => {
@@ -75,7 +75,7 @@ const getCharType = (char: string): string => {
 
 // 정렬 및 그룹화 함수
 const groupManufacturers = (manufacturers: string[]) => {
-  const groups: {[key: string]: string[]} = {};
+  const groups: { [key: string]: string[] } = {};
 
   manufacturers.forEach(m => {
     if (!m) return;
@@ -90,7 +90,7 @@ const groupManufacturers = (manufacturers: string[]) => {
     } else if (charType === 'english') {
       key = firstChar.toUpperCase();
     } else {
-      key = '기타';
+      key = 'Etc';
     }
 
     if (!groups[key]) {
@@ -161,6 +161,11 @@ const groupManufacturers = (manufacturers: string[]) => {
   }));
 };
 
+interface ManufacturerSection {
+  title: string;
+  data: string[];
+}
+
 const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
   visible,
   onClose,
@@ -168,11 +173,12 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
   manufacturers,
   selectedManufacturer,
 }) => {
+  const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSection, setCurrentSection] = useState('');
-  const sectionListRef = useRef<SectionList>(null);
+  const sectionListRef = useRef<SectionList<string, ManufacturerSection>>(null);
   const navBarRef = useRef<View>(null);
-  const navBarLayout = useRef({y: 0, height: 0});
+  const navBarLayout = useRef({ y: 0, height: 0 });
 
   // 검색 필터링
   const filteredSections = useMemo(() => {
@@ -229,7 +235,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
 
   // 뷰 어빌리티 변경 핸들러 - 현재 보이는 섹션 추적
   const onViewableItemsChanged = useCallback(
-    ({viewableItems}: {viewableItems: Array<{section?: {title: string}}>}) => {
+    ({ viewableItems }: { viewableItems: Array<{ section?: { title: string } }> }) => {
       if (viewableItems.length > 0 && viewableItems[0].section) {
         setCurrentSection(viewableItems[0].section.title);
       }
@@ -248,29 +254,31 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
     setCurrentSection('');
   };
 
-  const renderItem = ({item}: {item: string}) => (
+  const renderItem = ({ item }: { item: string }) => (
     <TouchableOpacity
       style={[
         styles.item,
-        selectedManufacturer === item && styles.itemSelected,
+        { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant },
+        selectedManufacturer === item && { backgroundColor: theme.colors.primaryContainer },
       ]}
       onPress={() => handleSelect(item)}>
       <Text
         style={[
           styles.itemText,
-          selectedManufacturer === item && styles.itemTextSelected,
+          { color: theme.colors.onSurface },
+          selectedManufacturer === item && { color: theme.colors.onPrimaryContainer, fontWeight: '700' },
         ]}>
         {item}
       </Text>
       {selectedManufacturer === item && (
-        <Icon name="check" size={20} color="#4CAF50" />
+        <Icon name="check" size={20} color={theme.colors.primary} />
       )}
     </TouchableOpacity>
   );
 
-  const renderSectionHeader = ({section}: {section: {title: string}}) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{section.title}</Text>
+  const renderSectionHeader = ({ section }: { section: ManufacturerSection }) => (
+    <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surfaceVariant, borderBottomColor: theme.colors.outlineVariant }]}>
+      <Text style={[styles.sectionHeaderText, { color: theme.colors.onSurfaceVariant }]}>{section.title}</Text>
     </View>
   );
 
@@ -281,33 +289,34 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
       transparent={true}
       onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <Surface style={styles.drawer}>
+        <Surface style={[styles.drawer, { backgroundColor: theme.colors.surface }]} elevation={5}>
           {/* 헤더 */}
-          <View style={styles.header}>
-            <Text variant="titleLarge" style={styles.headerTitle}>
-              제조사 선택
+          <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
+            <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+              Select Brand
             </Text>
-            <IconButton icon="close" size={24} onPress={onClose} />
+            <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
 
           {/* 검색창 */}
-          <View style={styles.searchContainer}>
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
             <Icon
               name="magnify"
               size={20}
-              color="#666"
+              color={theme.colors.onSurfaceVariant}
               style={styles.searchIcon}
             />
             <TextInput
-              style={styles.searchInput}
-              placeholder="제조사 검색..."
+              style={[styles.searchInput, { color: theme.colors.onSurface }]}
+              placeholder="Search brand..."
+              placeholderTextColor={theme.colors.outline}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Icon name="close-circle" size={20} color="#999" />
+                <Icon name="close-circle" size={20} color={theme.colors.outline} />
               </TouchableOpacity>
             )}
           </View>
@@ -337,7 +346,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
             {!searchQuery && navigationKeys.length > 0 && (
               <View
                 ref={navBarRef}
-                style={styles.navBar}
+                style={[styles.navBar, { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.outlineVariant }]}
                 onLayout={event => {
                   const layout = event.nativeEvent.layout;
                   navBarLayout.current = {
@@ -353,13 +362,14 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
                       key={key}
                       style={[
                         styles.navItem,
-                        currentSection === key && styles.navItemActive,
+                        currentSection === key && { backgroundColor: theme.colors.primary },
                       ]}
                       pointerEvents="none">
                       <Text
                         style={[
                           styles.navItemText,
-                          currentSection === key && styles.navItemTextActive,
+                          { color: theme.colors.onSurfaceVariant },
+                          currentSection === key && { color: theme.colors.onPrimary },
                         ]}>
                         {key}
                       </Text>
@@ -369,8 +379,8 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
 
                 {/* 현재 위치 표시 인디케이터 */}
                 {currentSection && (
-                  <View style={styles.currentPositionIndicator}>
-                    <Text style={styles.currentPositionText}>
+                  <View style={[styles.currentPositionIndicator, { backgroundColor: theme.colors.primary }]}>
+                    <Text style={[styles.currentPositionText, { color: theme.colors.onPrimary }]}>
                       {currentSection}
                     </Text>
                   </View>
@@ -380,7 +390,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
           </View>
 
           {/* 하단 버튼 */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { borderTopColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}>
             <Button
               mode="outlined"
               onPress={() => {
@@ -388,14 +398,17 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
                 onClose();
                 setSearchQuery('');
               }}
-              style={styles.clearButton}>
-              선택 해제
+              style={[styles.clearButton, { borderColor: theme.colors.outline }]}
+              textColor={theme.colors.onSurface}>
+              Clear
             </Button>
             <Button
               mode="contained"
               onPress={onClose}
-              style={styles.closeButton}>
-              닫기
+              style={styles.closeButton}
+              buttonColor={theme.colors.primary}
+              textColor={theme.colors.onPrimary}>
+              Close
             </Button>
           </View>
         </Surface>
@@ -412,7 +425,6 @@ const styles = StyleSheet.create({
   },
   drawer: {
     height: height * 0.8,
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -424,7 +436,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   headerTitle: {
     fontWeight: 'bold',
@@ -434,7 +445,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 16,
     paddingHorizontal: 12,
-    backgroundColor: '#f5f5f5',
     borderRadius: 8,
     height: 44,
   },
@@ -457,16 +467,13 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   sectionHeader: {
-    backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   sectionHeaderText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#666',
   },
   item: {
     flexDirection: 'row',
@@ -475,26 +482,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
     height: 56,
-  },
-  itemSelected: {
-    backgroundColor: '#E8F5E9',
   },
   itemText: {
     fontSize: 16,
-    color: '#333',
-  },
-  itemTextSelected: {
-    color: '#4CAF50',
-    fontWeight: '600',
   },
   navBar: {
     width: 44,
-    backgroundColor: '#fafafa',
     borderLeftWidth: 1,
-    borderLeftColor: '#eee',
     justifyContent: 'center',
   },
   navBarContent: {
@@ -507,21 +502,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 4,
   },
-  navItemActive: {
-    backgroundColor: '#4CAF50',
-  },
   navItemText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#666',
-  },
-  navItemTextActive: {
-    color: '#fff',
   },
   currentPositionIndicator: {
     position: 'absolute',
     left: -50,
-    backgroundColor: '#4CAF50',
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -529,7 +516,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentPositionText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -538,14 +524,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
   },
   clearButton: {
     flex: 1,
   },
   closeButton: {
     flex: 2,
-    backgroundColor: '#4CAF50',
   },
 });
 

@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,9 +13,11 @@ import {
   ProgressBar,
   Surface,
   IconButton,
+  useTheme,
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Plan, Gear, PlanType} from '../types';
+import Logo from '../components/Logo';
+import { Plan, Gear, PlanType } from '../types';
 
 interface HomeScreenProps {
   plans: Plan[];
@@ -47,7 +49,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   }, [activePlans]);
 
   const topTags = useMemo(() => {
-    const tagCount: {[key: string]: number} = {};
+    const tagCount: { [key: string]: number } = {};
     gears.forEach(gear => {
       gear.tags.forEach(tag => {
         tagCount[tag] = (tagCount[tag] || 0) + 1;
@@ -65,11 +67,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       0,
     );
     const totalItems = plans.reduce((sum, p) => sum + p.items.length, 0);
-    return {totalWeight, checkedItems, totalItems};
+    return { totalWeight, checkedItems, totalItems };
   }, [gears, plans]);
 
   const getPlanTypeIcon = (type: PlanType): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       [PlanType.AUTO_CAMPING]: 'car',
       [PlanType.MOTO_CAMPING]: 'motorbike',
       [PlanType.BACKPACKING]: 'bag-personal',
@@ -99,107 +101,135 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     return `D+${Math.abs(diff)}`;
   };
 
+  const theme = useTheme();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}>
-        {/* 헤더 영역 - Material Design 3 Hero Section */}
-        <Surface style={styles.heroSection} elevation={0}>
-          <View style={styles.heroContent}>
-            <Text variant="displaySmall" style={styles.heroTitle}>
-              PackPlanner
-            </Text>
-            <Text variant="bodyLarge" style={styles.heroSubtitle}>
-              캠핑 준비를 더 스마트하게
+        {/* 헤더 영역 - Modern Clean Header */}
+        <View style={styles.header}>
+          <View>
+            <Logo size={32} />
+            <Text variant="bodyLarge" style={[styles.headerSubtitle, { color: theme.colors.primary, marginTop: 4 }]}>
+              Ready for your next adventure?
             </Text>
           </View>
+          <Surface style={[styles.profileButton, { backgroundColor: theme.colors.primaryContainer }]} elevation={0}>
+            <MaterialCommunityIcons name="account" size={24} color={theme.colors.primary} />
+          </Surface>
+        </View>
 
-          {/* 통계 카드 */}
+        {/* 통계 카드 - Bento Grid Style */}
+        <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
-            <Surface style={styles.statCard} elevation={1}>
-              <MaterialCommunityIcons
-                name="briefcase"
-                size={24}
-                color="#2E7D32"
-              />
-              <Text variant="titleLarge" style={styles.statValue}>
-                {gears.length}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                장비
-              </Text>
+            {/* 장비 Stats */}
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <MaterialCommunityIcons
+                  name="briefcase-outline"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+              </View>
+              <View>
+                <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                  {gears.length}
+                </Text>
+                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                  Total Gears
+                </Text>
+              </View>
             </Surface>
-            <Surface style={styles.statCard} elevation={1}>
+
+            {/* 무게 Stats */}
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                <MaterialCommunityIcons
+                  name="weight-kilogram"
+                  size={24}
+                  color={theme.colors.tertiary} // Amber/Orange
+                />
+              </View>
+              <View>
+                <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                  {stats.totalWeight.toFixed(1)}
+                </Text>
+                <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                  Total Kg
+                </Text>
+              </View>
+            </Surface>
+          </View>
+
+          {/* 계획 Stats (Wide) */}
+          <Surface style={[styles.statCardWide, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
               <MaterialCommunityIcons
-                name="calendar-check"
+                name="calendar-check-outline"
                 size={24}
-                color="#558B2F"
+                color={theme.colors.primary}
               />
-              <Text variant="titleLarge" style={styles.statValue}>
+            </View>
+            <View style={styles.statContentWide}>
+              <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
                 {plans.length}
               </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                계획
+              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+                Active Plans
               </Text>
-            </Surface>
-            <Surface style={styles.statCard} elevation={1}>
-              <MaterialCommunityIcons
-                name="weight-kilogram"
-                size={24}
-                color="#00695C"
-              />
-              <Text variant="titleLarge" style={styles.statValue}>
-                {stats.totalWeight.toFixed(1)}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                kg
-              </Text>
-            </Surface>
-          </View>
-        </Surface>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={theme.colors.outlineVariant}
+              style={{ marginLeft: 'auto' }}
+            />
+          </Surface>
+        </View>
 
-        {/* 최근 계획 카드 */}
+        {/* 최근 계획 카드 - Glass/Clean Look */}
         {recentPlan && (
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text variant="titleMedium" style={styles.sectionTitle}>
-                다가오는 캠핑
+              <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+                Upcoming Trip
               </Text>
               <Button
                 mode="text"
                 onPress={onNavigateToPlans}
-                textColor="#2E7D32"
+                textColor={theme.colors.primary}
                 compact>
-                전체 보기
+                View All
               </Button>
             </View>
             <Card
-              style={styles.featuredCard}
+              style={[styles.featuredCard, { backgroundColor: theme.colors.primary }]}
               onPress={() =>
                 recentPlan && onNavigateToPlanDetail(recentPlan.id)
               }
-              mode="elevated">
+              mode="contained">
               <Card.Content style={styles.featuredCardContent}>
                 <View style={styles.featuredHeader}>
-                  <Surface style={styles.planTypeContainer} elevation={0}>
+                  <View style={[styles.planBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                     <MaterialCommunityIcons
                       name={getPlanTypeIcon(recentPlan.type)}
-                      size={20}
-                      color="#2E7D32"
+                      size={16}
+                      color="#FFFFFF"
                     />
-                    <Text variant="labelLarge" style={styles.planTypeText}>
+                    <Text variant="labelMedium" style={{ color: '#FFFFFF' }}>
                       {recentPlan.type}
                     </Text>
-                  </Surface>
-                  <Surface style={styles.ddayContainer} elevation={0}>
-                    <Text variant="labelLarge" style={styles.ddayText}>
+                  </View>
+                  <View style={[styles.ddayBadge, { backgroundColor: '#FFFFFF' }]}>
+                    <Text variant="labelLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
                       {getDday(recentPlan.startDate)}
                     </Text>
-                  </Surface>
+                  </View>
                 </View>
 
-                <Text variant="headlineSmall" style={styles.featuredPlanName}>
+                <Text variant="headlineMedium" style={styles.featuredPlanName}>
                   {recentPlan.name}
                 </Text>
 
@@ -208,9 +238,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <MaterialCommunityIcons
                       name="map-marker"
                       size={18}
-                      color="#49454F"
+                      color="rgba(255,255,255,0.8)"
                     />
-                    <Text variant="bodyMedium" style={styles.detailText}>
+                    <Text variant="bodyMedium" style={{ color: 'rgba(255,255,255,0.9)' }}>
                       {recentPlan.destination}
                     </Text>
                   </View>
@@ -218,9 +248,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <MaterialCommunityIcons
                       name="calendar"
                       size={18}
-                      color="#49454F"
+                      color="rgba(255,255,255,0.8)"
                     />
-                    <Text variant="bodyMedium" style={styles.detailText}>
+                    <Text variant="bodyMedium" style={{ color: 'rgba(255,255,255,0.9)' }}>
                       {formatDateRange(
                         recentPlan.startDate,
                         recentPlan.endDate,
@@ -231,23 +261,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
                 {recentPlan.items.length > 0 && (
                   <View style={styles.progressContainer}>
+                    <View style={styles.progressInfo}>
+                      <Text variant="bodySmall" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        Packing Progress
+                      </Text>
+                      <Text variant="bodySmall" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+                        {Math.round((recentPlan.items.filter(i => i.isChecked).length / recentPlan.items.length) * 100)}%
+                      </Text>
+                    </View>
                     <ProgressBar
                       progress={
                         recentPlan.items.filter(i => i.isChecked).length /
                         recentPlan.items.length
                       }
-                      color="#2E7D32"
-                      style={styles.progressBar}
+                      color="#FFFFFF"
+                      style={styles.progressBar} // Track color will be handled by style
                     />
-                    <View style={styles.progressInfo}>
-                      <Text variant="bodySmall" style={styles.progressText}>
-                        준비 완료
-                      </Text>
-                      <Text variant="bodySmall" style={styles.progressCount}>
-                        {recentPlan.items.filter(i => i.isChecked).length}/
-                        {recentPlan.items.length}
-                      </Text>
-                    </View>
                   </View>
                 )}
               </Card.Content>
@@ -255,165 +284,72 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           </View>
         )}
 
-        {/* 빠른 액션 */}
+        {/* 빠른 액션 - Minimal Buttons */}
         <View style={styles.sectionContainer}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            빠른 액션
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            Quick Actions
           </Text>
           <View style={styles.quickActionsGrid}>
-            <Surface style={styles.actionCard} elevation={1}>
-              <IconButton
-                icon="plus-circle"
-                size={32}
-                iconColor="#2E7D32"
-                onPress={onCreateNewPlan}
-                style={styles.actionIcon}
-              />
-              <Text variant="titleSmall" style={styles.actionTitle}>
-                새 계획
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+              onPress={onCreateNewPlan}
+              activeOpacity={0.8}>
+              <View style={[styles.actionIconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={28}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <Text variant="titleMedium" style={[styles.actionBtnLabel, { color: theme.colors.onSurface }]}>
+                Add Plan
               </Text>
-              <Text variant="bodySmall" style={styles.actionSubtitle}>
-                캠핑 계획 만들기
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+              onPress={onNavigateToGears}
+              activeOpacity={0.8}>
+              <View style={[styles.actionIconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <MaterialCommunityIcons
+                  name="format-list-bulleted"
+                  size={28}
+                  color={theme.colors.secondary}
+                />
+              </View>
+              <Text variant="titleMedium" style={[styles.actionBtnLabel, { color: theme.colors.onSurface }]}>
+                My Gears
               </Text>
-            </Surface>
-            <Surface style={styles.actionCard} elevation={1}>
-              <IconButton
-                icon="briefcase"
-                size={32}
-                iconColor="#558B2F"
-                onPress={onNavigateToGears}
-                style={styles.actionIcon}
-              />
-              <Text variant="titleSmall" style={styles.actionTitle}>
-                장비 관리
-              </Text>
-              <Text variant="bodySmall" style={styles.actionSubtitle}>
-                장비 목록 보기
-              </Text>
-            </Surface>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* 나의 계획 */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              나의 계획
-            </Text>
-            <Button
-              mode="text"
-              onPress={onNavigateToPlans}
-              textColor="#2E7D32"
-              compact>
-              전체 보기
-            </Button>
-          </View>
-          {activePlans.length === 0 ? (
-            <Surface style={styles.emptyCard} elevation={1}>
-              <MaterialCommunityIcons
-                name="clipboard-text-outline"
-                size={48}
-                color="#79747E"
-              />
-              <Text variant="bodyLarge" style={styles.emptyTitle}>
-                계획이 없습니다
-              </Text>
-              <Text variant="bodyMedium" style={styles.emptySubtitle}>
-                새로운 캠핑 계획을 만들어보세요
-              </Text>
-            </Surface>
-          ) : (
-            <View style={styles.plansList}>
-              {activePlans.slice(0, 3).map((plan, index) => (
-                <Card
-                  key={plan.id}
-                  style={[
-                    styles.planCard,
-                    index === activePlans.slice(0, 3).length - 1 &&
-                      styles.planCardLast,
-                  ]}
-                  onPress={() => onNavigateToPlanDetail(plan.id)}
-                  mode="elevated">
-                  <Card.Content style={styles.planCardContent}>
-                    <Surface style={styles.planIconContainer} elevation={0}>
-                      <MaterialCommunityIcons
-                        name={getPlanTypeIcon(plan.type)}
-                        size={24}
-                        color="#2E7D32"
-                      />
-                    </Surface>
-                    <View style={styles.planInfo}>
-                      <Text variant="titleMedium" style={styles.planName}>
-                        {plan.name}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.planDestination}>
-                        {plan.destination}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.planDate}>
-                        {formatDateRange(plan.startDate, plan.endDate)}
-                      </Text>
-                    </View>
-                    <Surface style={styles.progressChip} elevation={0}>
-                      <Text
-                        variant="labelMedium"
-                        style={styles.progressChipText}>
-                        {plan.items.filter(i => i.isChecked).length}/
-                        {plan.items.length}
-                      </Text>
-                    </Surface>
-                  </Card.Content>
-                </Card>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* 인기 태그 */}
+        {/* Popular Tags - Chips style */}
         <View style={[styles.sectionContainer, styles.lastSection]}>
           <View style={styles.sectionHeader}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              인기 태그
+            <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+              Popular Tags
             </Text>
-            <Button
-              mode="text"
-              onPress={onNavigateToGears}
-              textColor="#2E7D32"
-              compact>
-              전체 보기
-            </Button>
           </View>
-          {topTags.length === 0 ? (
-            <Surface style={styles.emptyCard} elevation={1}>
-              <MaterialCommunityIcons name="tag" size={32} color="#79747E" />
-              <Text variant="bodyMedium" style={styles.emptySubtitle}>
-                등록된 태그가 없습니다
-              </Text>
-            </Surface>
-          ) : (
-            <View style={styles.tagsGrid}>
-              {topTags.map(([tag, count]) => (
-                <TouchableOpacity
-                  key={tag}
-                  onPress={() => onNavigateToGearsWithTag?.(tag)}
-                  activeOpacity={0.7}>
-                  <Surface style={styles.tagCard} elevation={1}>
-                    <MaterialCommunityIcons
-                      name="tag"
-                      size={20}
-                      color="#2E7D32"
-                    />
-                    <Text variant="titleMedium" style={styles.tagName}>
-                      #{tag}
-                    </Text>
-                    <Text variant="bodySmall" style={styles.tagCount}>
-                      {count}개 장비
-                    </Text>
-                  </Surface>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          <View style={styles.tagsWrapper}>
+            {topTags.map(([tag, count]) => (
+              <TouchableOpacity
+                key={tag}
+                onPress={() => onNavigateToGearsWithTag?.(tag)}
+                activeOpacity={0.7}>
+                <Surface style={[styles.chip, { backgroundColor: theme.colors.surfaceVariant, borderRadius: 20 }]} elevation={0}>
+                  <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+                    #{tag} <Text style={{ opacity: 0.5 }}>({count})</Text>
+                  </Text>
+                </Surface>
+              </TouchableOpacity>
+            ))}
+            {topTags.length === 0 && (
+              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>No tags found yet.</Text>
+            )}
+          </View>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -422,29 +358,37 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   scrollView: {
     flex: 1,
   },
-  heroSection: {
-    backgroundColor: '#C8E6C9',
-    padding: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  heroContent: {
-    marginBottom: 24,
-  },
-  heroTitle: {
-    color: '#1B5E20',
-    fontWeight: '600',
+  headerTitle: {
+    fontWeight: '800', // Extra bold
     letterSpacing: -0.5,
   },
-  heroSubtitle: {
-    color: '#33691E',
+  headerSubtitle: {
     marginTop: 4,
-    opacity: 0.8,
+    fontWeight: '500',
+  },
+  profileButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statsContainer: {
+    paddingHorizontal: 24,
+    gap: 12,
+    marginBottom: 24,
   },
   statsRow: {
     flexDirection: 'row',
@@ -452,225 +396,131 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 16,
+    gap: 12,
+  },
+  statCardWide: {
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  statContentWide: {
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   statValue: {
-    color: '#1C1B1F',
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  statLabel: {
-    color: '#49454F',
-    marginTop: 2,
+    fontWeight: '700',
+    letterSpacing: -1,
   },
   sectionContainer: {
-    marginTop: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   lastSection: {
-    marginBottom: 32,
+    marginBottom: 48,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    color: '#1C1B1F',
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   featuredCard: {
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    // Shadow removed for cleaner look, relying on color
   },
   featuredCardContent: {
-    padding: 20,
+    padding: 24,
   },
   featuredHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
-  planTypeContainer: {
+  planBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#C8E6C9',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     gap: 6,
   },
-  planTypeText: {
-    color: '#1B5E20',
-    fontWeight: '500',
-  },
-  ddayContainer: {
-    backgroundColor: '#F9DEDC',
+  ddayBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
-  },
-  ddayText: {
-    color: '#B3261E',
-    fontWeight: '600',
+    borderRadius: 12,
   },
   featuredPlanName: {
-    color: '#1C1B1F',
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontWeight: '700',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
   featuredDetails: {
-    gap: 10,
+    gap: 8,
+    marginBottom: 24,
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  detailText: {
-    color: '#49454F',
+    gap: 8,
   },
   progressContainer: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E7E0EC',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 8,
+    gap: 8,
   },
   progressInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  progressText: {
-    color: '#49454F',
-  },
-  progressCount: {
-    color: '#2E7D32',
-    fontWeight: '600',
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   quickActionsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
-  actionCard: {
+  actionBtn: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
     alignItems: 'center',
-  },
-  actionIcon: {
-    margin: 0,
-    marginBottom: 8,
-  },
-  actionTitle: {
-    color: '#1C1B1F',
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    color: '#49454F',
-  },
-  plansList: {
     gap: 12,
   },
-  planCard: {
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  planCardLast: {
-    marginBottom: 0,
-  },
-  planCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  planIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#C8E6C9',
+  actionIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  planInfo: {
-    flex: 1,
-  },
-  planName: {
-    color: '#1C1B1F',
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  planDestination: {
-    color: '#49454F',
-    marginBottom: 2,
-  },
-  planDate: {
-    color: '#79747E',
-  },
-  progressChip: {
-    backgroundColor: '#C8E6C9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    minWidth: 48,
-    alignItems: 'center',
-  },
-  progressChipText: {
-    color: '#1B5E20',
+  actionBtnLabel: {
     fontWeight: '600',
   },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    color: '#1C1B1F',
-    marginTop: 16,
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  emptySubtitle: {
-    color: '#49454F',
-    textAlign: 'center',
-  },
-  tagsGrid: {
+  tagsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
-  tagCard: {
-    flex: 1,
-    minWidth: '30%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-  },
-  tagName: {
-    color: '#1C1B1F',
-    fontWeight: '600',
-    marginTop: 8,
-    marginBottom: 2,
-  },
-  tagCount: {
-    color: '#49454F',
-  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  }
 });
 
 export default HomeScreen;

@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,9 +20,10 @@ import {
   Surface,
   Divider,
   Checkbox,
+  useTheme,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Gear, GearTemplate, GearCategory} from '../types';
+import { Gear, GearTemplate, GearCategory } from '../types';
 
 interface GearTemplateScreenProps {
   templates: GearTemplate[];
@@ -35,6 +36,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   gears,
   onUpdateTemplates,
 }) => {
+  const theme = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<GearTemplate | null>(
@@ -122,13 +124,14 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
       const updatedTemplates = templates.map(t =>
         t.id === editingTemplate.id
           ? {
-              ...t,
-              name: formData.name.trim(),
-              description: formData.description.trim() || undefined,
-              category: formData.category.trim() || '기타',
-              gearIds: formData.selectedGearIds,
-              updatedAt: now,
-            }
+            ...t,
+            name: formData.name.trim(),
+            description: formData.description.trim() || undefined,
+            category: formData.category.trim() || '기타',
+            gearIds: formData.selectedGearIds,
+            updatedAt: now,
+            createdAt: t.createdAt,
+          }
           : t,
       );
       onUpdateTemplates(updatedTemplates);
@@ -181,7 +184,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   };
 
   const getGearCategoryIcon = (category: GearCategory): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       [GearCategory.TENT]: 'tent',
       [GearCategory.TARP]: 'texture',
       [GearCategory.SLEEPING_BAG]: 'sleep',
@@ -213,7 +216,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   };
 
   const getTemplateCategoryIcon = (category: string): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       백패킹: 'hiking',
       오토캠핑: 'car',
       모토캠핑: 'motorbike',
@@ -227,39 +230,39 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
     return iconMap[category] || 'folder-outline';
   };
 
-  const renderTemplateItem = ({item}: {item: GearTemplate}) => {
+  const renderTemplateItem = ({ item }: { item: GearTemplate }) => {
     const stats = getTemplateStats(item);
 
     return (
-      <Card style={styles.templateCard}>
+      <Card style={[styles.templateCard, { backgroundColor: theme.colors.surface }]} mode="elevated" elevation={1}>
         <Card.Content>
           <View style={styles.templateHeader}>
-            <Surface style={styles.templateIcon} elevation={1}>
+            <Surface style={[styles.templateIcon, { backgroundColor: theme.colors.surfaceVariant }]} elevation={0}>
               <Icon
                 name={getTemplateCategoryIcon(item.category)}
                 size={28}
-                color="#666"
+                color={theme.colors.primary}
               />
             </Surface>
             <View style={styles.templateInfo}>
-              <Text variant="titleMedium" style={styles.templateName}>
+              <Text variant="titleMedium" style={[styles.templateName, { color: theme.colors.onSurface }]}>
                 {item.name}
               </Text>
               <View style={styles.templateMeta}>
                 <Chip
-                  style={styles.categoryChip}
-                  textStyle={styles.categoryChipText}>
+                  style={[styles.categoryChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                  textStyle={{ color: theme.colors.onSecondaryContainer, fontSize: 12, lineHeight: 16 }}>
                   {item.category}
                 </Chip>
                 <View style={styles.statItem}>
-                  <Icon name="package-variant" size={14} color="#666" />
-                  <Text variant="bodySmall" style={styles.statText}>
-                    {stats.count}개
+                  <Icon name="package-variant" size={14} color={theme.colors.outline} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                    {stats.count} items
                   </Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Icon name="weight-kilogram" size={14} color="#4CAF50" />
-                  <Text variant="bodySmall" style={styles.statWeightText}>
+                  <Icon name="weight-kilogram" size={14} color={theme.colors.tertiary} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.tertiary, fontWeight: '600' }}>
                     {stats.weight.toFixed(1)}kg
                   </Text>
                 </View>
@@ -267,25 +270,26 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
             </View>
           </View>
           {item.description && (
-            <Text variant="bodySmall" style={styles.templateDescription}>
+            <Text variant="bodySmall" style={[styles.templateDescription, { color: theme.colors.onSurfaceVariant }]}>
               {item.description}
             </Text>
           )}
-          <View style={styles.templateActions}>
+          <View style={[styles.templateActions, { borderTopColor: theme.colors.outlineVariant }]}>
             <Button
               mode="text"
               onPress={() => openEditModal(item)}
               icon="pencil"
+              textColor={theme.colors.primary}
               compact>
-              수정
+              Edit
             </Button>
             <Button
               mode="text"
               onPress={() => confirmDelete(item)}
               icon="delete"
-              textColor="#F44336"
+              textColor={theme.colors.error}
               compact>
-              삭제
+              Delete
             </Button>
           </View>
         </Card.Content>
@@ -301,24 +305,27 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   }, [gears, formData.selectedGearIds]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Surface style={styles.header} elevation={2}>
-        <Text variant="headlineSmall" style={styles.headerTitle}>
-          장비 템플릿
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <Text variant="headlineSmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+          Gear Templates
         </Text>
       </Surface>
 
       <View style={styles.searchContainer}>
         <TextInput
-          placeholder="템플릿 검색..."
+          placeholder="Search templates..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           mode="outlined"
-          style={styles.searchInput}
-          left={<TextInput.Icon icon="magnify" />}
+          style={[styles.searchInput, { backgroundColor: theme.colors.surface }]}
+          outlineColor={theme.colors.outline}
+          activeOutlineColor={theme.colors.primary}
+          placeholderTextColor={theme.colors.outline}
+          left={<TextInput.Icon icon="magnify" color={theme.colors.outline} />}
           right={
             searchQuery ? (
-              <TextInput.Icon icon="close" onPress={() => setSearchQuery('')} />
+              <TextInput.Icon icon="close" onPress={() => setSearchQuery('')} color={theme.colors.outline} />
             ) : undefined
           }
         />
@@ -328,18 +335,20 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.categoryFilter}
+          style={[styles.categoryFilter, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}
           contentContainerStyle={styles.categoryFilterContent}>
           <Chip
             onPress={() => setSelectedCategory(null)}
             style={[
               styles.filterChip,
-              !selectedCategory && styles.filterChipSelected,
+              !selectedCategory ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surfaceVariant },
             ]}
-            textStyle={
-              !selectedCategory ? styles.filterChipTextSelected : undefined
-            }>
-            전체
+            textStyle={{
+              color: !selectedCategory ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+            }}
+            showSelectedOverlay={true}
+            selected={!selectedCategory}>
+            All
           </Chip>
           {templateCategories.map(category => (
             <Chip
@@ -347,35 +356,35 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
               onPress={() => setSelectedCategory(category)}
               style={[
                 styles.filterChip,
-                selectedCategory === category && styles.filterChipSelected,
+                selectedCategory === category ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surfaceVariant },
               ]}
-              textStyle={
-                selectedCategory === category
-                  ? styles.filterChipTextSelected
-                  : undefined
-              }
-              icon={getTemplateCategoryIcon(category)}>
+              textStyle={{
+                color: selectedCategory === category ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+              }}
+              icon={() => <Icon name={getTemplateCategoryIcon(category)} size={18} color={selectedCategory === category ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant} />}
+              showSelectedOverlay={true}
+              selected={selectedCategory === category}>
               {category}
             </Chip>
           ))}
         </ScrollView>
       )}
 
-      <View style={styles.statsContainer}>
-        <Surface style={styles.statBox} elevation={1}>
-          <Text variant="titleLarge" style={styles.statNumber}>
+      <View style={[styles.statsContainer, { backgroundColor: theme.colors.background }]}>
+        <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <Text variant="displaySmall" style={[styles.statNumber, { color: theme.colors.primary }]}>
             {filteredTemplates.length}
           </Text>
-          <Text variant="bodySmall" style={styles.statLabel}>
-            템플릿 수
+          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+            Templates
           </Text>
         </Surface>
-        <Surface style={styles.statBox} elevation={1}>
-          <Text variant="titleLarge" style={styles.statNumber}>
+        <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <Text variant="displaySmall" style={[styles.statNumber, { color: theme.colors.secondary }]}>
             {templateCategories.length}
           </Text>
-          <Text variant="bodySmall" style={styles.statLabel}>
-            카테고리
+          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+            Categories
           </Text>
         </Surface>
       </View>
@@ -387,18 +396,23 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Icon name="folder-open-outline" size={64} color="#ccc" />
-            <Text variant="titleMedium" style={styles.emptyStateText}>
-              등록된 템플릿이 없습니다.
+            <Icon name="folder-open-outline" size={64} color={theme.colors.outlineVariant} />
+            <Text variant="titleMedium" style={[styles.emptyStateText, { color: theme.colors.onSurface }]}>
+              No templates found
             </Text>
-            <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
-              + 버튼을 눌러 새 템플릿을 추가해보세요.
+            <Text variant="bodyMedium" style={[styles.emptyStateSubtext, { color: theme.colors.onSurfaceVariant }]}>
+              Tap the + button to create a new template.
             </Text>
           </View>
         }
       />
 
-      <FAB icon="plus" style={styles.fab} onPress={openAddModal} color="#fff" />
+      <FAB
+        icon="plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        onPress={openAddModal}
+        color={theme.colors.onPrimary}
+      />
 
       <Portal>
         <Modal
@@ -407,11 +421,11 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
             resetForm();
             setIsModalVisible(false);
           }}
-          contentContainerStyle={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="titleLarge">
-                {isEditMode ? '템플릿 수정' : '새 템플릿 추가'}
+          contentContainerStyle={[styles.modalContainer, { maxHeight: '90%' }]}>
+          <Surface style={[styles.modalContent, { backgroundColor: theme.colors.surface, borderRadius: 16 }]} elevation={5}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.outlineVariant }]}>
+              <Text variant="titleLarge" style={{ color: theme.colors.onSurface }}>
+                {isEditMode ? 'Edit Template' : 'New Template'}
               </Text>
               <IconButton
                 icon="close"
@@ -420,48 +434,58 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                   resetForm();
                   setIsModalVisible(false);
                 }}
+                iconColor={theme.colors.onSurface}
               />
             </View>
 
             <ScrollView style={styles.modalScroll}>
               <TextInput
-                label="템플릿 이름 *"
-                placeholder="예: 백패킹 필수 장비 세트"
+                label="Template Name *"
+                placeholder="e.g., Backpacking Essentials"
                 value={formData.name}
-                onChangeText={text => setFormData({...formData, name: text})}
-                style={styles.input}
+                onChangeText={text => setFormData({ ...formData, name: text })}
+                style={[styles.input, { backgroundColor: theme.colors.surface }]}
                 mode="outlined"
+                outlineColor={theme.colors.outline}
+                activeOutlineColor={theme.colors.primary}
+                textColor={theme.colors.onSurface}
               />
 
               <TextInput
-                label="설명"
-                placeholder="템플릿에 대한 설명을 입력하세요"
+                label="Description"
+                placeholder="Describe this template..."
                 value={formData.description}
                 onChangeText={text =>
-                  setFormData({...formData, description: text})
+                  setFormData({ ...formData, description: text })
                 }
                 multiline
                 numberOfLines={2}
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface }]}
                 mode="outlined"
+                outlineColor={theme.colors.outline}
+                activeOutlineColor={theme.colors.primary}
+                textColor={theme.colors.onSurface}
               />
 
               <TextInput
-                label="카테고리"
-                placeholder="예: 백패킹, 오토캠핑, 가족캠핑"
+                label="Category"
+                placeholder="e.g., Backpacking, Camping"
                 value={formData.category}
                 onChangeText={text =>
-                  setFormData({...formData, category: text})
+                  setFormData({ ...formData, category: text })
                 }
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface }]}
                 mode="outlined"
-                left={<TextInput.Icon icon="folder-outline" />}
+                outlineColor={theme.colors.outline}
+                activeOutlineColor={theme.colors.primary}
+                textColor={theme.colors.onSurface}
+                left={<TextInput.Icon icon="folder-outline" color={theme.colors.outline} />}
               />
 
               {templateCategories.length > 0 && (
                 <>
-                  <Text variant="bodyMedium" style={styles.inputLabel}>
-                    기존 카테고리
+                  <Text variant="bodyMedium" style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant }]}>
+                    Existing Categories
                   </Text>
                   <View style={styles.existingCategoriesContainer}>
                     {templateCategories
@@ -469,9 +493,10 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                       .map((category, index) => (
                         <Chip
                           key={index}
-                          onPress={() => setFormData({...formData, category})}
-                          style={styles.existingCategoryChip}
-                          icon={getTemplateCategoryIcon(category)}>
+                          onPress={() => setFormData({ ...formData, category })}
+                          style={[styles.existingCategoryChip, { backgroundColor: theme.colors.surfaceVariant }]}
+                          textStyle={{ color: theme.colors.onSurfaceVariant }}
+                          icon={() => <Icon name={getTemplateCategoryIcon(category)} size={16} color={theme.colors.onSurfaceVariant} />}>
                           {category}
                         </Chip>
                       ))}
@@ -479,21 +504,20 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 </>
               )}
 
-              <Divider style={styles.divider} />
+              <Divider style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
 
-              <Text variant="titleMedium" style={styles.sectionTitle}>
-                장비 선택
+              <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+                Select Gear
               </Text>
-              <Text variant="bodySmall" style={styles.sectionSubtitle}>
-                템플릿에 포함할 장비를 선택하세요 ({selectedGearsCount}개
-                선택됨, {selectedGearsWeight.toFixed(1)}kg)
+              <Text variant="bodySmall" style={[styles.sectionSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                Select items to include ({selectedGearsCount} items, {selectedGearsWeight.toFixed(1)}kg)
               </Text>
 
               {gears.length === 0 ? (
-                <View style={styles.noGearWarning}>
-                  <Icon name="alert-circle-outline" size={24} color="#FF9800" />
-                  <Text variant="bodyMedium" style={styles.noGearText}>
-                    등록된 장비가 없습니다. 먼저 장비를 등록해주세요.
+                <View style={[styles.noGearWarning, { backgroundColor: theme.colors.errorContainer }]}>
+                  <Icon name="alert-circle-outline" size={24} color={theme.colors.error} />
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onErrorContainer, flex: 1 }}>
+                    No gears found. Please add gears first.
                   </Text>
                 </View>
               ) : (
@@ -503,53 +527,59 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                       gear.id,
                     );
                     return (
-                      <List.Item
+                      <Surface
                         key={gear.id}
-                        title={gear.name}
-                        description={`${gear.manufacturer || '제조사 없음'} · ${
-                          gear.weight
-                        }kg`}
-                        left={() => (
-                          <View style={styles.gearSelectionLeft}>
-                            <Checkbox
-                              status={isSelected ? 'checked' : 'unchecked'}
-                              onPress={() => toggleGearSelection(gear.id)}
-                            />
-                            <Surface style={styles.gearIconSmall} elevation={1}>
-                              <Icon
-                                name={getGearCategoryIcon(gear.category)}
-                                size={18}
-                                color="#666"
-                              />
-                            </Surface>
-                          </View>
-                        )}
-                        onPress={() => toggleGearSelection(gear.id)}
                         style={[
                           styles.gearSelectionItem,
-                          isSelected && styles.gearSelectionItemSelected,
+                          { backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surface },
+                          isSelected ? { borderColor: theme.colors.primary, borderWidth: 1 } : { borderColor: theme.colors.outlineVariant, borderWidth: 1 }
                         ]}
-                      />
+                        elevation={0}>
+                        <List.Item
+                          title={gear.name}
+                          titleStyle={{ color: theme.colors.onSurface, fontWeight: isSelected ? '600' : '400' }}
+                          description={`${gear.manufacturer || 'No Brand'} · ${gear.weight}kg`}
+                          descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
+                          left={() => (
+                            <View style={styles.gearSelectionLeft}>
+                              <Checkbox
+                                status={isSelected ? 'checked' : 'unchecked'}
+                                onPress={() => toggleGearSelection(gear.id)}
+                                color={theme.colors.primary}
+                                uncheckedColor={theme.colors.outline}
+                              />
+                              <View style={[styles.gearIconSmall, { backgroundColor: theme.colors.surfaceVariant }]}>
+                                <Icon
+                                  name={getGearCategoryIcon(gear.category)}
+                                  size={18}
+                                  color={theme.colors.onSurfaceVariant}
+                                />
+                              </View>
+                            </View>
+                          )}
+                          onPress={() => toggleGearSelection(gear.id)}
+                        />
+                      </Surface>
                     );
                   })}
                 </View>
               )}
             </ScrollView>
 
-            <View style={styles.modalFooter}>
-              <View style={styles.selectionSummary}>
-                <Icon name="package-variant" size={18} color="#666" />
-                <Text variant="bodyMedium" style={styles.summaryText}>
-                  {selectedGearsCount}개 장비
+            <View style={[styles.modalFooter, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
+              <Surface style={[styles.selectionSummary, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
+                <Icon name="package-variant" size={18} color={theme.colors.onSecondaryContainer} />
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSecondaryContainer }}>
+                  {selectedGearsCount} items
                 </Text>
-                <Text variant="bodyMedium" style={styles.summaryDivider}>
+                <Text variant="bodyMedium" style={[styles.summaryDivider, { color: theme.colors.onSecondaryContainer }]}>
                   ·
                 </Text>
-                <Icon name="weight-kilogram" size={18} color="#4CAF50" />
-                <Text variant="bodyMedium" style={styles.summaryWeightText}>
+                <Icon name="weight-kilogram" size={18} color={theme.colors.onSecondaryContainer} />
+                <Text variant="bodyMedium" style={[styles.summaryWeightText, { color: theme.colors.onSecondaryContainer }]}>
                   {selectedGearsWeight.toFixed(1)}kg
                 </Text>
-              </View>
+              </Surface>
               <View style={styles.modalButtons}>
                 <Button
                   mode="outlined"
@@ -557,53 +587,57 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                     resetForm();
                     setIsModalVisible(false);
                   }}
-                  style={styles.modalButton}>
-                  취소
+                  style={[styles.modalButton, { borderColor: theme.colors.outline }]}
+                  textColor={theme.colors.onSurface}>
+                  Cancel
                 </Button>
                 <Button
                   mode="contained"
                   onPress={saveTemplate}
                   style={styles.modalButton}
                   disabled={!formData.name.trim()}
-                  buttonColor="#4CAF50">
-                  {isEditMode ? '수정' : '추가'}
+                  buttonColor={theme.colors.primary}
+                  textColor={theme.colors.onPrimary}>
+                  {isEditMode ? 'Update' : 'Create'}
                 </Button>
               </View>
             </View>
-          </View>
+          </Surface>
         </Modal>
 
         <Modal
           visible={deleteConfirmVisible}
           onDismiss={() => setDeleteConfirmVisible(false)}
           contentContainerStyle={styles.deleteModalContainer}>
-          <View style={styles.deleteModalContent}>
-            <Icon name="alert-circle-outline" size={48} color="#F44336" />
-            <Text variant="titleMedium" style={styles.deleteModalTitle}>
-              템플릿 삭제
+          <Surface style={[styles.deleteModalContent, { backgroundColor: theme.colors.surface }]} elevation={5}>
+            <Icon name="alert-circle-outline" size={48} color={theme.colors.error} />
+            <Text variant="titleMedium" style={[styles.deleteModalTitle, { color: theme.colors.onSurface }]}>
+              Delete Template
             </Text>
-            <Text variant="bodyMedium" style={styles.deleteModalText}>
-              '{templateToDelete?.name}' 템플릿을 삭제하시겠습니까?
+            <Text variant="bodyMedium" style={[styles.deleteModalText, { color: theme.colors.onSurfaceVariant }]}>
+              Are you sure you want to delete '{templateToDelete?.name}'?
             </Text>
-            <Text variant="bodySmall" style={styles.deleteModalSubtext}>
-              이 작업은 되돌릴 수 없습니다.
+            <Text variant="bodySmall" style={[styles.deleteModalSubtext, { color: theme.colors.onSurfaceVariant }]}>
+              This action cannot be undone.
             </Text>
             <View style={styles.deleteModalButtons}>
               <Button
                 mode="outlined"
                 onPress={() => setDeleteConfirmVisible(false)}
-                style={styles.deleteModalButton}>
-                취소
+                style={styles.deleteModalButton}
+                textColor={theme.colors.onSurface}
+                theme={{ colors: { primary: theme.colors.outline } }}>
+                Cancel
               </Button>
               <Button
                 mode="contained"
                 onPress={deleteTemplate}
-                buttonColor="#F44336"
+                buttonColor={theme.colors.error}
                 style={styles.deleteModalButton}>
-                삭제
+                Delete
               </Button>
             </View>
-          </View>
+          </Surface>
         </Modal>
       </Portal>
     </SafeAreaView>
@@ -613,75 +647,64 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     padding: 16,
-    backgroundColor: '#fff',
+    paddingBottom: 8,
   },
   headerTitle: {
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
   },
   searchContainer: {
     padding: 16,
+    paddingTop: 8,
     paddingBottom: 8,
   },
   searchInput: {
-    backgroundColor: '#fff',
+    borderRadius: 8,
   },
   categoryFilter: {
     maxHeight: 60,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   categoryFilterContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   filterChip: {
-    marginRight: 8,
-    backgroundColor: '#E0E0E0',
-  },
-  filterChipSelected: {
-    backgroundColor: '#4CAF50',
-  },
-  filterChipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    marginRight: 0,
+    height: 32,
   },
   statsContainer: {
     flexDirection: 'row',
     padding: 16,
     gap: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   statBox: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   statNumber: {
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontWeight: '700',
     marginBottom: 4,
   },
   statLabel: {
-    color: '#666',
+    opacity: 0.8,
   },
   listContainer: {
     padding: 16,
+    paddingTop: 0,
   },
   templateCard: {
-    marginBottom: 12,
-    borderRadius: 12,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   templateHeader: {
     flexDirection: 'row',
@@ -689,10 +712,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   templateIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#f5f5f5',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -701,7 +723,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateName: {
-    color: '#333',
     marginBottom: 6,
     fontWeight: '600',
   },
@@ -712,29 +733,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryChip: {
-    backgroundColor: '#E8F5E9',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  categoryChipText: {
-    fontSize: 12,
-    color: '#4CAF50',
-    lineHeight: 16,
+    height: 24,
+    alignItems: 'center',
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  statText: {
-    color: '#666',
-  },
   statWeightText: {
-    color: '#4CAF50',
     fontWeight: '600',
   },
   templateDescription: {
-    color: '#666',
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -743,60 +753,53 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 12,
+    paddingTop: 8,
+    marginTop: 8,
   },
   emptyState: {
     alignItems: 'center',
     padding: 60,
   },
   emptyStateText: {
-    color: '#333',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtext: {
-    color: '#666',
     textAlign: 'center',
   },
   fab: {
     position: 'absolute',
-    margin: 16,
+    margin: 20,
     right: 0,
     bottom: 0,
-    backgroundColor: '#4CAF50',
+    borderRadius: 16,
   },
   modalContainer: {
-    flex: 1,
     margin: 20,
-    maxHeight: '90%',
+    justifyContent: 'center',
   },
   modalContent: {
-    flex: 1,
-    backgroundColor: '#fff',
     borderRadius: 16,
     overflow: 'hidden',
+    flex: 1,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   modalScroll: {
     flex: 1,
     padding: 20,
   },
   input: {
-    marginBottom: 12,
-    backgroundColor: '#fff',
+    marginBottom: 16,
   },
   inputLabel: {
     marginTop: 8,
     marginBottom: 8,
-    color: '#666',
   },
   existingCategoriesContainer: {
     flexDirection: 'row',
@@ -805,7 +808,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   existingCategoryChip: {
-    backgroundColor: '#f5f5f5',
+    marginBottom: 4,
   },
   divider: {
     marginVertical: 16,
@@ -815,59 +818,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sectionSubtitle: {
-    color: '#666',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   noGearWarning: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFF3E0',
     padding: 16,
     borderRadius: 8,
     marginTop: 8,
   },
-  noGearText: {
-    color: '#E65100',
-    flex: 1,
-  },
   gearListContainer: {
     marginTop: 8,
+    gap: 8,
   },
   gearSelectionItem: {
-    paddingLeft: 0,
     borderRadius: 8,
-    marginBottom: 4,
-  },
-  gearSelectionItemSelected: {
-    backgroundColor: '#E8F5E9',
+    overflow: 'hidden',
   },
   gearSelectionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  gearIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   gearIconSmall: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalFooter: {
-    padding: 20,
+    padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff',
   },
   selectionSummary: {
     flexDirection: 'row',
@@ -876,18 +859,12 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  summaryText: {
-    color: '#666',
+    borderRadius: 12,
   },
   summaryDivider: {
-    color: '#999',
     marginHorizontal: 4,
   },
   summaryWeightText: {
-    color: '#4CAF50',
     fontWeight: '600',
   },
   modalButtons: {
@@ -896,13 +873,13 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+    borderRadius: 8,
   },
   deleteModalContainer: {
-    margin: 40,
+    padding: 24,
   },
   deleteModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 24,
     alignItems: 'center',
   },
@@ -910,16 +887,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
     fontWeight: '600',
-    color: '#333',
   },
   deleteModalText: {
-    color: '#666',
     textAlign: 'center',
     marginBottom: 4,
   },
   deleteModalSubtext: {
-    color: '#999',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   deleteModalButtons: {
     flexDirection: 'row',
@@ -928,6 +902,7 @@ const styles = StyleSheet.create({
   },
   deleteModalButton: {
     flex: 1,
+    borderRadius: 8,
   },
 });
 

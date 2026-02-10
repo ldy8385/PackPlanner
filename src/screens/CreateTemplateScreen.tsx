@@ -1,5 +1,5 @@
-import React, {useState, useMemo} from 'react';
-import {View, StyleSheet, ScrollView, Alert} from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import {
   Text,
   Button,
@@ -8,10 +8,11 @@ import {
   IconButton,
   Surface,
   Divider,
+  useTheme,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {Gear, GearTemplate} from '../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Gear, GearTemplate } from '../types';
 import GearSelectScreen from './GearSelectScreen';
 
 interface CreateTemplateScreenProps {
@@ -29,6 +30,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   onCancel,
   editingTemplate,
 }) => {
+  const theme = useTheme();
   const isEditMode = !!editingTemplate;
 
   const [name, setName] = useState(editingTemplate?.name || '');
@@ -52,7 +54,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   );
 
   const getTemplateCategoryIcon = (cat: string): string => {
-    const iconMap: {[key: string]: string} = {
+    const iconMap: { [key: string]: string } = {
       백패킹: 'bag-personal',
       오토캠핑: 'car',
       모토캠핑: 'motorbike',
@@ -107,19 +109,20 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
-      <Surface style={styles.header} elevation={2}>
-        <IconButton icon="arrow-left" size={24} onPress={onCancel} />
-        <Text variant="headlineSmall" style={styles.headerTitle}>
-          {isEditMode ? '템플릿 수정' : '새 템플릿'}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Header */}
+      <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onSurface} />
+        <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+          {isEditMode ? 'Edit Template' : 'New Template'}
         </Text>
         <Button
           mode="contained"
           onPress={handleSave}
           disabled={!name.trim() || selectedGearIds.length === 0}
-          buttonColor="#4CAF50">
-          저장
+          style={styles.saveHeaderButton}
+          buttonColor={theme.colors.primary}>
+          Save
         </Button>
       </Surface>
 
@@ -127,38 +130,47 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
         <View style={styles.form}>
           <TextInput
             mode="outlined"
-            label="템플릿 이름 *"
-            placeholder="예: 백패킹 필수 장비 세트"
+            label="Template Name *"
+            placeholder="e.g. Backpacking Essentials"
             value={name}
             onChangeText={setName}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
           <TextInput
             mode="outlined"
-            label="설명"
-            placeholder="템플릿에 대한 설명을 입력하세요"
+            label="Description"
+            placeholder="Describe this template..."
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={2}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
           <TextInput
             mode="outlined"
-            label="카테고리"
-            placeholder="예: 백패킹, 오토캠핑, 가족캠핑"
+            label="Category"
+            placeholder="e.g. Backpacking, Car Camping"
             value={category}
             onChangeText={setCategory}
-            left={<TextInput.Icon icon="folder-outline" />}
-            style={styles.input}
+            left={<TextInput.Icon icon="folder-outline" color={theme.colors.onSurfaceVariant} />}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outline}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
           />
 
           {existingCategories.length > 0 && (
             <>
-              <Text variant="bodyMedium" style={styles.sectionLabel}>
-                기존 카테고리
+              <Text variant="bodyMedium" style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
+                Existing Categories
               </Text>
               <View style={styles.categoriesContainer}>
                 {existingCategories
@@ -167,7 +179,8 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
                     <Chip
                       key={index}
                       onPress={() => setCategory(cat)}
-                      style={styles.categoryChip}
+                      style={[styles.categoryChip, { backgroundColor: theme.colors.surfaceVariant }]}
+                      textStyle={{ color: theme.colors.onSurfaceVariant }}
                       icon={getTemplateCategoryIcon(cat)}>
                       {cat}
                     </Chip>
@@ -176,55 +189,56 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             </>
           )}
 
-          <Divider style={styles.divider} />
+          <Divider style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
 
-          {/* 장비 선택 섹션 */}
+          {/* Gear Selection Section */}
           <View style={styles.gearSection}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              장비 선택
+            <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              Select Gear
             </Text>
 
-            <View style={styles.selectedInfo}>
+            <Surface style={[styles.selectedInfo, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <View style={styles.selectedStat}>
-                <Icon name="package-variant" size={20} color="#666" />
-                <Text style={styles.selectedStatText}>
-                  {selectedGearsCount}개 장비
+                <Icon name="package-variant" size={20} color={theme.colors.secondary} />
+                <Text style={[styles.selectedStatText, { color: theme.colors.onSurfaceVariant }]}>
+                  {selectedGearsCount} Items
                 </Text>
               </View>
               <View style={styles.selectedStat}>
-                <Icon name="weight-kilogram" size={20} color="#4CAF50" />
-                <Text style={styles.selectedStatWeight}>
+                <Icon name="weight-kilogram" size={20} color={theme.colors.tertiary} />
+                <Text style={[styles.selectedStatWeight, { color: theme.colors.tertiary }]}>
                   {selectedGearsWeight.toFixed(1)}kg
                 </Text>
               </View>
-            </View>
+            </Surface>
 
             <Button
               mode="contained"
               icon="plus"
               onPress={() => setShowGearSelect(true)}
-              style={styles.selectGearButton}
-              buttonColor="#4CAF50">
-              장비 선택하기
+              style={[styles.selectGearButton, { backgroundColor: theme.colors.secondary }]}
+              buttonColor={theme.colors.secondary}>
+              Select Gear
             </Button>
 
-            {/* 선택된 장비 목록 */}
+            {/* Selected Gear List */}
             {selectedGears.length > 0 && (
-              <View style={styles.selectedGearsContainer}>
-                <Text variant="bodyMedium" style={styles.selectedGearsTitle}>
-                  선택된 장비
+              <Surface style={[styles.selectedGearsContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
+                <Text variant="bodyMedium" style={[styles.selectedGearsTitle, { color: theme.colors.onSurfaceVariant }]}>
+                  Selected Items
                 </Text>
                 {selectedGears.map(gear => (
-                  <View key={gear.id} style={styles.selectedGearItem}>
+                  <View key={gear.id} style={[styles.selectedGearItem, { borderBottomColor: theme.colors.outlineVariant }]}>
                     <View style={styles.selectedGearInfo}>
-                      <Text style={styles.selectedGearName}>{gear.name}</Text>
-                      <Text style={styles.selectedGearDetail}>
+                      <Text style={[styles.selectedGearName, { color: theme.colors.onSurface }]}>{gear.name}</Text>
+                      <Text style={[styles.selectedGearDetail, { color: theme.colors.onSurfaceVariant }]}>
                         {gear.category} · {gear.weight}kg
                       </Text>
                     </View>
                     <IconButton
                       icon="close"
                       size={20}
+                      iconColor={theme.colors.error}
                       onPress={() => {
                         setSelectedGearIds(
                           selectedGearIds.filter(id => id !== gear.id),
@@ -233,7 +247,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
                     />
                   </View>
                 ))}
-              </View>
+              </Surface>
             )}
           </View>
         </View>
@@ -242,8 +256,9 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
           <Button
             mode="outlined"
             onPress={onCancel}
-            style={styles.cancelButton}>
-            취소
+            style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+            textColor={theme.colors.onSurfaceVariant}>
+            Cancel
           </Button>
         </View>
       </ScrollView>
@@ -254,28 +269,27 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingVertical: 12,
   },
   headerTitle: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     flex: 1,
     textAlign: 'center',
+  },
+  saveHeaderButton: {
+    borderRadius: 8,
   },
   scrollView: {
     flex: 1,
   },
   form: {
-    padding: 16,
+    padding: 20,
   },
   input: {
     marginBottom: 16,
@@ -283,7 +297,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     marginTop: 8,
     marginBottom: 8,
-    color: '#666',
   },
   categoriesContainer: {
     flexDirection: 'row',
@@ -293,9 +306,11 @@ const styles = StyleSheet.create({
   },
   categoryChip: {
     marginBottom: 8,
+    borderRadius: 16,
   },
   divider: {
     marginVertical: 24,
+    height: 1,
   },
   gearSection: {
     marginTop: 8,
@@ -308,6 +323,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 24,
     marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   selectedStat: {
     flexDirection: 'row',
@@ -315,27 +334,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectedStatText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
   },
   selectedStatWeight: {
-    fontSize: 16,
-    color: '#4CAF50',
+    fontSize: 14,
     fontWeight: '600',
   },
   selectGearButton: {
     marginBottom: 16,
+    borderRadius: 12,
   },
   selectedGearsContainer: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#eee',
   },
   selectedGearsTitle: {
     marginBottom: 12,
-    color: '#666',
+    fontWeight: '500',
   },
   selectedGearItem: {
     flexDirection: 'row',
@@ -343,7 +360,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   selectedGearInfo: {
     flex: 1,
@@ -351,12 +367,10 @@ const styles = StyleSheet.create({
   selectedGearName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     marginBottom: 4,
   },
   selectedGearDetail: {
     fontSize: 14,
-    color: '#666',
   },
   buttonContainer: {
     padding: 16,
@@ -364,6 +378,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     width: '100%',
+    borderRadius: 12,
   },
 });
 

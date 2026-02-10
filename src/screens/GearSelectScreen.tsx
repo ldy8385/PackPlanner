@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import {Text, Button, Chip, IconButton, Surface} from 'react-native-paper';
+import { Text, Button, Chip, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {Gear, GearCategory, PlanItem} from '../types';
-import {gearCategories} from '../data/mockData';
-import {deepClonePlanItems} from '../utils/gearHierarchy';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gear, GearCategory, PlanItem } from '../types';
+import { gearCategories } from '../data/mockData';
+import { deepClonePlanItems } from '../utils/gearHierarchy';
 
 interface GearSelectScreenProps {
   gears: Gear[];
@@ -22,7 +22,7 @@ interface GearSelectScreenProps {
   onCancel: () => void;
 }
 
-const {height} = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 // 계층 구조 전체에서 특정 gearId의 총 수량 계산
 const calculateGearQuantity = (items: PlanItem[], gearId: string): number => {
@@ -48,6 +48,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   onSave,
   onCancel,
 }) => {
+  const theme = useTheme();
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
@@ -190,10 +191,10 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               );
               if (filtered.length === 0) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const {children: _, ...rest} = item;
+                const { children: _, ...rest } = item;
                 return rest;
               }
-              return {...item, children: filtered};
+              return { ...item, children: filtered };
             }
             return item;
           })
@@ -213,7 +214,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               };
             }
             if (item.children) {
-              return {...item, children: addToTarget(item.children)};
+              return { ...item, children: addToTarget(item.children) };
             }
             return item;
           });
@@ -245,10 +246,10 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               );
               if (filtered.length === 0) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const {children: _, ...rest} = item;
+                const { children: _, ...rest } = item;
                 return rest;
               }
-              return {...item, children: filtered};
+              return { ...item, children: filtered };
             }
             return item;
           })
@@ -281,10 +282,10 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
               );
               if (filtered.length === 0) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const {children: _, ...rest} = item;
+                const { children: _, ...rest } = item;
                 return rest;
               }
-              return {...item, children: filtered};
+              return { ...item, children: filtered };
             }
             return item;
           })
@@ -326,41 +327,41 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   const movingItem = movingId ? findItem(planItems, movingId) : null;
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <GestureHandlerRootView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.container}>
-        {/* 상단: 드롭 영역 */}
-        <Surface style={styles.dropZoneContainer} elevation={4}>
-          <View style={styles.dropZoneHeader}>
-            <IconButton icon="arrow-left" size={24} onPress={onCancel} />
+        {/* Top Drop Zone */}
+        <Surface style={[styles.dropZoneContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.primary }]} elevation={2}>
+          <View style={[styles.dropZoneHeader, { backgroundColor: theme.colors.primaryContainer, borderBottomColor: theme.colors.primary }]}>
+            <IconButton icon="arrow-left" size={24} onPress={onCancel} iconColor={theme.colors.onPrimaryContainer} />
             <View style={styles.headerCenter}>
-              <Text variant="titleMedium" style={styles.dropZoneTitle}>
-                패킹 리스트
+              <Text variant="titleMedium" style={[styles.dropZoneTitle, { color: theme.colors.onPrimaryContainer }]}>
+                Packing List
               </Text>
-              <Text variant="bodySmall" style={styles.statsText}>
-                {planItems.length}개 항목 · {totalSelectedWeight.toFixed(1)}kg
+              <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+                {planItems.length} items · {totalSelectedWeight.toFixed(1)}kg
               </Text>
             </View>
             <Button
               mode="contained"
               onPress={handleSave}
-              buttonColor="#2E7D32"
+              buttonColor={theme.colors.primary}
               compact
               style={styles.saveBtn}>
-              저장
+              Save
             </Button>
           </View>
 
           <ScrollView
             style={styles.dropZoneScroll}
-            contentContainerStyle={movingId ? {paddingBottom: 140} : undefined}>
+            contentContainerStyle={movingId ? { paddingBottom: 140 } : undefined}>
             {planItems.length === 0 ? (
               <View style={styles.emptyDropZone}>
-                <Icon name="package-variant" size={48} color="#C8E6C9" />
-                <Text variant="titleSmall" style={styles.emptyTitle}>
-                  장비를 추가하세요
+                <Icon name="package-variant" size={48} color={theme.colors.outlineVariant} />
+                <Text variant="titleSmall" style={[styles.emptyTitle, { color: theme.colors.primary }]}>
+                  Add Gear Below
                 </Text>
-                <Text variant="bodySmall" style={styles.emptySubtext}>
-                  아래에서 장비를 추가하거나 터치하여 이동하세요
+                <Text variant="bodySmall" style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
+                  Select items from the list or drag to move
                 </Text>
               </View>
             ) : (
@@ -383,47 +384,47 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
             )}
           </ScrollView>
 
-          {/* 이동 모드 UI */}
+          {/* Moving Mode UI */}
           {movingId && movingItem && (
             <View style={styles.moveModeUI}>
-              <Surface style={styles.moveInfo} elevation={5}>
-                <Icon name="arrow-all" size={24} color="#fff" />
-                <Text variant="bodyMedium" style={styles.moveInfoText}>
-                  {movingItem.gear.name} 이동 중...
+              <Surface style={[styles.moveInfo, { backgroundColor: theme.colors.inverseSurface }]} elevation={5}>
+                <Icon name="arrow-all" size={24} color={theme.colors.inverseOnSurface} />
+                <Text variant="bodyMedium" style={{ color: theme.colors.inverseOnSurface, marginLeft: 8 }}>
+                  Moving {movingItem.gear.name}...
                 </Text>
               </Surface>
 
               <View style={styles.actionButtons}>
                 <TouchableOpacity
-                  style={styles.rootBtn}
+                  style={[styles.rootBtn, { backgroundColor: theme.colors.primary }]}
                   onPress={() => {
                     moveItemToRoot(movingId);
                     setMovingId(null);
                   }}>
-                  <Icon name="arrow-up" size={20} color="#fff" />
-                  <Text variant="bodyMedium" style={styles.actionBtnText}>
-                    루트로
+                  <Icon name="arrow-up" size={20} color={theme.colors.onPrimary} />
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onPrimary, marginTop: 4 }}>
+                    To Root
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.cancelBtn}
+                  style={[styles.cancelBtn, { backgroundColor: theme.colors.secondary }]}
                   onPress={() => setMovingId(null)}>
-                  <Icon name="close" size={20} color="#fff" />
-                  <Text variant="bodyMedium" style={styles.actionBtnText}>
-                    취소
+                  <Icon name="close" size={20} color={theme.colors.onSecondary} />
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSecondary, marginTop: 4 }}>
+                    Cancel
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.deleteBtn}
+                  style={[styles.deleteBtn, { backgroundColor: theme.colors.error }]}
                   onPress={() => {
                     removePlanItem(movingId);
                     setMovingId(null);
                   }}>
-                  <Icon name="delete" size={20} color="#fff" />
-                  <Text variant="bodyMedium" style={styles.actionBtnText}>
-                    삭제
+                  <Icon name="delete" size={20} color={theme.colors.onError} />
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onError, marginTop: 4 }}>
+                    Remove
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -431,30 +432,30 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
           )}
         </Surface>
 
-        {/* 하단 토글 버튼 */}
+        {/* Bottom Toggle */}
         <TouchableOpacity
-          style={styles.bottomToggle}
+          style={[styles.bottomToggle, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}
           onPress={() => setIsBottomExpanded(!isBottomExpanded)}>
           <Icon
             name={isBottomExpanded ? 'chevron-down' : 'chevron-up'}
             size={24}
-            color="#666"
+            color={theme.colors.onSurfaceVariant}
           />
-          <Text variant="bodySmall" style={styles.bottomToggleText}>
-            {isBottomExpanded ? '장비 목록 접기' : '장비 목록 펼치기'}
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginHorizontal: 8 }}>
+            {isBottomExpanded ? 'Collapse Gear List' : 'Expand Gear List'}
           </Text>
           <View style={styles.badgeContainer}>
-            <Surface style={styles.countBadge} elevation={1}>
-              <Text variant="labelSmall" style={styles.countBadgeText}>
+            <Surface style={[styles.countBadge, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
+              <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>
                 {filteredGears.length}
               </Text>
             </Surface>
           </View>
         </TouchableOpacity>
 
-        {/* 하단: 필터 + 장비 목록 (접을 수 있음) */}
+        {/* Bottom: Filter + Gear List */}
         {isBottomExpanded && (
-          <View style={styles.sourceContainer}>
+          <View style={[styles.sourceContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.filterSection}>
               <ScrollView
                 horizontal
@@ -464,14 +465,14 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                   onPress={() => setSelectedCategory(null)}
                   style={[
                     styles.filterChip,
-                    !selectedCategory && styles.filterChipSelected,
+                    !selectedCategory ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surface },
                   ]}
-                  textStyle={
-                    !selectedCategory
-                      ? styles.filterChipTextSelected
-                      : undefined
-                  }>
-                  전체
+                  textStyle={{
+                    color: !selectedCategory ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+                  }}
+                  showSelectedOverlay={true}
+                  selected={!selectedCategory}>
+                  All
                 </Chip>
                 {gearCategories.map(category => (
                   <Chip
@@ -479,14 +480,13 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                     onPress={() => setSelectedCategory(category)}
                     style={[
                       styles.filterChip,
-                      selectedCategory === category &&
-                        styles.filterChipSelected,
+                      selectedCategory === category ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surface },
                     ]}
-                    textStyle={
-                      selectedCategory === category
-                        ? styles.filterChipTextSelected
-                        : undefined
-                    }>
+                    textStyle={{
+                      color: selectedCategory === category ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+                    }}
+                    showSelectedOverlay={true}
+                    selected={selectedCategory === category}>
                     {category}
                   </Chip>
                 ))}
@@ -501,14 +501,14 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                     onPress={() => setSelectedTags([])}
                     style={[
                       styles.tagFilterChip,
-                      selectedTags.length === 0 && styles.tagFilterChipSelected,
+                      selectedTags.length === 0 ? { backgroundColor: theme.colors.secondaryContainer } : { backgroundColor: theme.colors.surface },
                     ]}
-                    textStyle={
-                      selectedTags.length === 0
-                        ? styles.tagFilterChipTextSelected
-                        : undefined
-                    }>
-                    모든 태그
+                    textStyle={{
+                      color: selectedTags.length === 0 ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                    }}
+                    showSelectedOverlay={true}
+                    selected={selectedTags.length === 0}>
+                    All Tags
                   </Chip>
                   {allTags.map(tag => (
                     <Chip
@@ -522,14 +522,13 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                       }}
                       style={[
                         styles.tagFilterChip,
-                        selectedTags.includes(tag) &&
-                          styles.tagFilterChipSelected,
+                        selectedTags.includes(tag) ? { backgroundColor: theme.colors.secondaryContainer } : { backgroundColor: theme.colors.surface },
                       ]}
-                      textStyle={
-                        selectedTags.includes(tag)
-                          ? styles.tagFilterChipTextSelected
-                          : undefined
-                      }>
+                      textStyle={{
+                        color: selectedTags.includes(tag) ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant
+                      }}
+                      showSelectedOverlay={true}
+                      selected={selectedTags.includes(tag)}>
                       #{tag}
                     </Chip>
                   ))}
@@ -538,8 +537,8 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
             </View>
 
             <ScrollView style={styles.gearList}>
-              <Text variant="titleSmall" style={styles.sectionTitle}>
-                추가할 장비 ({filteredGears.length}개)
+              <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                Available Gear ({filteredGears.length})
               </Text>
 
               {filteredGears.map(gear => {
@@ -548,25 +547,24 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                 const remaining = maxQuantity - usedQuantity;
 
                 return (
-                  <Surface key={gear.id} style={styles.gearCard} elevation={2}>
+                  <Surface key={gear.id} style={[styles.gearCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                     <View style={styles.gearCardContent}>
                       <View style={styles.gearInfo}>
-                        <Text variant="bodyMedium" style={styles.gearName}>
+                        <Text variant="bodyMedium" style={[styles.gearName, { color: theme.colors.onSurface }]}>
                           {gear.name}
                         </Text>
-                        <Text variant="bodySmall" style={styles.gearMeta}>
+                        <Text variant="bodySmall" style={[styles.gearMeta, { color: theme.colors.onSurfaceVariant }]}>
                           {gear.weight}kg · {gear.category}
                         </Text>
-                        <Text variant="bodySmall" style={styles.quantityText}>
-                          사용: {usedQuantity} / {maxQuantity} · 남은:{' '}
-                          {remaining}
+                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                          Used: {usedQuantity} / {maxQuantity} · Remaining: {remaining}
                         </Text>
                       </View>
 
                       <TouchableOpacity
                         style={styles.addBtn}
                         onPress={() => addGearToRoot(gear)}>
-                        <Icon name="plus-circle" size={36} color="#2E7D32" />
+                        <Icon name="plus-circle" size={32} color={theme.colors.primary} />
                       </TouchableOpacity>
                     </View>
                   </Surface>
@@ -575,8 +573,8 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
 
               {filteredGears.length === 0 && (
                 <View style={styles.noGearsMessage}>
-                  <Text variant="bodyMedium" style={styles.noGearsText}>
-                    추가할 장비가 없습니다
+                  <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+                    No gear found
                   </Text>
                 </View>
               )}
@@ -610,127 +608,124 @@ const PlanItemView: React.FC<{
   movingId,
   setMovingId,
 }) => {
-  const isExpanded = expandedIds.has(item.id);
-  const hasChildren = item.children && item.children.length > 0;
-  const isContainer = item.gear.container;
-  const isMoving = movingId === item.id;
-  const isDropTarget = movingId && isContainer && movingId !== item.id;
+    const isExpanded = expandedIds.has(item.id);
+    const hasChildren = item.children && item.children.length > 0;
+    const isContainer = item.gear.container;
+    const isMoving = movingId === item.id;
+    const isDropTarget = movingId && isContainer && movingId !== item.id;
 
-  // 직계 자식 수 계산 (하위의 하위는 제외)
-  const directChildCount = item.children?.length || 0;
+    // 직계 자식 수 계산 (하위의 하위는 제외)
+    const directChildCount = item.children?.length || 0;
 
-  return (
-    <View style={{marginLeft: depth * 24}}>
-      {/* 메인 아이템 (이동 중이면 숨김) */}
-      {!isMoving && (
-        <Surface
-          style={[styles.planItemCard, isDropTarget && styles.dropTargetCard]}
-          elevation={isDropTarget ? 3 : 1}>
-          <TouchableOpacity
-            style={styles.planItemHeader}
-            onPress={() => onToggleExpand(item.id)}
-            onLongPress={() => setMovingId(item.id)}
-            delayLongPress={300}
-            activeOpacity={0.7}>
-            <View style={styles.planItemRow}>
-              {isContainer ? (
-                <Icon
-                  name={isExpanded ? 'chevron-down' : 'chevron-right'}
-                  size={22}
-                  color="#666"
-                />
-              ) : (
-                <View style={{width: 22}} />
-              )}
-
-              <View style={styles.planItemIcon}>
-                <Icon name="cube" size={20} color="#2E7D32" />
-              </View>
-
-              <View style={styles.planItemInfo}>
-                <Text variant="bodyMedium" style={styles.planItemName}>
-                  {item.gear.name}
-                </Text>
-                <Text variant="bodySmall" style={styles.planItemMeta}>
-                  {item.gear.weight}kg × {item.quantity} ={' '}
-                  {(item.gear.weight * item.quantity).toFixed(1)}kg
-                </Text>
-              </View>
-
-              {/* 컨테이너 아이콘과 자식 수 표시 */}
-              <View style={styles.rightIcons}>
-                {isContainer && (
-                  <View style={styles.containerBadge}>
-                    <Icon
-                      name="package-variant-closed"
-                      size={14}
-                      color="#fff"
-                    />
-                  </View>
-                )}
-
-                {/* 직계 자식 수 표시 (+1, +2 등) */}
-                {directChildCount > 0 && (
-                  <Surface style={styles.childCountBadge} elevation={1}>
-                    <Text variant="labelSmall" style={styles.childCountText}>
-                      +{directChildCount}
-                    </Text>
-                  </Surface>
-                )}
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* 드롭 버튼 (이동 모드일 때만 표시) */}
-          {isDropTarget && (
+    return (
+      <View style={{ marginLeft: depth * 24 }}>
+        {/* 메인 아이템 (이동 중이면 숨김) */}
+        {!isMoving && (
+          <Surface
+            style={[styles.planItemCard, isDropTarget && styles.dropTargetCard]}
+            elevation={isDropTarget ? 3 : 1}>
             <TouchableOpacity
-              style={styles.dropButton}
-              onPress={() => {
-                onMoveToContainer(movingId, item.id);
-                setMovingId(null);
-              }}>
-              <Icon name="arrow-down-circle" size={20} color="#fff" />
-              <Text variant="bodyMedium" style={styles.dropButtonText}>
-                여기에 넣기
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Surface>
-      )}
+              style={styles.planItemHeader}
+              onPress={() => onToggleExpand(item.id)}
+              onLongPress={() => setMovingId(item.id)}
+              delayLongPress={300}
+              activeOpacity={0.7}>
+              <View style={styles.planItemRow}>
+                {isContainer ? (
+                  <Icon
+                    name={isExpanded ? 'chevron-down' : 'chevron-right'}
+                    size={22}
+                    color="#666"
+                  />
+                ) : (
+                  <View style={{ width: 22 }} />
+                )}
 
-      {/* 자식 아이템들 */}
-      {isExpanded && hasChildren && (
-        <View style={styles.childrenContainer}>
-          {item.children!.map(child => (
-            <PlanItemView
-              key={child.id}
-              item={child}
-              depth={depth + 1}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              onMoveToContainer={onMoveToContainer}
-              onMoveToRoot={onMoveToRoot}
-              onDelete={onDelete}
-              movingId={movingId}
-              setMovingId={setMovingId}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
-};
+                <View style={styles.planItemIcon}>
+                  <Icon name="cube" size={20} color="#2E7D32" />
+                </View>
+
+                <View style={styles.planItemInfo}>
+                  <Text variant="bodyMedium" style={styles.planItemName}>
+                    {item.gear.name}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.planItemMeta}>
+                    {item.gear.weight}kg × {item.quantity} ={' '}
+                    {(item.gear.weight * item.quantity).toFixed(1)}kg
+                  </Text>
+                </View>
+
+                {/* 컨테이너 아이콘과 자식 수 표시 */}
+                <View style={styles.rightIcons}>
+                  {isContainer && (
+                    <View style={styles.containerBadge}>
+                      <Icon
+                        name="package-variant-closed"
+                        size={14}
+                        color="#fff"
+                      />
+                    </View>
+                  )}
+
+                  {/* 직계 자식 수 표시 (+1, +2 등) */}
+                  {directChildCount > 0 && (
+                    <Surface style={styles.childCountBadge} elevation={1}>
+                      <Text variant="labelSmall" style={styles.childCountText}>
+                        +{directChildCount}
+                      </Text>
+                    </Surface>
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* 드롭 버튼 (이동 모드일 때만 표시) */}
+            {isDropTarget && (
+              <TouchableOpacity
+                style={styles.dropButton}
+                onPress={() => {
+                  onMoveToContainer(movingId, item.id);
+                  setMovingId(null);
+                }}>
+                <Icon name="arrow-down-circle" size={20} color="#fff" />
+                <Text variant="bodyMedium" style={styles.dropButtonText}>
+                  여기에 넣기
+                </Text>
+              </TouchableOpacity>
+            )}
+          </Surface>
+        )}
+
+        {/* 자식 아이템들 */}
+        {isExpanded && hasChildren && (
+          <View style={styles.childrenContainer}>
+            {item.children!.map(child => (
+              <PlanItemView
+                key={child.id}
+                item={child}
+                depth={depth + 1}
+                expandedIds={expandedIds}
+                onToggleExpand={onToggleExpand}
+                onMoveToContainer={onMoveToContainer}
+                onMoveToRoot={onMoveToRoot}
+                onDelete={onDelete}
+                movingId={movingId}
+                setMovingId={setMovingId}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   dropZoneContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderBottomWidth: 3,
-    borderBottomColor: '#2E7D32',
+    borderBottomWidth: 1,
   },
   dropZoneHeader: {
     flexDirection: 'row',
@@ -738,9 +733,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingVertical: 8,
-    backgroundColor: '#C8E6C9',
     borderBottomWidth: 1,
-    borderBottomColor: '#A5D6A7',
   },
   headerCenter: {
     flex: 1,
@@ -748,14 +741,10 @@ const styles = StyleSheet.create({
   },
   dropZoneTitle: {
     fontWeight: '700',
-    color: '#1B5E20',
-  },
-  statsText: {
-    color: '#2E7D32',
-    marginTop: 2,
   },
   saveBtn: {
     minWidth: 60,
+    borderRadius: 8,
   },
   dropZoneScroll: {
     flex: 1,
@@ -768,12 +757,10 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyTitle: {
-    color: '#2E7D32',
     marginTop: 12,
     fontWeight: '600',
   },
   emptySubtext: {
-    color: '#81C784',
     marginTop: 4,
     textAlign: 'center',
   },
@@ -781,11 +768,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   planItemCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
+    borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     overflow: 'hidden',
   },
   planItemHeader: {
@@ -797,27 +782,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dropTargetCard: {
-    borderColor: '#2E7D32',
     borderWidth: 2,
-    backgroundColor: '#E8F5E9',
   },
   planItemIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#C8E6C9',
-    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   planItemInfo: {
     flex: 1,
   },
   planItemName: {
-    color: '#333',
     fontWeight: '500',
   },
   planItemMeta: {
-    color: '#666',
     marginTop: 2,
   },
   rightIcons: {
@@ -826,23 +806,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   containerBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#2E7D32',
-    justifyContent: 'center',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   childCountBadge: {
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
-    minWidth: 24,
-    alignItems: 'center',
   },
   childCountText: {
-    color: '#fff',
     fontWeight: '700',
     fontSize: 12,
   },
@@ -850,208 +825,136 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 10,
-    backgroundColor: '#2E7D32',
-    margin: 8,
-    marginTop: 0,
-    borderRadius: 6,
+    padding: 12,
   },
   dropButtonText: {
-    color: '#fff',
+    marginLeft: 8,
     fontWeight: '600',
   },
   childrenContainer: {
-    marginTop: 4,
-    paddingLeft: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: '#C8E6C9',
+    borderLeftWidth: 1,
+    marginLeft: 10,
+    paddingLeft: 10,
   },
   moveModeUI: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
-    borderTopWidth: 2,
-    borderTopColor: '#2E7D32',
+    padding: 16,
+    alignItems: 'center',
   },
   moveInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    padding: 12,
-    backgroundColor: '#2E7D32',
-  },
-  moveInfoText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  moveInfoSubtext: {
-    color: '#C8E6C9',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 16,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 12,
-    gap: 8,
+    gap: 12,
   },
   rootBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    padding: 12,
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
   },
   cancelBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    padding: 12,
-    backgroundColor: '#757575',
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
   },
   deleteBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    padding: 12,
-    backgroundColor: '#B3261E',
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
   },
   actionBtnText: {
-    color: '#fff',
+    marginTop: 4,
     fontWeight: '600',
   },
   bottomToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
-    backgroundColor: '#E0E0E0',
+    paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#ccc',
-    gap: 8,
-  },
-  bottomToggleText: {
-    color: '#666',
   },
   badgeContainer: {
-    position: 'absolute',
-    right: 16,
+    marginLeft: 8,
   },
   countBadge: {
-    backgroundColor: '#2E7D32',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
-    alignItems: 'center',
-  },
-  countBadgeText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 12,
+    borderRadius: 12,
   },
   sourceContainer: {
-    height: height * 0.35,
-    backgroundColor: '#f5f5f5',
+    height: 300,
   },
   filterSection: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   filterScrollContent: {
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 16,
     gap: 8,
+    marginBottom: 8,
   },
   tagFilterScrollContent: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 16,
     gap: 8,
   },
   filterChip: {
-    backgroundColor: '#E0E0E0',
-  },
-  filterChipSelected: {
-    backgroundColor: '#4CAF50',
-  },
-  filterChipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    height: 32,
   },
   tagFilterChip: {
-    backgroundColor: '#E0E0E0',
-  },
-  tagFilterChipSelected: {
-    backgroundColor: '#2196F3',
-  },
-  tagFilterChipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    height: 32,
+    marginBottom: 4,
   },
   gearList: {
     flex: 1,
-    padding: 12,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontWeight: '700',
     marginBottom: 12,
-    color: '#333',
-    fontSize: 16,
+    fontWeight: '600',
   },
   gearCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 10,
+    marginBottom: 12,
     overflow: 'hidden',
   },
   gearCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    gap: 12,
   },
   gearInfo: {
     flex: 1,
   },
   gearName: {
-    color: '#333',
-    fontWeight: '600',
-    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 2,
   },
   gearMeta: {
-    color: '#666',
-    marginTop: 2,
+    marginBottom: 2,
   },
   quantityText: {
-    color: '#999',
     marginTop: 2,
   },
   addBtn: {
     padding: 4,
   },
   noGearsMessage: {
-    padding: 40,
+    padding: 32,
     alignItems: 'center',
-  },
-  noGearsText: {
-    color: '#666',
-    textAlign: 'center',
   },
 });
 

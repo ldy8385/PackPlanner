@@ -7,9 +7,9 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import {Text, IconButton, Surface} from 'react-native-paper';
+import { Text, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {GearCategory} from '../types';
+import { GearCategory } from '../types';
 
 interface CategorySelectDrawerProps {
   visible: boolean;
@@ -20,8 +20,6 @@ interface CategorySelectDrawerProps {
   getCategoryIcon: (category: GearCategory) => string;
 }
 
-const {height} = Dimensions.get('window');
-
 const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
   visible,
   onClose,
@@ -30,6 +28,9 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
   selectedCategory,
   getCategoryIcon,
 }) => {
+  const theme = useTheme();
+  const { height } = Dimensions.get('window');
+
   const handleSelect = (category: GearCategory) => {
     onSelect(category);
     onClose();
@@ -42,16 +43,16 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
       transparent={true}
       onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <Surface style={styles.drawer}>
-          {/* 헤더 */}
-          <View style={styles.header}>
-            <Text variant="titleLarge" style={styles.headerTitle}>
-              카테고리 선택
+        <Surface style={[styles.drawer, { backgroundColor: theme.colors.surface }]} elevation={5}>
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
+            <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+              Select Category
             </Text>
-            <IconButton icon="close" size={24} onPress={onClose} />
+            <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
 
-          {/* 3열 그리드 */}
+          {/* Grid */}
           <ScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}>
@@ -61,7 +62,8 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
                   key={category}
                   style={[
                     styles.gridItem,
-                    selectedCategory === category && styles.gridItemSelected,
+                    { backgroundColor: theme.colors.surfaceVariant },
+                    selectedCategory === category && { backgroundColor: theme.colors.primaryContainer, borderColor: theme.colors.primary },
                   ]}
                   onPress={() => handleSelect(category)}
                   activeOpacity={0.7}>
@@ -69,7 +71,7 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
                     name={getCategoryIcon(category)}
                     size={28}
                     color={
-                      selectedCategory === category ? '#FFFFFF' : '#2E7D32'
+                      selectedCategory === category ? theme.colors.primary : theme.colors.onSurfaceVariant
                     }
                     style={styles.gridIcon}
                   />
@@ -77,14 +79,15 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
                     variant="bodySmall"
                     style={[
                       styles.gridText,
-                      selectedCategory === category && styles.gridTextSelected,
+                      { color: theme.colors.onSurfaceVariant },
+                      selectedCategory === category && { color: theme.colors.onPrimaryContainer, fontWeight: '700' },
                     ]}
                     numberOfLines={2}>
                     {category}
                   </Text>
                   {selectedCategory === category && (
                     <View style={styles.checkMark}>
-                      <Icon name="check-circle" size={16} color="#FFFFFF" />
+                      <Icon name="check-circle" size={16} color={theme.colors.primary} />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -105,8 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   drawer: {
-    height: height * 0.75,
-    backgroundColor: '#fff',
+    height: Dimensions.get('window').height * 0.75,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: 'hidden',
@@ -118,11 +120,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0EC',
   },
   headerTitle: {
     fontWeight: '600',
-    color: '#1C1B1F',
   },
   content: {
     flex: 1,
@@ -132,34 +132,26 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     padding: 16,
     gap: 12,
+    justifyContent: 'space-between',
   },
   gridItem: {
     width: '30%',
     aspectRatio: 1,
-    backgroundColor: '#F5F5F5',
     borderRadius: 16,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
-  },
-  gridItemSelected: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#1B5E20',
+    marginBottom: 8,
   },
   gridIcon: {
     marginBottom: 8,
   },
   gridText: {
     textAlign: 'center',
-    color: '#1C1B1F',
     fontWeight: '500',
     fontSize: 12,
-  },
-  gridTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
   },
   checkMark: {
     position: 'absolute',
