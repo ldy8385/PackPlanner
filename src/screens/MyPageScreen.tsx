@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
 import {
   Text,
   Surface,
+  IconButton,
   useTheme,
   Divider,
 } from 'react-native-paper';
@@ -31,6 +32,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
+  const [subScreen, setSubScreen] = useState<'terms' | 'privacy' | null>(null);
 
   const handleLogout = () => {
     Alert.alert(
@@ -58,6 +60,46 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
     { mode: 'dark', label: t('mypage.darkMode'), icon: 'weather-night' },
     { mode: 'system', label: t('mypage.systemMode'), icon: 'cellphone-cog' },
   ];
+
+  // 이용약관 / 개인정보처리방침 서브 화면
+  if (subScreen) {
+    const isTerms = subScreen === 'terms';
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Surface style={[styles.subScreenHeader, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <IconButton
+            icon="arrow-left"
+            iconColor={theme.colors.onSurface}
+            onPress={() => setSubScreen(null)}
+          />
+          <Text variant="titleLarge" style={[styles.subScreenTitle, { color: theme.colors.onSurface }]}>
+            {isTerms ? t('mypage.terms') : t('mypage.privacy')}
+          </Text>
+          <View style={{ width: 48 }} />
+        </Surface>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.legalContent}>
+          <Text variant="bodySmall" style={[styles.legalDate, { color: theme.colors.outline }]}>
+            {isTerms ? t('legal.termsEffectiveDate') : t('legal.privacyEffectiveDate')}
+          </Text>
+          {(isTerms ? t('legal.termsContent', { returnObjects: true }) as string[] : t('legal.privacyContent', { returnObjects: true }) as string[]).map((section: string, index: number) => {
+            const isHeading = section.startsWith('##');
+            const text = isHeading ? section.replace('## ', '') : section;
+            return (
+              <Text
+                key={index}
+                variant={isHeading ? 'titleMedium' : 'bodyMedium'}
+                style={[
+                  isHeading ? styles.legalHeading : styles.legalParagraph,
+                  { color: isHeading ? theme.colors.onSurface : theme.colors.onSurfaceVariant },
+                ]}>
+                {text}
+              </Text>
+            );
+          })}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -299,7 +341,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 
             <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
 
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => setSubScreen('terms')}>
               <View style={styles.settingRowLeft}>
                 <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <MaterialCommunityIcons
@@ -321,7 +363,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 
             <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
 
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => setSubScreen('privacy')}>
               <View style={styles.settingRowLeft}>
                 <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <MaterialCommunityIcons
@@ -436,6 +478,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  subScreenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  subScreenTitle: {
+    fontWeight: '700',
+  },
+  legalContent: {
+    padding: 24,
+    paddingBottom: 48,
+  },
+  legalDate: {
+    marginBottom: 20,
+  },
+  legalHeading: {
+    fontWeight: '700',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  legalParagraph: {
+    lineHeight: 22,
+    marginBottom: 12,
   },
 });
 
