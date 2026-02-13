@@ -5,10 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import DatePicker from 'react-native-date-picker';
+import CalendarPicker from 'react-native-calendar-picker';
 import { useTranslation } from 'react-i18next';
 import { Plan, PlanType, Location } from '../types';
 import { planTypes } from '../data/mockData';
@@ -41,11 +42,10 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   const [startDate, setStartDate] = useState(
     editingPlan ? editingPlan.startDate : today,
   );
-  const [endDate, setEndDate] = useState(
+  const [endDate, setEndDate] = useState<Date | null>(
     editingPlan ? editingPlan.endDate : today,
   );
-  const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
-  const [openEndDatePicker, setOpenEndDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [type, setType] = useState<PlanType>(
     editingPlan?.type || PlanType.AUTO_CAMPING,
   );
@@ -73,7 +73,9 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
       return;
     }
 
-    if (startDate > endDate) {
+    const finalEndDate = endDate || startDate;
+
+    if (startDate > finalEndDate) {
       Alert.alert(t('common.error'), t('createPlan.errorDate'));
       return;
     }
@@ -84,7 +86,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
       destination: selectedLocation?.name || destination,
       location: selectedLocation || undefined,
       startDate,
-      endDate,
+      endDate: finalEndDate,
       type,
       description,
       createdAt: editingPlan?.createdAt || new Date(),
@@ -213,73 +215,98 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             {t('createPlan.schedule')}
           </Text>
 
-          <View style={styles.dateRow}>
-            <TouchableOpacity
-              style={[styles.dateSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
-              onPress={() => setOpenStartDatePicker(true)}>
-              <View style={styles.dateContent}>
-                <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
-                  {t('createPlan.startDate')}
-                </Text>
-                <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                  {formatDateDisplay(startDate)}
-                </Text>
-              </View>
-              <Icon name="calendar-start" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.dateRangeSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+            onPress={() => setShowCalendar(true)}>
+            <View style={styles.dateRangeItem}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {t('createPlan.startDate')}
+              </Text>
+              <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+                {formatDateDisplay(startDate)}
+              </Text>
+            </View>
+            <Icon name="arrow-right" size={20} color={theme.colors.outline} />
+            <View style={[styles.dateRangeItem, { alignItems: 'flex-end' }]}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {t('createPlan.endDate')}
+              </Text>
+              <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+                {formatDateDisplay(endDate || startDate)}
+              </Text>
+            </View>
+            <Icon name="calendar-range" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.dateSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
-              onPress={() => setOpenEndDatePicker(true)}>
-              <View style={styles.dateContent}>
-                <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
-                  {t('createPlan.endDate')}
-                </Text>
-                <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                  {formatDateDisplay(endDate)}
-                </Text>
-              </View>
-              <Icon name="calendar-end" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
-
-          <DatePicker
-            modal
-            open={openStartDatePicker}
-            date={startDate}
-            onConfirm={date => {
-              setOpenStartDatePicker(false);
-              setStartDate(date);
-            }}
-            onCancel={() => {
-              setOpenStartDatePicker(false);
-            }}
-            mode="date"
-            locale="ko"
-            theme="light"
-            confirmText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            title={t('createPlan.selectStartDate')}
-          />
-
-          <DatePicker
-            modal
-            open={openEndDatePicker}
-            date={endDate}
-            onConfirm={date => {
-              setOpenEndDatePicker(false);
-              setEndDate(date);
-            }}
-            onCancel={() => {
-              setOpenEndDatePicker(false);
-            }}
-            mode="date"
-            locale="ko"
-            theme="light"
-            confirmText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            title={t('createPlan.selectEndDate')}
-          />
+          <Modal
+            visible={showCalendar}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowCalendar(false)}>
+            <View style={styles.calendarOverlay}>
+              <Surface style={[styles.calendarContainer, { backgroundColor: theme.colors.surface }]} elevation={5}>
+                <View style={styles.calendarHeader}>
+                  <Text variant="titleLarge" style={[styles.calendarTitle, { color: theme.colors.onSurface }]}>
+                    {t('createPlan.schedule')}
+                  </Text>
+                  <IconButton
+                    icon="close"
+                    size={24}
+                    onPress={() => setShowCalendar(false)}
+                    iconColor={theme.colors.onSurfaceVariant}
+                  />
+                </View>
+                <CalendarPicker
+                  startFromMonday={false}
+                  allowRangeSelection={true}
+                  selectedStartDate={startDate}
+                  selectedEndDate={endDate}
+                  onDateChange={(date, type) => {
+                    if (type === 'END_DATE') {
+                      if (date) {
+                        setEndDate(new Date(date.toString()));
+                      }
+                    } else {
+                      setStartDate(new Date(date.toString()));
+                      setEndDate(null);
+                    }
+                  }}
+                  selectedDayColor={theme.colors.primary}
+                  selectedDayTextColor={theme.colors.onPrimary}
+                  selectedRangeStyle={{ backgroundColor: theme.colors.primaryContainer }}
+                  selectedRangeStartStyle={{ backgroundColor: theme.colors.primary }}
+                  selectedRangeEndStyle={{ backgroundColor: theme.colors.primary }}
+                  selectedRangeStartTextStyle={{ color: theme.colors.onPrimary }}
+                  selectedRangeEndTextStyle={{ color: theme.colors.onPrimary }}
+                  todayBackgroundColor={theme.colors.surfaceVariant}
+                  todayTextStyle={{ color: theme.colors.onSurface }}
+                  textStyle={{ color: theme.colors.onSurface }}
+                  monthTitleStyle={{ color: theme.colors.onSurface, fontWeight: '700', fontSize: 18 }}
+                  yearTitleStyle={{ color: theme.colors.onSurface, fontWeight: '700', fontSize: 18 }}
+                  dayLabelsWrapper={{ borderTopWidth: 0, borderBottomWidth: 0 }}
+                  previousTitle="<"
+                  nextTitle=">"
+                  previousTitleStyle={{ color: theme.colors.primary, fontSize: 20 }}
+                  nextTitleStyle={{ color: theme.colors.primary, fontSize: 20 }}
+                  width={340}
+                />
+                <View style={styles.calendarFooter}>
+                  <Button
+                    mode="contained"
+                    onPress={() => {
+                      if (!endDate) {
+                        setEndDate(startDate);
+                      }
+                      setShowCalendar(false);
+                    }}
+                    buttonColor={theme.colors.primary}
+                    style={styles.calendarConfirmBtn}>
+                    {t('common.confirm')}
+                  </Button>
+                </View>
+              </Surface>
+            </View>
+          </Modal>
 
           <TextInput
             mode="outlined"
@@ -407,22 +434,47 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 6,
   },
-  dateRow: {
+  dateRangeSelector: {
     flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
     gap: 12,
     marginBottom: 12,
   },
-  dateSelector: {
+  dateRangeItem: {
     flex: 1,
+  },
+  calendarOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  calendarContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  calendarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
   },
-  dateContent: {
-    flex: 1,
+  calendarTitle: {
+    fontWeight: '700',
+  },
+  calendarFooter: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  calendarConfirmBtn: {
+    borderRadius: 12,
   },
   buttonContainer: {
     flexDirection: 'row',
