@@ -11,12 +11,13 @@ import {
 import { Text, Button, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
+import { Manufacturer } from '../types';
 
 interface ManufacturerSelectDrawerProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (manufacturer: string) => void;
-  manufacturers: string[];
+  onSelect: (manufacturerKey: string) => void;
+  manufacturers: Manufacturer[];
   selectedManufacturer?: string;
 }
 
@@ -74,35 +75,40 @@ const getCharType = (char: string): string => {
   return 'other';
 };
 
-// 정렬 및 그룹화 함수
-const groupManufacturers = (manufacturers: string[]) => {
-  const groups: { [key: string]: string[] } = {};
+interface ManufacturerItem {
+  key: string;
+  displayName: string;
+}
 
-  manufacturers.forEach(m => {
-    if (!m) return;
-    const firstChar = m.charAt(0);
+// 정렬 및 그룹화 함수 (displayName 기반)
+const groupManufacturers = (items: ManufacturerItem[]) => {
+  const groups: { [key: string]: ManufacturerItem[] } = {};
+
+  items.forEach(m => {
+    if (!m.displayName) return;
+    const firstChar = m.displayName.charAt(0);
     const charType = getCharType(firstChar);
 
-    let key: string;
+    let groupKey: string;
     if (charType === 'korean') {
-      key = getKoreanInitial(m);
+      groupKey = getKoreanInitial(m.displayName);
     } else if (charType === 'number') {
-      key = '#';
+      groupKey = '#';
     } else if (charType === 'english') {
-      key = firstChar.toUpperCase();
+      groupKey = firstChar.toUpperCase();
     } else {
-      key = 'Etc';
+      groupKey = 'Etc';
     }
 
-    if (!groups[key]) {
-      groups[key] = [];
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
     }
-    groups[key].push(m);
+    groups[groupKey].push(m);
   });
 
   // 각 그룹 내에서 정렬
   Object.keys(groups).forEach(key => {
-    groups[key].sort((a, b) => a.localeCompare(b, 'ko'));
+    groups[key].sort((a, b) => a.displayName.localeCompare(b.displayName, 'ko'));
   });
 
   // 섹션 순서: ㄱ-ㅎ, A-Z, 1-9, 기타
@@ -164,8 +170,11 @@ const groupManufacturers = (manufacturers: string[]) => {
 
 interface ManufacturerSection {
   title: string;
-  data: string[];
+  data: ManufacturerItem[];
 }
+
+const ITEM_HEIGHT = 56;
+const SECTION_HEADER_HEIGHT = 34;
 
 const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
   visible,
@@ -175,29 +184,65 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
   selectedManufacturer,
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSection, setCurrentSection] = useState('');
-  const sectionListRef = useRef<SectionList<string, ManufacturerSection>>(null);
+  const sectionListRef = useRef<SectionList<ManufacturerItem, ManufacturerSection>>(null);
   const navBarRef = useRef<View>(null);
   const navBarLayout = useRef({ y: 0, height: 0 });
+  const isScrolling = useRef(false);
+
+  const lang = i18n.language;
+
+  // Manufacturer를 displayName 포함 아이템으로 변환
+  const manufacturerItems: ManufacturerItem[] = useMemo(() => {
+    return manufacturers.map(m => ({
+      key: m.key,
+      displayName: lang === 'en' ? m.en : m.ko,
+    }));
+  }, [manufacturers, lang]);
 
   // 검색 필터링
   const filteredSections = useMemo(() => {
     if (!searchQuery.trim()) {
-      return groupManufacturers(manufacturers);
+      return groupManufacturers(manufacturerItems);
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = manufacturers.filter(m => m.toLowerCase().includes(query));
+    const filtered = manufacturerItems.filter(m =>
+      m.displayName.toLowerCase().includes(query),
+    );
 
     return groupManufacturers(filtered);
-  }, [manufacturers, searchQuery]);
+  }, [manufacturerItems, searchQuery]);
 
   // 네비게이션 키 (중복 제거)
   const navigationKeys = useMemo(() => {
     const keys = filteredSections.map(s => s.title);
     return Array.from(new Set(keys));
+  }, [filteredSections]);
+
+  // getItemLayout: 섹션 헤더와 아이템 높이를 정확히 계산
+  const getItemLayout = useCallback((_data: any, index: number) => {
+    let offset = 0;
+    let currentIndex = 0;
+    for (const section of filteredSections) {
+      // 섹션 헤더
+      if (currentIndex === index) {
+        return { length: SECTION_HEADER_HEIGHT, offset, index };
+      }
+      offset += SECTION_HEADER_HEIGHT;
+      currentIndex++;
+      // 섹션 내 아이템
+      const itemCount = section.data.length;
+      if (index < currentIndex + itemCount) {
+        const itemIdx = index - currentIndex;
+        return { length: ITEM_HEIGHT, offset: offset + itemIdx * ITEM_HEIGHT, index };
+      }
+      offset += itemCount * ITEM_HEIGHT;
+      currentIndex += itemCount;
+    }
+    return { length: ITEM_HEIGHT, offset, index };
   }, [filteredSections]);
 
   // 특정 섹션으로 스크롤
@@ -208,12 +253,15 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
         index < filteredSections.length &&
         sectionListRef.current
       ) {
+        isScrolling.current = true;
         sectionListRef.current.scrollToLocation({
           sectionIndex: index,
           itemIndex: 0,
-          animated: true,
+          animated: false,
         });
         setCurrentSection(filteredSections[index].title);
+        // 스크롤 완료 후 플래그 해제
+        setTimeout(() => { isScrolling.current = false; }, 100);
       }
     },
     [filteredSections],
@@ -235,9 +283,10 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
     scrollToSection(index);
   };
 
-  // 뷰 어빌리티 변경 핸들러 - 현재 보이는 섹션 추적
+  // 뷰 어빌리티 변경 핸들러 - 현재 보이는 섹션 추적 (프로그래밍 스크롤 중 무시)
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: Array<{ section?: { title: string } }> }) => {
+      if (isScrolling.current) return;
       if (viewableItems.length > 0 && viewableItems[0].section) {
         setCurrentSection(viewableItems[0].section.title);
       }
@@ -249,30 +298,30 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
     itemVisiblePercentThreshold: 50,
   }).current;
 
-  const handleSelect = (manufacturer: string) => {
-    onSelect(manufacturer);
+  const handleSelect = (item: ManufacturerItem) => {
+    onSelect(item.key);
     onClose();
     setSearchQuery('');
     setCurrentSection('');
   };
 
-  const renderItem = ({ item }: { item: string }) => (
+  const renderItem = ({ item }: { item: ManufacturerItem }) => (
     <TouchableOpacity
       style={[
         styles.item,
         { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant },
-        selectedManufacturer === item && { backgroundColor: theme.colors.primaryContainer },
+        selectedManufacturer === item.key && { backgroundColor: theme.colors.primaryContainer },
       ]}
       onPress={() => handleSelect(item)}>
       <Text
         style={[
           styles.itemText,
           { color: theme.colors.onSurface },
-          selectedManufacturer === item && { color: theme.colors.onPrimaryContainer, fontWeight: '700' },
+          selectedManufacturer === item.key && { color: theme.colors.onPrimaryContainer, fontWeight: '700' },
         ]}>
-        {item}
+        {item.displayName}
       </Text>
-      {selectedManufacturer === item && (
+      {selectedManufacturer === item.key && (
         <Icon name="check" size={20} color={theme.colors.primary} />
       )}
     </TouchableOpacity>
@@ -329,7 +378,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
             <SectionList
               ref={sectionListRef}
               sections={filteredSections}
-              keyExtractor={item => item}
+              keyExtractor={item => item.key}
               renderItem={renderItem}
               renderSectionHeader={renderSectionHeader}
               stickySectionHeadersEnabled={true}
@@ -337,11 +386,7 @@ const ManufacturerSelectDrawer: React.FC<ManufacturerSelectDrawerProps> = ({
               contentContainerStyle={styles.listContent}
               onViewableItemsChanged={onViewableItemsChanged}
               viewabilityConfig={viewabilityConfig}
-              getItemLayout={(data, index) => ({
-                length: 56,
-                offset: 56 * index,
-                index,
-              })}
+              getItemLayout={getItemLayout}
             />
 
             {/* 우측 네비게이션 바 */}
@@ -470,7 +515,8 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    height: SECTION_HEADER_HEIGHT,
+    justifyContent: 'center',
     borderBottomWidth: 1,
   },
   sectionHeaderText: {
@@ -495,14 +541,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   navBarContent: {
-    paddingVertical: 4,
+    flex: 1,
+    justifyContent: 'space-evenly',
+    paddingVertical: 2,
   },
   navItem: {
-    height: 26,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 4,
     marginHorizontal: 4,
+    paddingVertical: 1,
   },
   navItemText: {
     fontSize: 11,

@@ -85,7 +85,7 @@ const CategorySelectDrawer: React.FC<CategorySelectDrawerProps> = ({
                       selectedCategory === category && { color: theme.colors.onPrimaryContainer, fontWeight: '700' },
                     ]}
                     numberOfLines={2}>
-                    {category}
+                    {t(`gearCategory.${category}`)}
                   </Text>
                   {selectedCategory === category && (
                     <View style={styles.checkMark}>

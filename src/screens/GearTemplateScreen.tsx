@@ -23,7 +23,9 @@ import {
   useTheme,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { Gear, GearTemplate, GearCategory } from '../types';
+import { getManufacturerName } from '../data/mockData';
 
 interface GearTemplateScreenProps {
   templates: GearTemplate[];
@@ -37,13 +39,13 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   onUpdateTemplates,
 }) => {
   const theme = useTheme();
+  const { i18n } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<GearTemplate | null>(
     null,
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<GearTemplate | null>(
     null,
@@ -52,19 +54,8 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: '',
     selectedGearIds: [] as string[],
   });
-
-  const templateCategories = useMemo(() => {
-    const categories = new Set<string>();
-    templates.forEach(t => {
-      if (t.category) {
-        categories.add(t.category);
-      }
-    });
-    return Array.from(categories).sort();
-  }, [templates]);
 
   const filteredTemplates = useMemo(() => {
     let result = templates;
@@ -78,18 +69,13 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
       );
     }
 
-    if (selectedCategory) {
-      result = result.filter(t => t.category === selectedCategory);
-    }
-
     return result.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  }, [templates, searchQuery, selectedCategory]);
+  }, [templates, searchQuery]);
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      category: '',
       selectedGearIds: [],
     });
     setIsEditMode(false);
@@ -106,7 +92,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
     setFormData({
       name: template.name,
       description: template.description || '',
-      category: template.category,
       selectedGearIds: [...template.gearIds],
     });
     setIsEditMode(true);
@@ -127,7 +112,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
             ...t,
             name: formData.name.trim(),
             description: formData.description.trim() || undefined,
-            category: formData.category.trim() || '기타',
             gearIds: formData.selectedGearIds,
             updatedAt: now,
             createdAt: t.createdAt,
@@ -140,7 +124,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
         id: Date.now().toString(),
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        category: formData.category.trim() || '기타',
         gearIds: formData.selectedGearIds,
         createdAt: now,
         updatedAt: now,
@@ -215,21 +198,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
     return iconMap[category] || 'package-variant';
   };
 
-  const getTemplateCategoryIcon = (category: string): string => {
-    const iconMap: { [key: string]: string } = {
-      백패킹: 'hiking',
-      오토캠핑: 'car',
-      모토캠핑: 'motorbike',
-      가족캠핑: 'account-group',
-      솔로캠핑: 'account',
-      '2인캠핑': 'account-multiple',
-      겨울캠핑: 'snowflake',
-      여름캠핑: 'weather-sunny',
-      기타: 'dots-horizontal',
-    };
-    return iconMap[category] || 'folder-outline';
-  };
-
   const renderTemplateItem = ({ item }: { item: GearTemplate }) => {
     const stats = getTemplateStats(item);
 
@@ -239,7 +207,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
           <View style={styles.templateHeader}>
             <Surface style={[styles.templateIcon, { backgroundColor: theme.colors.surfaceVariant }]} elevation={0}>
               <Icon
-                name={getTemplateCategoryIcon(item.category)}
+                name="file-document-outline"
                 size={28}
                 color={theme.colors.primary}
               />
@@ -249,11 +217,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 {item.name}
               </Text>
               <View style={styles.templateMeta}>
-                <Chip
-                  style={[styles.categoryChip, { backgroundColor: theme.colors.secondaryContainer }]}
-                  textStyle={{ color: theme.colors.onSecondaryContainer, fontSize: 12, lineHeight: 16 }}>
-                  {item.category}
-                </Chip>
                 <View style={styles.statItem}>
                   <Icon name="package-variant" size={14} color={theme.colors.outline} />
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
@@ -331,45 +294,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
         />
       </View>
 
-      {templateCategories.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[styles.categoryFilter, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}
-          contentContainerStyle={styles.categoryFilterContent}>
-          <Chip
-            onPress={() => setSelectedCategory(null)}
-            style={[
-              styles.filterChip,
-              !selectedCategory ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surfaceVariant },
-            ]}
-            textStyle={{
-              color: !selectedCategory ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
-            }}
-            showSelectedOverlay={true}
-            selected={!selectedCategory}>
-            All
-          </Chip>
-          {templateCategories.map(category => (
-            <Chip
-              key={category}
-              onPress={() => setSelectedCategory(category)}
-              style={[
-                styles.filterChip,
-                selectedCategory === category ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: theme.colors.surfaceVariant },
-              ]}
-              textStyle={{
-                color: selectedCategory === category ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
-              }}
-              icon={() => <Icon name={getTemplateCategoryIcon(category)} size={18} color={selectedCategory === category ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant} />}
-              showSelectedOverlay={true}
-              selected={selectedCategory === category}>
-              {category}
-            </Chip>
-          ))}
-        </ScrollView>
-      )}
-
       <View style={[styles.statsContainer, { backgroundColor: theme.colors.background }]}>
         <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
           <Text variant="displaySmall" style={[styles.statNumber, { color: theme.colors.primary }]}>
@@ -377,14 +301,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
           </Text>
           <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
             Templates
-          </Text>
-        </Surface>
-        <Surface style={[styles.statBox, { backgroundColor: theme.colors.surface }]} elevation={0}>
-          <Text variant="displaySmall" style={[styles.statNumber, { color: theme.colors.secondary }]}>
-            {templateCategories.length}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-            Categories
           </Text>
         </Surface>
       </View>
@@ -467,43 +383,6 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 textColor={theme.colors.onSurface}
               />
 
-              <TextInput
-                label="Category"
-                placeholder="e.g., Backpacking, Camping"
-                value={formData.category}
-                onChangeText={text =>
-                  setFormData({ ...formData, category: text })
-                }
-                style={[styles.input, { backgroundColor: theme.colors.surface }]}
-                mode="outlined"
-                outlineColor={theme.colors.outline}
-                activeOutlineColor={theme.colors.primary}
-                textColor={theme.colors.onSurface}
-                left={<TextInput.Icon icon="folder-outline" color={theme.colors.outline} />}
-              />
-
-              {templateCategories.length > 0 && (
-                <>
-                  <Text variant="bodyMedium" style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    Existing Categories
-                  </Text>
-                  <View style={styles.existingCategoriesContainer}>
-                    {templateCategories
-                      .filter(c => c !== formData.category)
-                      .map((category, index) => (
-                        <Chip
-                          key={index}
-                          onPress={() => setFormData({ ...formData, category })}
-                          style={[styles.existingCategoryChip, { backgroundColor: theme.colors.surfaceVariant }]}
-                          textStyle={{ color: theme.colors.onSurfaceVariant }}
-                          icon={() => <Icon name={getTemplateCategoryIcon(category)} size={16} color={theme.colors.onSurfaceVariant} />}>
-                          {category}
-                        </Chip>
-                      ))}
-                  </View>
-                </>
-              )}
-
               <Divider style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
 
               <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -538,7 +417,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                         <List.Item
                           title={gear.name}
                           titleStyle={{ color: theme.colors.onSurface, fontWeight: isSelected ? '600' : '400' }}
-                          description={`${gear.manufacturer || 'No Brand'} · ${gear.weight}kg`}
+                          description={`${getManufacturerName(gear.manufacturer, i18n.language) || 'No Brand'} · ${gear.weight}kg`}
                           descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
                           left={() => (
                             <View style={styles.gearSelectionLeft}>

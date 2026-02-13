@@ -147,7 +147,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                   color: type === planType ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
                 }}
                 showSelectedOverlay={true}>
-                {planType}
+                {t(`planType.${planType}`)}
               </Chip>
             ))}
           </View>

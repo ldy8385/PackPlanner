@@ -12,7 +12,7 @@ import { Text, Chip, Surface, IconButton, Divider, useTheme } from 'react-native
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory, GearTemplate } from '../types';
-import { gearCategories } from '../data/mockData';
+import { gearCategories, getManufacturerName } from '../data/mockData';
 import CreateTemplateScreen from './CreateTemplateScreen';
 
 interface GearScreenProps {
@@ -39,7 +39,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
   plans = [],
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<'gears' | 'templates'>('gears');
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
     null,
@@ -62,7 +62,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     gears.forEach(gear => {
-      gear.tags.forEach(tag => tagSet.add(tag));
+      (gear.tags || []).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
   }, [gears]);
@@ -74,8 +74,10 @@ const GearScreen: React.FC<GearScreenProps> = ({
         manufacturerSet.add(gear.manufacturer);
       }
     });
-    return Array.from(manufacturerSet).sort();
-  }, [gears]);
+    return Array.from(manufacturerSet).sort((a, b) =>
+      getManufacturerName(a, i18n.language).localeCompare(getManufacturerName(b, i18n.language)),
+    );
+  }, [gears, i18n.language]);
 
   const filteredGears = useMemo(() => {
     let result = gears;
@@ -84,7 +86,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
     }
     if (selectedTags.length > 0) {
       result = result.filter(g =>
-        selectedTags.some(tag => g.tags.includes(tag)),
+        selectedTags.some(tag => (g.tags || []).includes(tag)),
       );
     }
     if (selectedManufacturers.length > 0) {
@@ -96,14 +98,6 @@ const GearScreen: React.FC<GearScreenProps> = ({
   }, [gears, selectedCategory, selectedTags, selectedManufacturers]);
 
   const totalWeight = filteredGears.reduce((sum, gear) => sum + gear.weight, 0);
-
-  const templateCategories = useMemo(() => {
-    const categories = new Set<string>();
-    templates.forEach(t => {
-      if (t.category) categories.add(t.category);
-    });
-    return Array.from(categories).sort();
-  }, [templates]);
 
   const getCategoryIcon = (category: GearCategory): string => {
     const iconMap: { [key: string]: string } = {
@@ -197,28 +191,28 @@ const GearScreen: React.FC<GearScreenProps> = ({
               {item.name}
             </Text>
             <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-              {item.category}
+              {t(`gearCategory.${item.category}`)}
             </Text>
             {item.manufacturer && (
               <View style={styles.manufacturerRow}>
                 <Icon name="factory" size={12} color={theme.colors.outline} />
                 <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                  {item.manufacturer}
+                  {getManufacturerName(item.manufacturer, i18n.language)}
                 </Text>
               </View>
             )}
-            {item.tags.length > 0 && (
+            {(item.tags || []).length > 0 && (
               <View style={styles.tagsRow}>
-                {item.tags.slice(0, 3).map((tag, index) => (
+                {(item.tags || []).slice(0, 3).map((tag, index) => (
                   <Surface key={index} style={[styles.tagBadge, { backgroundColor: theme.colors.surfaceVariant }]} elevation={0}>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                       {tag}
                     </Text>
                   </Surface>
                 ))}
-                {item.tags.length > 3 && (
+                {(item.tags || []).length > 3 && (
                   <Text variant="labelSmall" style={{ color: theme.colors.outline, paddingVertical: 4 }}>
-                    +{item.tags.length - 3}
+                    +{(item.tags || []).length - 3}
                   </Text>
                 )}
               </View>
@@ -331,7 +325,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                   textStyle={{ color: selectedCategory === category ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant }}
                   icon={getCategoryIcon(category)}
                   showSelectedOverlay>
-                  {category}
+                  {t(`gearCategory.${category}`)}
                 </Chip>
               ))}
             </ScrollView>
@@ -443,7 +437,6 @@ const GearScreen: React.FC<GearScreenProps> = ({
       ) : showCreateTemplate ? (
         <CreateTemplateScreen
           gears={gears}
-          existingCategories={templateCategories}
           editingTemplate={editingTemplate}
           onSave={template => {
             if (editingTemplate) {
@@ -502,17 +495,6 @@ const GearScreen: React.FC<GearScreenProps> = ({
                             {template.name}
                           </Text>
                           <View style={styles.templateMeta}>
-                            {template.category && (
-                              <Surface
-                                style={[styles.templateCategoryBadge, { backgroundColor: theme.colors.surfaceVariant }]}
-                                elevation={0}>
-                                <Text
-                                  variant="labelSmall"
-                                  style={{ color: theme.colors.onSurfaceVariant }}>
-                                  {template.category}
-                                </Text>
-                              </Surface>
-                            )}
                             <View style={styles.templateStat}>
                               <Icon
                                 name="format-list-bulleted"

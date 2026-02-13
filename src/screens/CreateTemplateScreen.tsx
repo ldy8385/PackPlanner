@@ -5,7 +5,6 @@ import {
   Text,
   Button,
   TextInput,
-  Chip,
   IconButton,
   Surface,
   Divider,
@@ -18,7 +17,6 @@ import GearSelectScreen from './GearSelectScreen';
 
 interface CreateTemplateScreenProps {
   gears: Gear[];
-  existingCategories: string[];
   onSave: (template: GearTemplate) => void;
   onCancel: () => void;
   editingTemplate?: GearTemplate | null;
@@ -26,7 +24,6 @@ interface CreateTemplateScreenProps {
 
 const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   gears,
-  existingCategories,
   onSave,
   onCancel,
   editingTemplate,
@@ -39,7 +36,6 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   const [description, setDescription] = useState(
     editingTemplate?.description || '',
   );
-  const [category, setCategory] = useState(editingTemplate?.category || '');
   const [selectedGearIds, setSelectedGearIds] = useState<string[]>(
     editingTemplate?.gearIds || [],
   );
@@ -54,21 +50,6 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
     (sum, gear) => sum + gear.weight,
     0,
   );
-
-  const getTemplateCategoryIcon = (cat: string): string => {
-    const iconMap: { [key: string]: string } = {
-      백패킹: 'bag-personal',
-      오토캠핑: 'car',
-      모토캠핑: 'motorbike',
-      가족캠핑: 'account-group',
-      솔로캠핑: 'account',
-      '2인캠핑': 'account-multiple',
-      겨울캠핑: 'snowflake',
-      여름캠핑: 'weather-sunny',
-      기타: 'dots-horizontal',
-    };
-    return iconMap[cat] || 'folder-outline';
-  };
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -85,7 +66,6 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
       id: editingTemplate?.id || Date.now().toString(),
       name: name.trim(),
       description: description.trim(),
-      category: category.trim(),
       gearIds: selectedGearIds,
       createdAt: editingTemplate?.createdAt || new Date(),
       updatedAt: new Date(),
@@ -156,41 +136,6 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             textColor={theme.colors.onSurface}
           />
 
-          <TextInput
-            mode="outlined"
-            label={t('createTemplate.category')}
-            placeholder={t('createTemplate.categoryPlaceholder')}
-            value={category}
-            onChangeText={setCategory}
-            left={<TextInput.Icon icon="folder-outline" color={theme.colors.onSurfaceVariant} />}
-            style={[styles.input, { backgroundColor: theme.colors.surface }]}
-            outlineColor={theme.colors.outline}
-            activeOutlineColor={theme.colors.primary}
-            textColor={theme.colors.onSurface}
-          />
-
-          {existingCategories.length > 0 && (
-            <>
-              <Text variant="bodyMedium" style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
-                {t('createTemplate.existingCategories')}
-              </Text>
-              <View style={styles.categoriesContainer}>
-                {existingCategories
-                  .filter(c => c !== category)
-                  .map((cat, index) => (
-                    <Chip
-                      key={index}
-                      onPress={() => setCategory(cat)}
-                      style={[styles.categoryChip, { backgroundColor: theme.colors.surfaceVariant }]}
-                      textStyle={{ color: theme.colors.onSurfaceVariant }}
-                      icon={getTemplateCategoryIcon(cat)}>
-                      {cat}
-                    </Chip>
-                  ))}
-              </View>
-            </>
-          )}
-
           <Divider style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
 
           {/* Gear Selection Section */}
@@ -234,7 +179,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
                     <View style={styles.selectedGearInfo}>
                       <Text style={[styles.selectedGearName, { color: theme.colors.onSurface }]}>{gear.name}</Text>
                       <Text style={[styles.selectedGearDetail, { color: theme.colors.onSurfaceVariant }]}>
-                        {gear.category} · {gear.weight}kg
+                        {t(`gearCategory.${gear.category}`)} · {gear.weight}kg
                       </Text>
                     </View>
                     <IconButton
@@ -295,20 +240,6 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
-  },
-  sectionLabel: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  categoryChip: {
-    marginBottom: 8,
-    borderRadius: 16,
   },
   divider: {
     marginVertical: 24,

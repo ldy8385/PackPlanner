@@ -52,7 +52,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const topTags = useMemo(() => {
     const tagCount: { [key: string]: number } = {};
     gears.forEach(gear => {
-      gear.tags.forEach(tag => {
+      (gear.tags || []).forEach(tag => {
         tagCount[tag] = (tagCount[tag] || 0) + 1;
       });
     });
@@ -75,6 +75,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     const iconMap: { [key: string]: string } = {
       [PlanType.AUTO_CAMPING]: 'car',
       [PlanType.MOTO_CAMPING]: 'motorbike',
+      [PlanType.BIKE_CAMPING]: 'bicycle',
       [PlanType.BACKPACKING]: 'bag-personal',
     };
     return iconMap[type] || 'tent';
@@ -229,7 +230,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                       color="#FFFFFF"
                     />
                     <Text variant="labelMedium" style={{ color: '#FFFFFF' }}>
-                      {recentPlan.type}
+                      {t(`planType.${recentPlan.type}`)}
                     </Text>
                   </View>
                   <View style={[styles.ddayBadge, { backgroundColor: '#FFFFFF' }]}>

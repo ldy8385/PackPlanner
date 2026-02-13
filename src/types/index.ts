@@ -1,3 +1,9 @@
+export interface Manufacturer {
+  key: string;
+  ko: string;
+  en: string;
+}
+
 export interface Gear {
   id: string;
   name: string;
@@ -12,38 +18,39 @@ export interface Gear {
 }
 
 export enum GearCategory {
-  TENT = '텐트/쉘터',
-  TARP = '타프',
-  SLEEPING_BAG = '침낭',
-  PILLOW = '베개',
-  MAT = '매트',
-  COOKING = '취사도구',
-  LIGHTING = '조명',
-  BATTERY = '배터리',
-  CAMERA = '카메라',
-  POUCH = '파우치/디팩',
-  CHAIR = '의자',
-  TABLE = '테이블',
-  SOUND = '음향기기',
-  FURNITURE = '가구',
-  CLOTHING = '의류',
-  ACCESSORIES = '액세서리',
-  TOOLS = '도구',
-  CARE = '위생용품',
-  DOWN = '우모복',
-  BOOTY = '부티',
-  FOOD = '음식',
-  BOTTLE = '물병',
-  TABLEWARE = '식기',
-  HIKING_STICK = '등산스틱',
-  BAG = '배낭/가방',
-  ETC = '기타',
+  TENT = 'TENT',
+  TARP = 'TARP',
+  SLEEPING_BAG = 'SLEEPING_BAG',
+  PILLOW = 'PILLOW',
+  MAT = 'MAT',
+  COOKING = 'COOKING',
+  LIGHTING = 'LIGHTING',
+  BATTERY = 'BATTERY',
+  CAMERA = 'CAMERA',
+  POUCH = 'POUCH',
+  CHAIR = 'CHAIR',
+  TABLE = 'TABLE',
+  SOUND = 'SOUND',
+  FURNITURE = 'FURNITURE',
+  CLOTHING = 'CLOTHING',
+  ACCESSORIES = 'ACCESSORIES',
+  TOOLS = 'TOOLS',
+  CARE = 'CARE',
+  DOWN = 'DOWN',
+  BOOTY = 'BOOTY',
+  FOOD = 'FOOD',
+  BOTTLE = 'BOTTLE',
+  TABLEWARE = 'TABLEWARE',
+  HIKING_STICK = 'HIKING_STICK',
+  BAG = 'BAG',
+  ETC = 'ETC',
 }
 
 export enum PlanType {
-  AUTO_CAMPING = '오토캠핑',
-  MOTO_CAMPING = '모토캠핑',
-  BACKPACKING = '백패킹',
+  AUTO_CAMPING = 'AUTO_CAMPING',
+  MOTO_CAMPING = 'MOTO_CAMPING',
+  BIKE_CAMPING = 'BIKE_CAMPING',
+  BACKPACKING = 'BACKPACKING',
 }
 
 export interface Location {
@@ -83,7 +90,6 @@ export interface GearTemplate {
   id: string;
   name: string;
   description?: string;
-  category: string;
   gearIds: string[];
   createdAt: Date;
   updatedAt: Date;

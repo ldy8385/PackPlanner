@@ -5,13 +5,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { Text, Button, Chip, IconButton, Surface, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
-import { Gear, GearCategory, PlanItem } from '../types';
+import { Gear, GearCategory, GearTemplate, PlanItem } from '../types';
 import { gearCategories } from '../data/mockData';
 import { deepClonePlanItems } from '../utils/gearHierarchy';
 import { t } from 'i18next';
@@ -22,6 +23,7 @@ interface GearSelectScreenProps {
   selectedItems?: PlanItem[];
   onSave: (selectedGearIds: string[], updatedItems?: PlanItem[]) => void;
   onCancel: () => void;
+  templates?: GearTemplate[];
 }
 
 const { height } = Dimensions.get('window');
@@ -49,6 +51,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   selectedItems,
   onSave,
   onCancel,
+  templates,
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -60,6 +63,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [movingId, setMovingId] = useState<string | null>(null);
   const [isBottomExpanded, setIsBottomExpanded] = useState(true);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   // 초기 선택된 장비들을 PlanItem으로 변환
   React.useEffect(() => {
@@ -106,7 +110,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     gears.forEach(gear => {
-      gear.tags.forEach(tag => tagSet.add(tag));
+      (gear.tags || []).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
   }, [gears]);
@@ -129,7 +133,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
     }
     if (selectedTags.length > 0) {
       result = result.filter(g =>
-        selectedTags.some(tag => g.tags.includes(tag)),
+        selectedTags.some(tag => (g.tags || []).includes(tag)),
       );
     }
     return result;
@@ -172,6 +176,25 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
       quantity: 1,
     };
     setPlanItems(prev => [...prev, newItem]);
+  };
+
+  // 템플릿에서 장비 불러오기
+  const loadFromTemplate = (template: GearTemplate) => {
+    const newItems: PlanItem[] = [];
+    template.gearIds.forEach(gearId => {
+      const gear = gears.find(g => g.id === gearId);
+      if (gear) {
+        newItems.push({
+          id: `${Date.now()}_${gear.id}_${Math.random().toString(36).substr(2, 9)}`,
+          gearId: gear.id,
+          gear: gear,
+          isChecked: false,
+          quantity: 1,
+        });
+      }
+    });
+    setPlanItems(prev => [...prev, ...newItems]);
+    setShowTemplateModal(false);
   };
 
   // PlanItem을 다른 컨테이너로 이동
@@ -344,6 +367,14 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                 {t('gearSelect.itemsWeight', { count: planItems.length, weight: totalSelectedWeight.toFixed(1) })}
               </Text>
             </View>
+            {templates && templates.length > 0 && (
+              <IconButton
+                icon="file-document-outline"
+                size={22}
+                onPress={() => setShowTemplateModal(true)}
+                iconColor={theme.colors.onPrimaryContainer}
+              />
+            )}
             <Button
               mode="contained"
               onPress={handleSave}
@@ -366,6 +397,15 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                 <Text variant="bodySmall" style={[styles.emptySubtext, { color: theme.colors.secondary }]}>
                   {t('gearSelect.selectOrDrag')}
                 </Text>
+                {templates && templates.length > 0 && (
+                  <Button
+                    mode="contained-tonal"
+                    icon="file-document-outline"
+                    onPress={() => setShowTemplateModal(true)}
+                    style={{marginTop: 16}}>
+                    {t('gearSelect.loadTemplate')}
+                  </Button>
+                )}
               </View>
             ) : (
               <View style={styles.planItemsContainer}>
@@ -490,7 +530,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                     }}
                     showSelectedOverlay={true}
                     selected={selectedCategory === category}>
-                    {category}
+                    {t(`gearCategory.${category}`)}
                   </Chip>
                 ))}
               </ScrollView>
@@ -557,7 +597,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {gear.name}
                         </Text>
                         <Text variant="bodySmall" style={[styles.gearMeta, { color: theme.colors.onSurfaceVariant }]}>
-                          {gear.weight}kg · {gear.category}
+                          {gear.weight}kg · {t(`gearCategory.${gear.category}`)}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                           {t('gearSelect.used', { used: usedQuantity, max: maxQuantity, remaining: remaining })}
@@ -585,6 +625,62 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
           </View>
         )}
       </SafeAreaView>
+
+      {/* Template Selection Modal */}
+      <Modal
+        visible={showTemplateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTemplateModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Surface style={[styles.modalContent, { backgroundColor: theme.colors.surface }]} elevation={5}>
+            <View style={styles.modalHeader}>
+              <Text variant="titleLarge" style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+                {t('gearSelect.selectTemplate')}
+              </Text>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={() => setShowTemplateModal(false)}
+                iconColor={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <ScrollView style={styles.modalScroll}>
+              {templates && templates.length > 0 ? (
+                templates.map(template => {
+                  const templateGears = template.gearIds
+                    .map(id => gears.find(g => g.id === id))
+                    .filter((g): g is Gear => g !== undefined);
+                  const totalWeight = templateGears.reduce((sum, g) => sum + g.weight, 0);
+                  return (
+                    <TouchableOpacity
+                      key={template.id}
+                      style={[styles.templateItem, { borderBottomColor: theme.colors.outlineVariant }]}
+                      onPress={() => loadFromTemplate(template)}>
+                      <View style={styles.templateInfo}>
+                        <Text variant="bodyLarge" style={[styles.templateName, { color: theme.colors.onSurface }]}>
+                          {template.name}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                          {templateGears.length} {t('plan.gearCount')} · {totalWeight.toFixed(1)}kg
+                        </Text>
+                      </View>
+                      <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+                    </TouchableOpacity>
+                  );
+                })
+              ) : (
+                <View style={styles.noTemplates}>
+                  <Icon name="file-document-outline" size={48} color={theme.colors.outlineVariant} />
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
+                    {t('gearSelect.noTemplates')}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </Surface>
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -958,6 +1054,48 @@ const styles = StyleSheet.create({
   noGearsMessage: {
     padding: 32,
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    maxHeight: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 32,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  modalTitle: {
+    fontWeight: '700',
+  },
+  modalScroll: {
+    paddingHorizontal: 20,
+  },
+  templateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  templateInfo: {
+    flex: 1,
+  },
+  templateName: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  noTemplates: {
+    alignItems: 'center',
+    paddingVertical: 40,
   },
 });
 

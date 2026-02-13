@@ -27,9 +27,9 @@ import CreateGearScreen from './src/screens/CreateGearScreen';
 import MyPageScreen from './src/screens/MyPageScreen';
 
 import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
-import { storage } from './src/utils/storage';
 import { ThemeProvider, useThemeMode } from './src/contexts/ThemeContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { firestoreService } from './src/utils/firestore';
 
 // Material Design 3 테마
 // Modern Clean 테마 (Indigo & Emerald & Stone)
@@ -128,6 +128,7 @@ const AppContent = () => {
   const [gears, setGears] = useState<Gear[]>([]);
   const [templates, setTemplates] = useState<GearTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [initialPlanId, setInitialPlanId] = useState<string | null>(null);
   const [initialGearTags, setInitialGearTags] = useState<string[]>([]);
 
@@ -135,45 +136,37 @@ const AppContent = () => {
   const tags = useMemo(() => {
     const tagSet = new Set<string>();
     gears.forEach(gear => {
-      gear.tags.forEach(tag => tagSet.add(tag));
+      (gear.tags || []).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
   }, [gears]);
 
-  // 앱 시작 시 데이터 로드
+  // 로그인 후 Firestore에서 데이터 로드
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!user) {
+      setPlans([]);
+      setGears([]);
+      setTemplates([]);
+      setIsLoading(false);
+      return;
+    }
+    loadData(user.uid);
+  }, [user]);
 
   // 데이터 로드
-  const loadData = async () => {
+  const loadData = async (userId: string) => {
     try {
       setIsLoading(true);
-
-      // 저장된 데이터 불러오기
-      const savedPlans = await storage.loadPlans();
-      const savedGears = await storage.loadGears();
-      const savedTemplates = await storage.loadTemplates();
-      const isFirstLaunch = await storage.isFirstLaunch();
-
-      if (isFirstLaunch) {
-        // 첫 실행 시 빈 데이터로 시작
-        setPlans([]);
-        setGears([]);
-        setTemplates([]);
-        await storage.savePlans([]);
-        await storage.saveGears([]);
-        await storage.saveTemplates([]);
-        await storage.setFirstLaunchComplete();
-      } else {
-        // 이후 실행 시 저장된 데이터 사용
-        setPlans(savedPlans || []);
-        setGears(savedGears || []);
-        setTemplates(savedTemplates || []);
-      }
+      const [savedPlans, savedGears, savedTemplates] = await Promise.all([
+        firestoreService.loadPlans(userId),
+        firestoreService.loadGears(userId),
+        firestoreService.loadTemplates(userId),
+      ]);
+      setPlans(savedPlans);
+      setGears(savedGears);
+      setTemplates(savedTemplates);
     } catch (error) {
       console.error('Error loading data:', error);
-      // 에러 시 빈 데이터로 시작
       setPlans([]);
       setGears([]);
       setTemplates([]);
@@ -185,13 +178,17 @@ const AppContent = () => {
   // Plans 업데이트 및 저장
   const handleUpdatePlans = async (newPlans: Plan[]) => {
     setPlans(newPlans);
-    await storage.savePlans(newPlans);
+    if (user) {
+      await firestoreService.savePlans(user.uid, newPlans);
+    }
   };
 
   // Gears 업데이트 및 저장
   const handleUpdateGears = async (newGears: Gear[]) => {
     setGears(newGears);
-    await storage.saveGears(newGears);
+    if (user) {
+      await firestoreService.saveGears(user.uid, newGears);
+    }
   };
 
   // Gear 삭제 및 연결된 계획에서도 제거
@@ -199,94 +196,138 @@ const AppContent = () => {
     gearId: string,
     affectedPlanIds: string[],
   ) => {
-    // 1. 장비 삭제 (단순 filter)
-    const updatedGears = gears.filter(gear => gear.id !== gearId);
-    setGears(updatedGears);
-    await storage.saveGears(updatedGears);
+    setIsSaving(true);
+    try {
+      // 1. 장비 삭제
+      const updatedGears = gears.filter(gear => gear.id !== gearId);
+      setGears(updatedGears);
+      if (user) {
+        await firestoreService.deleteGear(user.uid, gearId);
+      }
 
-    // 2. 연결된 계획에서 해당 장비 제거 (PlanItem 계층 구조 유지하며 제거)
-    if (affectedPlanIds.length > 0) {
-      const removeItemsFromPlan = (items: PlanItem[]): PlanItem[] => {
-        return items
-          .map(item => {
-            if (item.gearId === gearId) {
-              // 해당 아이템 제거 (자식들은 승격)
-              return item.children || null;
-            }
-            if (item.children) {
-              const updatedChildren = removeItemsFromPlan(item.children);
-              const filteredChildren = updatedChildren.filter(
-                (i): i is PlanItem => i !== null,
-              );
-              if (filteredChildren.length === 0) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { children: _, ...rest } = item;
-                return rest;
+      // 2. 연결된 계획에서 해당 장비 제거 (PlanItem 계층 구조 유지하며 제거)
+      if (affectedPlanIds.length > 0) {
+        const removeItemsFromPlan = (items: PlanItem[]): PlanItem[] => {
+          return items
+            .map(item => {
+              if (item.gearId === gearId) {
+                return item.children || null;
               }
-              return { ...item, children: filteredChildren };
-            }
-            return item;
-          })
-          .flat()
-          .filter((i): i is PlanItem => i !== null);
-      };
+              if (item.children) {
+                const updatedChildren = removeItemsFromPlan(item.children);
+                const filteredChildren = updatedChildren.filter(
+                  (i): i is PlanItem => i !== null,
+                );
+                if (filteredChildren.length === 0) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const { children: _, ...rest } = item;
+                  return rest;
+                }
+                return { ...item, children: filteredChildren };
+              }
+              return item;
+            })
+            .flat()
+            .filter((i): i is PlanItem => i !== null);
+        };
 
-      const updatedPlans = plans.map(plan => {
-        if (affectedPlanIds.includes(plan.id)) {
-          return {
-            ...plan,
-            items: removeItemsFromPlan(plan.items),
-          };
+        const updatedPlans = plans.map(plan => {
+          if (affectedPlanIds.includes(plan.id)) {
+            return {
+              ...plan,
+              items: removeItemsFromPlan(plan.items),
+            };
+          }
+          return plan;
+        });
+        setPlans(updatedPlans);
+        if (user) {
+          const affectedPlans = updatedPlans.filter(p => affectedPlanIds.includes(p.id));
+          await firestoreService.savePlans(user.uid, affectedPlans);
         }
-        return plan;
-      });
-      setPlans(updatedPlans);
-      await storage.savePlans(updatedPlans);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
   // Templates 업데이트 및 저장
   const handleUpdateTemplates = async (newTemplates: GearTemplate[]) => {
-    setTemplates(newTemplates);
-    await storage.saveTemplates(newTemplates);
+    setIsSaving(true);
+    try {
+      setTemplates(newTemplates);
+      if (user) {
+        await firestoreService.saveTemplates(user.uid, newTemplates);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 새 계획 생성
   const handleCreatePlan = async (newPlan: Plan) => {
-    const updatedPlans = [...plans, newPlan];
-    setPlans(updatedPlans);
-    await storage.savePlans(updatedPlans);
-    setShowCreatePlan(false);
-    setActiveTab('plan');
+    setIsSaving(true);
+    try {
+      const updatedPlans = [...plans, newPlan];
+      setPlans(updatedPlans);
+      if (user) {
+        await firestoreService.savePlan(user.uid, newPlan);
+      }
+      setShowCreatePlan(false);
+      setActiveTab('plan');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 계획 수정
   const handleUpdatePlan = async (updatedPlan: Plan) => {
-    const updatedPlans = plans.map(p =>
-      p.id === updatedPlan.id ? updatedPlan : p,
-    );
-    setPlans(updatedPlans);
-    await storage.savePlans(updatedPlans);
-    setEditingPlan(null);
-    setInitialPlanId(updatedPlan.id);
+    setIsSaving(true);
+    try {
+      const updatedPlans = plans.map(p =>
+        p.id === updatedPlan.id ? updatedPlan : p,
+      );
+      setPlans(updatedPlans);
+      if (user) {
+        await firestoreService.savePlan(user.uid, updatedPlan);
+      }
+      setEditingPlan(null);
+      setInitialPlanId(updatedPlan.id);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 새 장비 생성
   const handleCreateGear = async (newGear: Gear) => {
-    const updatedGears = [...gears, newGear];
-    setGears(updatedGears);
-    await storage.saveGears(updatedGears);
-    setShowCreateGear(false);
+    setIsSaving(true);
+    try {
+      const updatedGears = [...gears, newGear];
+      setGears(updatedGears);
+      if (user) {
+        await firestoreService.saveGear(user.uid, newGear);
+      }
+      setShowCreateGear(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 장비 수정
   const handleUpdateGear = async (updatedGear: Gear) => {
-    const updatedGears = gears.map(g =>
-      g.id === updatedGear.id ? updatedGear : g,
-    );
-    setGears(updatedGears);
-    await storage.saveGears(updatedGears);
-    setEditingGear(null);
+    setIsSaving(true);
+    try {
+      const updatedGears = gears.map(g =>
+        g.id === updatedGear.id ? updatedGear : g,
+      );
+      setGears(updatedGears);
+      if (user) {
+        await firestoreService.saveGear(user.uid, updatedGear);
+      }
+      setEditingGear(null);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 특정 계획 상세로 이동
@@ -362,70 +403,140 @@ const AppContent = () => {
     }
   }, [activeTab]);
 
-  // 로딩 중
-  if (isLoading || isAuthLoading) {
-    return (
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>{t('common.loading')}</Text>
-          </View>
-        </PaperProvider>
-      </SafeAreaProvider>
-    );
-  }
+  // 현재 화면 렌더링
+  const renderScreen = () => {
+    // 로딩 중
+    if (isLoading || isAuthLoading) {
+      return (
+        <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>{t('common.loading')}</Text>
+        </View>
+      );
+    }
 
-  // 로그인 화면
-  if (!user) {
-    return (
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <LoginScreen />
-        </PaperProvider>
-      </SafeAreaProvider>
-    );
-  }
+    // 로그인 화면
+    if (!user) {
+      return <LoginScreen />;
+    }
 
-  // 새 계획 만들기 화면 또는 계획 수정 화면
-  if (showCreatePlan || editingPlan) {
-    return (
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <CreatePlanScreen
-            onSave={editingPlan ? handleUpdatePlan : handleCreatePlan}
-            onCancel={() => {
-              setShowCreatePlan(false);
-              setEditingPlan(null);
-            }}
-            editingPlan={editingPlan}
-          />
-        </PaperProvider>
-      </SafeAreaProvider>
-    );
-  }
+    // 새 계획 만들기 화면 또는 계획 수정 화면
+    if (showCreatePlan || editingPlan) {
+      return (
+        <CreatePlanScreen
+          onSave={editingPlan ? handleUpdatePlan : handleCreatePlan}
+          onCancel={() => {
+            setShowCreatePlan(false);
+            setEditingPlan(null);
+          }}
+          editingPlan={editingPlan}
+        />
+      );
+    }
 
-  // 새 장비 추가 화면 또는 장비 수정 화면
-  if (showCreateGear || editingGear) {
-    return (
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <CreateGearScreen
-            onSave={editingGear ? handleUpdateGear : handleCreateGear}
-            onCancel={() => {
-              setShowCreateGear(false);
-              setEditingGear(null);
-            }}
-            editingGear={editingGear}
-            tags={tags}
-          />
-        </PaperProvider>
-      </SafeAreaProvider>
-    );
-  }
+    // 새 장비 추가 화면 또는 장비 수정 화면
+    if (showCreateGear || editingGear) {
+      return (
+        <CreateGearScreen
+          onSave={editingGear ? handleUpdateGear : handleCreateGear}
+          onCancel={() => {
+            setShowCreateGear(false);
+            setEditingGear(null);
+          }}
+          editingGear={editingGear}
+          tags={tags}
+        />
+      );
+    }
 
-  // 현재 선택된 탭에 따라 화면 렌더링
-  const renderContent = () => {
+    // 메인 탭 화면
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.content}>{renderTabContent()}</View>
+        <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'home' && styles.tabButtonActive,
+            ]}
+            onPress={() => setActiveTab('home')}>
+            <Icon
+              name="home"
+              size={24}
+              color={activeTab === 'home' ? theme.colors.primary : theme.colors.outline}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: activeTab === 'home' ? theme.colors.primary : theme.colors.outline },
+              ]}>
+              {t('tabs.home')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'plan' && styles.tabButtonActive,
+            ]}
+            onPress={() => setActiveTab('plan')}>
+            <Icon
+              name="calendar-check"
+              size={24}
+              color={activeTab === 'plan' ? theme.colors.primary : theme.colors.outline}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: activeTab === 'plan' ? theme.colors.primary : theme.colors.outline },
+              ]}>
+              {t('tabs.plan')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'gear' && styles.tabButtonActive,
+            ]}
+            onPress={() => setActiveTab('gear')}>
+            <Icon
+              name="briefcase"
+              size={24}
+              color={activeTab === 'gear' ? theme.colors.primary : theme.colors.outline}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: activeTab === 'gear' ? theme.colors.primary : theme.colors.outline },
+              ]}>
+              {t('tabs.gear')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'mypage' && styles.tabButtonActive,
+            ]}
+            onPress={() => setActiveTab('mypage')}>
+            <Icon
+              name="account"
+              size={24}
+              color={activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline },
+              ]}>
+              {t('tabs.mypage')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  // 탭 콘텐츠 렌더링
+  const renderTabContent = () => {
     switch (activeTab) {
       case 'home':
         return (
@@ -450,6 +561,7 @@ const AppContent = () => {
           <PlanScreen
             plans={plans}
             gears={gears}
+            templates={templates}
             onUpdatePlans={handleUpdatePlans}
             initialPlanId={initialPlanId}
             onEditPlan={plan => setEditingPlan(plan)}
@@ -485,87 +597,17 @@ const AppContent = () => {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-          <View style={styles.content}>{renderContent()}</View>
-          <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'home' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('home')}>
-              <Icon
-                name="home"
-                size={24}
-                color={activeTab === 'home' ? theme.colors.primary : theme.colors.outline}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  { color: activeTab === 'home' ? theme.colors.primary : theme.colors.outline },
-                ]}>
-                {t('tabs.home')}
+        {renderScreen()}
+        {isSaving && (
+          <View style={styles.savingOverlay}>
+            <View style={[styles.savingBox, { backgroundColor: theme.colors.surface }]}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={[styles.savingText, { color: theme.colors.onSurface }]}>
+                {t('common.saving')}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'plan' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('plan')}>
-              <Icon
-                name="calendar-check"
-                size={24}
-                color={activeTab === 'plan' ? theme.colors.primary : theme.colors.outline}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  { color: activeTab === 'plan' ? theme.colors.primary : theme.colors.outline },
-                ]}>
-                {t('tabs.plan')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'gear' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('gear')}>
-              <Icon
-                name="briefcase"
-                size={24}
-                color={activeTab === 'gear' ? theme.colors.primary : theme.colors.outline}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  { color: activeTab === 'gear' ? theme.colors.primary : theme.colors.outline },
-                ]}>
-                {t('tabs.gear')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'mypage' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('mypage')}>
-              <Icon
-                name="account"
-                size={24}
-                color={activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  { color: activeTab === 'mypage' ? theme.colors.primary : theme.colors.outline },
-                ]}>
-                {t('tabs.mypage')}
-              </Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
       </PaperProvider>
     </SafeAreaProvider>
   );
@@ -619,6 +661,30 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: '500',
     letterSpacing: 0.2,
+  },
+  savingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  savingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 12,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  savingText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
 });
 

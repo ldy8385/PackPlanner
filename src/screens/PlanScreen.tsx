@@ -21,7 +21,7 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTranslation} from 'react-i18next';
-import {Plan, Gear, PlanItem, PlanType} from '../types';
+import {Plan, Gear, GearTemplate, PlanItem, PlanType} from '../types';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
 import {OPENWEATHER_KEY} from '../config/apiKeys';
@@ -78,6 +78,7 @@ const getWeatherIconColor = (iconCode: string): string => {
 interface PlanScreenProps {
   plans: Plan[];
   gears: Gear[];
+  templates?: GearTemplate[];
   onUpdatePlans: (plans: Plan[]) => void;
   initialPlanId?: string | null;
   onEditPlan?: (plan: Plan) => void;
@@ -197,7 +198,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                   {item.gear.name}
                 </Text>
                 <Text variant="bodySmall" style={{color: theme.colors.outline}}>
-                  {item.gear.category} · {item.gear.weight}kg
+                  {t(`gearCategory.${item.gear.category}`)} · {item.gear.weight}kg
                   {hasChildren
                     ? ` · ${item.children?.length} ${t('plan.gearCount')}`
                     : ''}
@@ -246,6 +247,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
 const PlanScreen: React.FC<PlanScreenProps> = ({
   plans,
   gears,
+  templates,
   onUpdatePlans,
   initialPlanId,
   onEditPlan,
@@ -596,6 +598,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     const iconMap: {[key: string]: string} = {
       [PlanType.AUTO_CAMPING]: 'car',
       [PlanType.MOTO_CAMPING]: 'motorbike',
+      [PlanType.BIKE_CAMPING]: 'bicycle',
       [PlanType.BACKPACKING]: 'bag-personal',
     };
     return iconMap[type] || 'tent';
@@ -653,7 +656,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 style={styles.planTypeIcon}
               />
               <Text variant="labelMedium" style={styles.planTypeText}>
-                {item.type}
+                {t(`planType.${item.type}`)}
               </Text>
             </Surface>
             <Surface style={styles.ddayBadge} elevation={0}>
@@ -776,7 +779,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   <Text
                     variant="bodyLarge"
                     style={{color: theme.colors.onSurface}}>
-                    {selectedPlan.type}
+                    {t(`planType.${selectedPlan.type}`)}
                   </Text>
                 </View>
                 <View style={styles.detailInfoRow}>
@@ -1079,6 +1082,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         selectedItems={selectedPlan.items}
         onSave={handleAddGears}
         onCancel={() => setShowGearSelect(false)}
+        templates={templates}
       />
     );
   }

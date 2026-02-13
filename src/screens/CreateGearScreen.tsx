@@ -12,7 +12,7 @@ import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 're
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory } from '../types';
-import { gearCategories, manufacturers } from '../data/mockData';
+import { gearCategories, manufacturers, getManufacturerName } from '../data/mockData';
 import ManufacturerSelectDrawer from '../components/ManufacturerSelectDrawer';
 import CategorySelectDrawer from '../components/CategorySelectDrawer';
 
@@ -30,7 +30,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   tags: availableTags = [],
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isEditMode = !!editingGear;
 
   const [name, setName] = useState(editingGear?.name || '');
@@ -274,7 +274,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                   <View style={styles.selectedItem}>
                     <Icon name={getCategoryIcon(category)} size={24} color={theme.colors.primary} />
                     <Text variant="bodyLarge" style={{ color: theme.colors.onSurface, fontWeight: '500' }}>
-                      {category}
+                      {t(`gearCategory.${category}`)}
                     </Text>
                   </View>
                 ) : (
@@ -311,7 +311,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
               onPress={() => setShowManufacturerDrawer(true)}>
               <View style={styles.selectorContent}>
                 <Text variant="bodyLarge" style={{ color: manufacturer ? theme.colors.onSurface : theme.colors.outline, fontWeight: manufacturer ? '500' : '400' }}>
-                  {manufacturer || t('createGear.selectManufacturer')}
+                  {manufacturer ? getManufacturerName(manufacturer, i18n.language) : t('createGear.selectManufacturer')}
                 </Text>
               </View>
               <Icon name="chevron-right" size={24} color={theme.colors.outline} />
