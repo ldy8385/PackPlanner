@@ -29,6 +29,7 @@ import MyPageScreen from './src/screens/MyPageScreen';
 import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
 import { storage } from './src/utils/storage';
 import { ThemeProvider, useThemeMode } from './src/contexts/ThemeContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 
 // Material Design 3 테마
 // Modern Clean 테마 (Indigo & Emerald & Stone)
@@ -115,9 +116,9 @@ const darkTheme = {
 
 const AppContent = () => {
   const { isDarkMode, themeMode, setThemeMode } = useThemeMode();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { t } = useTranslation();
   const theme = isDarkMode ? darkTheme : lightTheme;
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'gear' | 'mypage'>('home');
   const [showCreatePlan, setShowCreatePlan] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -179,10 +180,6 @@ const AppContent = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
   };
 
   // Plans 업데이트 및 저장
@@ -366,7 +363,7 @@ const AppContent = () => {
   }, [activeTab]);
 
   // 로딩 중
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <SafeAreaProvider>
         <PaperProvider theme={theme}>
@@ -380,11 +377,11 @@ const AppContent = () => {
   }
 
   // 로그인 화면
-  if (!isLoggedIn) {
+  if (!user) {
     return (
       <SafeAreaProvider>
         <PaperProvider theme={theme}>
-          <LoginScreen onLogin={handleLogin} />
+          <LoginScreen />
         </PaperProvider>
       </SafeAreaProvider>
     );
@@ -576,9 +573,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </AuthProvider>
   );
 };
 

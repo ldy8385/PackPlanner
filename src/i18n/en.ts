@@ -191,6 +191,9 @@ export default {
     appInfo: 'App Info',
     terms: 'Terms of Service',
     privacy: 'Privacy Policy',
+    logout: 'Logout',
+    logoutTitle: 'Logout',
+    logoutMessage: 'Are you sure you want to logout?',
   },
   login: {
     tagline: 'Ready for your next adventure?',
@@ -204,6 +207,7 @@ export default {
     continueApple: 'Continue with Apple',
     footer: 'By logging in, you agree to our Terms & Privacy Policy.',
     errorEmpty: 'Please enter email and password.',
+    errorGoogle: 'Google sign-in failed.',
   },
   location: {
     selectLocation: 'Select Location',

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1007252351630",
+    "firebase_url": "https://packplanner-5756a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "packplanner-5756a",
+    "storage_bucket": "packplanner-5756a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007252351630:android:8873c1619b3e6191bb77df",
+        "android_client_info": {
+          "package_name": "com.packplanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKXpMMIvlLAUJbWyWT6ewDQO_OPHpRPuU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

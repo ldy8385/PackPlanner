@@ -5,6 +5,7 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -15,6 +16,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { ThemeMode } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { storage } from '../utils/storage';
 
 interface MyPageScreenProps {
@@ -28,6 +30,18 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { user, signOut } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      t('mypage.logoutTitle'),
+      t('mypage.logoutMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('mypage.logout'), onPress: () => signOut(), style: 'destructive' },
+      ],
+    );
+  };
 
   const languageOptions: { code: string; label: string; icon: string }[] = [
     { code: 'ko', label: t('mypage.korean'), icon: 'translate' },
@@ -68,10 +82,10 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
           </View>
           <View style={styles.profileInfo}>
             <Text variant="titleLarge" style={{ color: theme.colors.onSurface }}>
-              {t('mypage.camper')}
+              {user?.displayName || t('mypage.camper')}
             </Text>
             <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
-              {t('mypage.campingWith')}
+              {user?.email || t('mypage.campingWith')}
             </Text>
           </View>
         </Surface>
@@ -228,6 +242,31 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
                 name="chevron-right"
                 size={24}
                 color={theme.colors.outline}
+              />
+            </TouchableOpacity>
+          </Surface>
+        </View>
+
+        {/* 로그아웃 */}
+        <View style={styles.section}>
+          <Surface style={[styles.settingsCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <TouchableOpacity style={styles.settingRow} onPress={handleLogout} activeOpacity={0.7}>
+              <View style={styles.settingRowLeft}>
+                <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.errorContainer }]}>
+                  <MaterialCommunityIcons
+                    name="logout"
+                    size={20}
+                    color={theme.colors.error}
+                  />
+                </View>
+                <Text variant="bodyLarge" style={{ color: theme.colors.error }}>
+                  {t('mypage.logout')}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={24}
+                color={theme.colors.error}
               />
             </TouchableOpacity>
           </Surface>

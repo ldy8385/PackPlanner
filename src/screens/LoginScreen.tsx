@@ -10,35 +10,36 @@ import {
   useTheme,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAuth } from '../contexts/AuthContext';
 
-interface LoginScreenProps {
-  onLogin: () => void;
-}
-
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const theme = useTheme();
   const { t } = useTranslation();
+  const { signInWithGoogle } = useAuth();
 
   const handleEmailLogin = () => {
     if (!email || !password) {
       Alert.alert(t('common.error'), t('login.errorEmpty'));
       return;
     }
-    console.log('Email login:', email);
-    onLogin();
+    // TODO: Firebase email/password auth
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Google login');
-    onLogin();
-  };
-
-  const handleAppleLogin = () => {
-    console.log('Apple login');
-    onLogin();
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSigningIn(true);
+      await signInWithGoogle();
+    } catch (error: any) {
+      if (error?.code !== 'SIGN_IN_CANCELLED') {
+        Alert.alert(t('common.error'), t('login.errorGoogle'));
+      }
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   return (
@@ -110,19 +111,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           mode="outlined"
           icon="google"
           onPress={handleGoogleLogin}
+          loading={isSigningIn}
+          disabled={isSigningIn}
           style={[styles.socialButton, { borderColor: theme.colors.outline }]}
           textColor={theme.colors.onSurface}>
           {t('login.continueGoogle')}
-        </Button>
-
-        <Button
-          mode="contained"
-          icon="apple"
-          buttonColor="#000"
-          textColor="#fff"
-          onPress={handleAppleLogin}
-          style={styles.socialButton}>
-          {t('login.continueApple')}
         </Button>
       </View>
 

@@ -190,6 +190,9 @@ export default {
     appInfo: '앱 정보',
     terms: '이용약관',
     privacy: '개인정보처리방침',
+    logout: '로그아웃',
+    logoutTitle: '로그아웃',
+    logoutMessage: '정말 로그아웃하시겠습니까?',
   },
   login: {
     tagline: '다음 모험을 준비하세요!',
@@ -203,6 +206,7 @@ export default {
     continueApple: 'Apple로 계속하기',
     footer: '로그인하면 이용약관 및 개인정보처리방침에 동의하게 됩니다.',
     errorEmpty: '이메일과 비밀번호를 입력해주세요.',
+    errorGoogle: 'Google 로그인에 실패했습니다.',
   },
   location: {
     selectLocation: '위치 선택',
