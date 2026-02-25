@@ -71,6 +71,11 @@ export default {
     weatherError: 'Unable to fetch weather info.',
     weatherHumidity: 'Humidity',
     weatherUnavailableShort: 'Unavailable',
+    shareAsImage: 'Share as Image',
+    shareTitle: 'My Packing List',
+    shareError: 'Failed to create share image.',
+    generatingImage: 'Generating image...',
+    poweredBy: 'Made with PackPlanner',
   },
   createPlan: {
     newPlan: 'New Plan',

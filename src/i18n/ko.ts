@@ -70,6 +70,11 @@ export default {
     weatherError: '날씨 정보를 가져올 수 없습니다.',
     weatherHumidity: '습도',
     weatherUnavailableShort: '예보 불가',
+    shareAsImage: '이미지로 공유',
+    shareTitle: '나의 패킹 리스트',
+    shareError: '공유 이미지 생성에 실패했습니다.',
+    generatingImage: '이미지 생성 중...',
+    poweredBy: 'Made with PackPlanner',
   },
   createPlan: {
     newPlan: '새 계획',

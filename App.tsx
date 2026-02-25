@@ -30,6 +30,10 @@ import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
 import { ThemeProvider, useThemeMode } from './src/contexts/ThemeContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { firestoreService } from './src/utils/firestore';
+import {
+  hydratePlanItemGears,
+  restorePlanItemHierarchy,
+} from './src/utils/gearHierarchy';
 
 // Material Design 3 테마
 // Modern Clean 테마 (Indigo & Emerald & Stone)
@@ -141,6 +145,28 @@ const AppContent = () => {
     return Array.from(tagSet).sort();
   }, [gears]);
 
+  // gear 변경 시 plans 내 gear 참조를 최신으로 갱신
+  const gearsLoadedRef = React.useRef(false);
+  useEffect(() => {
+    if (gears.length === 0) {
+      gearsLoadedRef.current = false;
+      return;
+    }
+    // 초기 로드는 loadData에서 처리하므로 스킵
+    if (!gearsLoadedRef.current) {
+      gearsLoadedRef.current = true;
+      return;
+    }
+    const gearMap = new Map(gears.map(g => [g.id, g]));
+    setPlans(prev => {
+      if (prev.length === 0) return prev;
+      return prev.map(plan => ({
+        ...plan,
+        items: hydratePlanItemGears(plan.items, gearMap),
+      }));
+    });
+  }, [gears]);
+
   // 로그인 후 Firestore에서 데이터 로드
   useEffect(() => {
     if (!user) {
@@ -162,7 +188,15 @@ const AppContent = () => {
         firestoreService.loadGears(userId),
         firestoreService.loadTemplates(userId),
       ]);
-      setPlans(savedPlans);
+      // gear 데이터 주입 + 계층 구조 복원
+      const gearMap = new Map(savedGears.map(g => [g.id, g]));
+      const hydratedPlans = savedPlans.map(plan => ({
+        ...plan,
+        items: restorePlanItemHierarchy(
+          hydratePlanItemGears(plan.items, gearMap),
+        ),
+      }));
+      setPlans(hydratedPlans);
       setGears(savedGears);
       setTemplates(savedTemplates);
     } catch (error) {

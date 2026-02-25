@@ -25,6 +25,9 @@ import {Plan, Gear, GearTemplate, PlanItem, PlanType} from '../types';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
 import {OPENWEATHER_KEY} from '../config/apiKeys';
+import {countAllItems} from '../utils/gearHierarchy';
+import PlanShareImage from '../components/PlanShareImage';
+import {useSharePlanImage} from '../hooks/useSharePlanImage';
 
 interface DailyWeather {
   date: string;
@@ -263,6 +266,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   const [weatherStatus, setWeatherStatus] = useState<
     'available' | 'past' | 'tooFar' | 'noLocation' | 'error' | 'idle'
   >('idle');
+  const {viewShotRef, isGenerating, sharePlanAsImage} = useSharePlanImage();
 
   const fetchWeather = useCallback(
     async (plan: Plan) => {
@@ -633,13 +637,10 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   };
 
   const renderPlanItem = ({item}: {item: Plan}) => {
-    const checkedCount = item.items.filter(i => i.isChecked).length;
-    const progress =
-      item.items.length > 0 ? checkedCount / item.items.length : 0;
-    const totalWeight = item.items.reduce(
-      (sum, i) => sum + i.gear.weight * i.quantity,
-      0,
-    );
+    const stats = countAllItems(item.items);
+    const checkedCount = stats.checked;
+    const progress = stats.total > 0 ? checkedCount / stats.total : 0;
+    const totalWeight = stats.weight;
 
     return (
       <Card
@@ -685,7 +686,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           <View style={styles.planStats}>
             <View style={styles.statItem}>
               <Text variant="titleMedium" style={styles.statValue}>
-                {checkedCount}/{item.items.length}
+                {checkedCount}/{stats.total}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 {t('plan.ready')}
@@ -703,7 +704,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text variant="titleMedium" style={styles.statValue}>
-                {item.items.length}
+                {stats.total}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 {t('plan.gearCount')}
@@ -726,10 +727,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   const renderDetailView = () => {
     if (!selectedPlan) return null;
 
-    const totalWeight = selectedPlan.items.reduce(
-      (sum, i) => sum + i.gear.weight * i.quantity,
-      0,
-    );
+    const totalWeight = countAllItems(selectedPlan.items).weight;
 
     return (
       <SafeAreaView
@@ -749,12 +747,21 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               numberOfLines={1}>
               {selectedPlan.name}
             </Text>
-            <Button
-              mode="text"
-              onPress={() => handleEditPress(selectedPlan)}
-              textColor={theme.colors.primary}>
-              {t('common.edit')}
-            </Button>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <IconButton
+                icon="share-variant"
+                iconColor={theme.colors.primary}
+                size={22}
+                onPress={() => sharePlanAsImage(selectedPlan)}
+                disabled={selectedPlan.items.length === 0 || isGenerating}
+              />
+              <Button
+                mode="text"
+                onPress={() => handleEditPress(selectedPlan)}
+                textColor={theme.colors.primary}>
+                {t('common.edit')}
+              </Button>
+            </View>
           </View>
         </Surface>
 
@@ -1071,6 +1078,21 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           </Button>
           <View style={{height: 48}} />
         </ScrollView>
+
+        {/* Offscreen view for image capture */}
+        <PlanShareImage plan={selectedPlan} viewShotRef={viewShotRef} />
+
+        {/* Generating overlay */}
+        {isGenerating && (
+          <View style={styles.generatingOverlay}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text
+              variant="bodyMedium"
+              style={{color: theme.colors.onSurface, marginTop: 12}}>
+              {t('plan.generatingImage')}
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
     );
   };
@@ -1476,6 +1498,12 @@ const styles = StyleSheet.create({
   },
   pastPlansToggleText: {
     fontWeight: '500',
+  },
+  generatingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailTypeBadge: {
     // Legacy support if needed

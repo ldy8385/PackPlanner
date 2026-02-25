@@ -17,7 +17,7 @@ import {
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Logo from '../components/Logo';
-import { Plan, Gear, PlanType } from '../types';
+import { Plan, Gear, PlanItem, PlanType } from '../types';
 
 interface HomeScreenProps {
   plans: Plan[];
@@ -61,13 +61,27 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       .slice(0, 3);
   }, [gears]);
 
+  const countAllPlanItems = (items: PlanItem[]): { total: number; checked: number } => {
+    let total = 0, checked = 0;
+    const traverse = (list: PlanItem[]) => {
+      list.forEach(i => {
+        total++;
+        if (i.isChecked) checked++;
+        if (i.children) traverse(i.children);
+      });
+    };
+    traverse(items);
+    return { total, checked };
+  };
+
   const stats = useMemo(() => {
     const totalWeight = gears.reduce((sum, g) => sum + g.weight, 0);
-    const checkedItems = plans.reduce(
-      (sum, p) => sum + p.items.filter(i => i.isChecked).length,
-      0,
-    );
-    const totalItems = plans.reduce((sum, p) => sum + p.items.length, 0);
+    let checkedItems = 0, totalItems = 0;
+    plans.forEach(p => {
+      const counts = countAllPlanItems(p.items);
+      checkedItems += counts.checked;
+      totalItems += counts.total;
+    });
     return { totalWeight, checkedItems, totalItems };
   }, [gears, plans]);
 
@@ -270,26 +284,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   </View>
                 </View>
 
-                {recentPlan.items.length > 0 && (
-                  <View style={styles.progressContainer}>
-                    <View style={styles.progressInfo}>
-                      <Text variant="bodySmall" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                        {t('home.packingProgress')}
-                      </Text>
-                      <Text variant="bodySmall" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-                        {Math.round((recentPlan.items.filter(i => i.isChecked).length / recentPlan.items.length) * 100)}%
-                      </Text>
+                {(() => {
+                  const rc = countAllPlanItems(recentPlan.items);
+                  if (rc.total === 0) return null;
+                  const pct = Math.round((rc.checked / rc.total) * 100);
+                  return (
+                    <View style={styles.progressContainer}>
+                      <View style={styles.progressInfo}>
+                        <Text variant="bodySmall" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                          {t('home.packingProgress')}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+                          {pct}%
+                        </Text>
+                      </View>
+                      <ProgressBar
+                        progress={rc.checked / rc.total}
+                        color="#FFFFFF"
+                        style={styles.progressBar}
+                      />
                     </View>
-                    <ProgressBar
-                      progress={
-                        recentPlan.items.filter(i => i.isChecked).length /
-                        recentPlan.items.length
-                      }
-                      color="#FFFFFF"
-                      style={styles.progressBar} // Track color will be handled by style
-                    />
-                  </View>
-                )}
+                  );
+                })()}
               </Card.Content>
             </Card>
           </View>

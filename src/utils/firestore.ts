@@ -2,7 +2,6 @@ import database from '@react-native-firebase/database';
 import { Plan, Gear, GearTemplate } from '../types';
 import {
   flattenPlanItemHierarchy,
-  restorePlanItemHierarchy,
 } from './gearHierarchy';
 
 const getUserRef = (userId: string, path: string) =>
@@ -18,7 +17,7 @@ const planToDb = (plan: Plan) => {
     startDate: plan.startDate.toISOString(),
     endDate: plan.endDate.toISOString(),
     createdAt: plan.createdAt.toISOString(),
-    items: flatItems.map(({ children, expanded, ...item }) => item),
+    items: flatItems.map(({ children, expanded, gear, ...item }) => item),
   };
 };
 
@@ -28,7 +27,7 @@ const planFromDb = (key: string, data: any): Plan => ({
   startDate: new Date(data.startDate),
   endDate: new Date(data.endDate),
   createdAt: new Date(data.createdAt),
-  items: restorePlanItemHierarchy(data.items || []),
+  items: data.items || [],
 });
 
 // ===== Template 변환 =====

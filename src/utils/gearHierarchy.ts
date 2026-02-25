@@ -1,4 +1,48 @@
-import {PlanItem} from '../types';
+import {PlanItem, Gear} from '../types';
+
+/**
+ * PlanItem 계층의 총 아이템 수, 체크 수, 무게 집계
+ */
+export const countAllItems = (
+  items: PlanItem[],
+): {total: number; checked: number; weight: number} => {
+  let total = 0,
+    checked = 0,
+    weight = 0;
+  const traverse = (list: PlanItem[]) => {
+    list.forEach(i => {
+      total++;
+      if (i.isChecked) checked++;
+      weight += i.gear.weight * i.quantity;
+      if (i.children) traverse(i.children);
+    });
+  };
+  traverse(items);
+  return {total, checked, weight};
+};
+
+/**
+ * PlanItem 배열에 gear 데이터를 주입 (gearId → Gear 매핑)
+ * gear가 삭제된 아이템은 제외됨
+ */
+export const hydratePlanItemGears = (
+  items: PlanItem[],
+  gearMap: Map<string, Gear>,
+): PlanItem[] => {
+  const result: PlanItem[] = [];
+  for (const item of items) {
+    const gear = gearMap.get(item.gearId);
+    if (!gear) continue;
+    result.push({
+      ...item,
+      gear,
+      children: item.children
+        ? hydratePlanItemGears(item.children, gearMap)
+        : undefined,
+    });
+  }
+  return result;
+};
 
 /**
  * PlanItem 계층 구조를 평탄화하여 저장용으로 변환
