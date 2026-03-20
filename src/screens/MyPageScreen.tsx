@@ -31,7 +31,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const [subScreen, setSubScreen] = useState<'terms' | 'privacy' | null>(null);
 
   const handleLogout = () => {
@@ -41,6 +41,27 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('mypage.logout'), onPress: () => signOut(), style: 'destructive' },
+      ],
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('mypage.deleteAccountTitle'),
+      t('mypage.deleteAccountMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('mypage.deleteAccountConfirm'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+            } catch {
+              Alert.alert(t('mypage.deleteAccountTitle'), t('mypage.deleteAccountError'));
+            }
+          },
+        },
       ],
     );
   };
@@ -303,6 +324,28 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
                 </View>
                 <Text variant="bodyLarge" style={{ color: theme.colors.error }}>
                   {t('mypage.logout')}
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={24}
+                color={theme.colors.error}
+              />
+            </TouchableOpacity>
+
+            <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
+
+            <TouchableOpacity style={styles.settingRow} onPress={handleDeleteAccount} activeOpacity={0.7}>
+              <View style={styles.settingRowLeft}>
+                <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.errorContainer }]}>
+                  <MaterialCommunityIcons
+                    name="account-remove"
+                    size={20}
+                    color={theme.colors.error}
+                  />
+                </View>
+                <Text variant="bodyLarge" style={{ color: theme.colors.error }}>
+                  {t('mypage.deleteAccount')}
                 </Text>
               </View>
               <MaterialCommunityIcons

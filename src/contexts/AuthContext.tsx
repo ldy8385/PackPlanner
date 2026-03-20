@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
@@ -11,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,8 +51,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch {}
   };
 
+  const deleteAccount = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) { return; }
+    // Firebase Realtime Database에서 사용자 데이터 삭제
+    await database().ref(`users/${currentUser.uid}`).remove();
+    // Google 연동 해제
+    try {
+      await GoogleSignin.revokeAccess();
+    } catch {}
+    // Firebase Auth 계정 삭제
+    await currentUser.delete();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, signInWithGoogle, signOut, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

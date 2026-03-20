@@ -199,6 +199,11 @@ export default {
     logout: '로그아웃',
     logoutTitle: '로그아웃',
     logoutMessage: '정말 로그아웃하시겠습니까?',
+    deleteAccount: '계정 삭제',
+    deleteAccountTitle: '계정 삭제',
+    deleteAccountMessage: '계정과 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?',
+    deleteAccountConfirm: '삭제',
+    deleteAccountError: '계정 삭제에 실패했습니다. 다시 로그인 후 시도해 주세요.',
   },
   login: {
     tagline: '다음 모험을 준비하세요!',

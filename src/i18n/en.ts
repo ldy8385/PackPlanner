@@ -200,6 +200,11 @@ export default {
     logout: 'Logout',
     logoutTitle: 'Logout',
     logoutMessage: 'Are you sure you want to logout?',
+    deleteAccount: 'Delete Account',
+    deleteAccountTitle: 'Delete Account',
+    deleteAccountMessage: 'Your account and all data will be permanently deleted. This cannot be undone. Are you sure?',
+    deleteAccountConfirm: 'Delete',
+    deleteAccountError: 'Failed to delete account. Please sign in again and try.',
   },
   login: {
     tagline: 'Ready for your next adventure?',
