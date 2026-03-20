@@ -17,6 +17,7 @@ import {
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Logo from '../components/Logo';
+import AdBanner from '../components/AdBanner';
 import { Plan, Gear, PlanItem, PlanType } from '../types';
 
 interface HomeScreenProps {
@@ -378,6 +379,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </View>
 
       </ScrollView>
+      <AdBanner />
     </SafeAreaView>
   );
 };

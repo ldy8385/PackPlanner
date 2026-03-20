@@ -1,4 +1,8 @@
 {
   "name": "PackPlanner",
-  "displayName": "PackPlanner"
+  "displayName": "PackPlanner",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-8725652445501420~5445392891",
+    "ios_app_id": "ca-app-pub-8725652445501420~5445392891"
+  }
 }
