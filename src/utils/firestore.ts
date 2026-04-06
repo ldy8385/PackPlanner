@@ -4,6 +4,9 @@ import {
   flattenPlanItemHierarchy,
 } from './gearHierarchy';
 
+// 오프라인 캐싱 활성화
+database().setPersistenceEnabled(true);
+
 const getUserRef = (userId: string, path: string) =>
   database().ref(`users/${userId}/${path}`);
 
