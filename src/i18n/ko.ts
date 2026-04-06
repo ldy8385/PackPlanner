@@ -17,6 +17,9 @@ export default {
     or: '또는',
     loading: '데이터 로딩 중...',
     saving: '저장 중...',
+    loadError: '데이터를 불러오지 못했습니다.\n네트워크 연결을 확인해주세요.',
+    saveError: '저장에 실패했습니다.\n네트워크 연결을 확인해주세요.',
+    retry: '다시 시도',
   },
   tabs: {
     home: '홈',

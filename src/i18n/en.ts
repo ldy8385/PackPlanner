@@ -17,6 +17,9 @@ export default {
     or: 'OR',
     loading: 'Loading...',
     saving: 'Saving...',
+    loadError: 'Failed to load data.\nPlease check your network connection.',
+    saveError: 'Failed to save.\nPlease check your network connection.',
+    retry: 'Retry',
   },
   tabs: {
     home: 'Home',

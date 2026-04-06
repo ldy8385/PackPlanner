@@ -204,6 +204,14 @@ const AppContent = () => {
       setPlans([]);
       setGears([]);
       setTemplates([]);
+      Alert.alert(
+        t('common.error'),
+        t('common.loadError'),
+        [
+          { text: t('common.confirm'), style: 'cancel' },
+          { text: t('common.retry'), onPress: () => loadData(userId) },
+        ],
+      );
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +221,12 @@ const AppContent = () => {
   const handleUpdatePlans = async (newPlans: Plan[]) => {
     setPlans(newPlans);
     if (user) {
-      await firestoreService.savePlans(user.uid, newPlans);
+      try {
+        await firestoreService.savePlans(user.uid, newPlans);
+      } catch (error) {
+        console.error('Error saving plans:', error);
+        Alert.alert(t('common.error'), t('common.saveError'));
+      }
     }
   };
 
@@ -221,7 +234,12 @@ const AppContent = () => {
   const handleUpdateGears = async (newGears: Gear[]) => {
     setGears(newGears);
     if (user) {
-      await firestoreService.saveGears(user.uid, newGears);
+      try {
+        await firestoreService.saveGears(user.uid, newGears);
+      } catch (error) {
+        console.error('Error saving gears:', error);
+        Alert.alert(t('common.error'), t('common.saveError'));
+      }
     }
   };
 
