@@ -266,6 +266,12 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   const [weatherStatus, setWeatherStatus] = useState<
     'available' | 'past' | 'tooFar' | 'noLocation' | 'error' | 'idle'
   >('idle');
+  const weatherCacheRef = React.useRef<{
+    key: string;
+    data: DailyWeather[];
+    status: 'available' | 'past' | 'tooFar' | 'noLocation' | 'error' | 'idle';
+    timestamp: number;
+  } | null>(null);
   const {viewShotRef, isGenerating, sharePlanAsImage} = useSharePlanImage();
 
   const fetchWeather = useCallback(
@@ -296,6 +302,15 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
       if (planStart > fiveDaysLater) {
         setWeatherStatus('tooFar');
         setWeatherData([]);
+        return;
+      }
+
+      // 캐시 확인 (위치+날짜 기준, 3시간 TTL)
+      const cacheKey = `${plan.location.latitude},${plan.location.longitude},${planStart.toISOString()},${planEnd.toISOString()}`;
+      const cache = weatherCacheRef.current;
+      if (cache && cache.key === cacheKey && Date.now() - cache.timestamp < 3 * 60 * 60 * 1000) {
+        setWeatherData(cache.data);
+        setWeatherStatus(cache.status);
         return;
       }
 
@@ -366,6 +381,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
         if (allDates.length > 0) {
           setWeatherData(allDates);
           setWeatherStatus('available');
+          weatherCacheRef.current = { key: cacheKey, data: allDates, status: 'available', timestamp: Date.now() };
         } else {
           setWeatherStatus('tooFar');
           setWeatherData([]);
