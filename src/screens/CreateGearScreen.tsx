@@ -153,6 +153,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       {
         mediaType: 'photo',
         quality: 0.7,
+        maxWidth: 800,
+        maxHeight: 800,
         selectionLimit: 1,
       },
       (response: any) => {
