@@ -1,6 +1,7 @@
 import './src/i18n';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import crashlytics from '@react-native-firebase/crashlytics';
 import {
   View,
   StyleSheet,
@@ -201,6 +202,7 @@ const AppContent = () => {
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Error loading data:', error);
+      crashlytics().recordError(error instanceof Error ? error : new Error(String(error)));
       setPlans([]);
       setGears([]);
       setTemplates([]);
@@ -225,6 +227,7 @@ const AppContent = () => {
         await firestoreService.savePlans(user.uid, newPlans);
       } catch (error) {
         console.error('Error saving plans:', error);
+        crashlytics().recordError(error instanceof Error ? error : new Error(String(error)));
         Alert.alert(t('common.error'), t('common.saveError'));
       }
     }
@@ -238,6 +241,7 @@ const AppContent = () => {
         await firestoreService.saveGears(user.uid, newGears);
       } catch (error) {
         console.error('Error saving gears:', error);
+        crashlytics().recordError(error instanceof Error ? error : new Error(String(error)));
         Alert.alert(t('common.error'), t('common.saveError'));
       }
     }
