@@ -95,9 +95,9 @@ android {
         }
         release {
             storeFile file('release.keystore')
-            storePassword '@960119d'
+            storePassword project.findProperty('PACKPLANNER_STORE_PASSWORD')
             keyAlias 'packplanner'
-            keyPassword '@960119d'
+            keyPassword project.findProperty('PACKPLANNER_KEY_PASSWORD')
         }
     }
     buildTypes {
