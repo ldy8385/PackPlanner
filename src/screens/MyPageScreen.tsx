@@ -378,7 +378,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
                 </Text>
               </View>
               <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
-                v1.0.0
+                v{require('../../package.json').version}
               </Text>
             </TouchableOpacity>
 
