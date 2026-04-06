@@ -1,10 +1,9 @@
 import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { ADMOB_BANNER_ID } from '@env';
 
-const BANNER_ID = 'ca-app-pub-8725652445501420/7585305227';
-
-const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : BANNER_ID;
+const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : ADMOB_BANNER_ID;
 
 const AdBanner: React.FC = () => {
   return (

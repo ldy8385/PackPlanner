@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GOOGLE_WEB_CLIENT_ID } from '@env';
 
 GoogleSignin.configure({
-  webClientId: '1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com',
+  webClientId: GOOGLE_WEB_CLIENT_ID,
 });
 
 interface AuthContextType {
