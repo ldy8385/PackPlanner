@@ -4,7 +4,7 @@ import database from '@react-native-firebase/database';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
-  webClientId: '1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com',
+  webClientId: '1007252351630-60kddtk628l7p380459gpao4g9sivjt8.apps.googleusercontent.com',
 });
 
 interface AuthContextType {

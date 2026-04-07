@@ -21,8 +21,9 @@ const LoginScreen: React.FC = () => {
       setIsSigningIn(true);
       await signInWithGoogle();
     } catch (error: any) {
+      console.error('GoogleSignIn error:', error?.code, error?.message);
       if (error?.code !== 'SIGN_IN_CANCELLED') {
-        Alert.alert(t('common.error'), t('login.errorGoogle'));
+        Alert.alert(t('common.error'), `${t('login.errorGoogle')}\n(${error?.code || 'UNKNOWN'})`);
       }
     } finally {
       setIsSigningIn(false);

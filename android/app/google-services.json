@@ -15,7 +15,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "1007252351630-02mcecsu58r48h01pctlliidt7pr9fk7.apps.googleusercontent.com",
+          "client_id": "1007252351630-08gaij3j9sqdaujn5qgi6equbfh849l9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.packplanner",
@@ -23,7 +23,7 @@
           }
         },
         {
-          "client_id": "1007252351630-27i5siv8voi9o43h2mdalo7dfuh10u1f.apps.googleusercontent.com",
+          "client_id": "1007252351630-5o5loavdvv63p5k4s7af5el145flepgk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.packplanner",
@@ -31,7 +31,7 @@
           }
         },
         {
-          "client_id": "1007252351630-d1h6rt4be64m1gqgeuuttj7l1kudfqeb.apps.googleusercontent.com",
+          "client_id": "1007252351630-v89l8nn86itjhm7kstquqo4t0egnkmbt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.packplanner",
@@ -39,20 +39,20 @@
           }
         },
         {
-          "client_id": "1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com",
+          "client_id": "1007252351630-60kddtk628l7p380459gpao4g9sivjt8.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAKXpMMIvlLAUJbWyWT6ewDQO_OPHpRPuU"
+          "current_key": "AIzaSyBWt9DpCdaK55h5vsBF-eJ2WVqq5Ai8uZA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1007252351630-crucpng9njcm963iaove2muhpolcuqia.apps.googleusercontent.com",
+              "client_id": "1007252351630-60kddtk628l7p380459gpao4g9sivjt8.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
