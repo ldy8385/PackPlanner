@@ -31,6 +31,14 @@
           }
         },
         {
+          "client_id": "1007252351630-l1mfo4mtgk2b630mv5i1beqb8d4dqlrs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.packplanner",
+            "certificate_hash": "59e1e7530d8726f0b2ce721b884c70ab828ce818"
+          }
+        },
+        {
           "client_id": "1007252351630-v89l8nn86itjhm7kstquqo4t0egnkmbt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
