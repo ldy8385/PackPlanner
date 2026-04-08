@@ -11,15 +11,15 @@ const STORY_WIDTH = 360;
 const STORY_HEIGHT = 640;
 
 const C = {
-  bg: '#1a1145',
-  bgGrad: '#2d1b69',
-  card: 'rgba(255,255,255,0.08)',
-  cardBorder: 'rgba(255,255,255,0.12)',
-  accent: '#818CF8',
-  accentLight: '#C7D2FE',
-  white: '#FFFFFF',
-  whiteAlpha: 'rgba(255,255,255,0.7)',
-  whiteAlpha2: 'rgba(255,255,255,0.5)',
+  bg: '#FFFFFF',
+  bgGrad: '#E0E7FF',
+  card: '#F3F4F6',
+  cardBorder: '#E5E7EB',
+  accent: '#4F46E5',
+  accentLight: '#3730A3',
+  text: '#111827',
+  textSub: '#4B5563',
+  textMuted: '#9CA3AF',
 };
 
 const getPlanTypeLabel = (type: PlanType, t: (key: string) => string) =>
@@ -32,7 +32,7 @@ const formatDateRange = (start: Date, end: Date): string => {
 };
 
 const getStaticMapUrl = (lat: number, lng: number, width: number, height: number) =>
-  `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=14&size=${width}x${height}&scale=2&markers=color:red|${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}&style=feature:all|element:geometry|color:0x242f3e&style=feature:all|element:labels.text.stroke|color:0x242f3e&style=feature:all|element:labels.text.fill|color:0x746855&style=feature:water|element:geometry|color:0x17263c`;
+  `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=14&size=${width}x${height}&scale=2&markers=color:0x4F46E5|${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
 
 interface GearItemRowProps {
   item: PlanItem;
@@ -71,12 +71,12 @@ const rowStyles = StyleSheet.create({
   name: {
     flex: 1,
     fontSize: 11,
-    color: C.white,
+    color: C.text,
     marginRight: 6,
   },
   weight: {
     fontSize: 10,
-    color: C.whiteAlpha,
+    color: C.textSub,
   },
 });
 
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 26,
     fontWeight: '800',
-    color: C.white,
+    color: C.text,
     marginBottom: 6,
   },
   metaRow: {
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: C.whiteAlpha,
+    color: C.textSub,
   },
   subRow: {
     flexDirection: 'row',
@@ -256,12 +256,12 @@ const styles = StyleSheet.create({
   },
   statInlineText: {
     fontSize: 12,
-    color: C.whiteAlpha,
+    color: C.textSub,
     fontWeight: '600',
   },
   statInlineDot: {
     fontSize: 12,
-    color: C.whiteAlpha2,
+    color: C.textMuted,
   },
   mapSection: {
     marginBottom: 16,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   mapLabel: {
     fontSize: 11,
-    color: C.white,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   photoSection: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   memoText: {
     fontSize: 12,
-    color: C.whiteAlpha,
+    color: C.textSub,
     lineHeight: 18,
     fontStyle: 'italic',
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: 10,
-    color: C.whiteAlpha2,
+    color: C.textMuted,
     textAlign: 'center',
     marginTop: 6,
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 10,
-    color: C.whiteAlpha2,
+    color: C.textMuted,
     letterSpacing: 0.5,
   },
 });
