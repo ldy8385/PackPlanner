@@ -1,12 +1,12 @@
 import React from 'react';
-import {View, Text, Image, StyleSheet, Dimensions} from 'react-native';
+import {View, Text, Image, StyleSheet} from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
+import {KAKAO_API_KEY} from '../config/apiKeys';
 
 // Instagram Story: 1080x1920 (9:16)
-// 렌더링은 축소 비율로, 캡처 시 고해상도
 const STORY_WIDTH = 360;
 const STORY_HEIGHT = 640;
 
@@ -20,7 +20,6 @@ const C = {
   white: '#FFFFFF',
   whiteAlpha: 'rgba(255,255,255,0.7)',
   whiteAlpha2: 'rgba(255,255,255,0.5)',
-  badge: 'rgba(129,140,248,0.2)',
 };
 
 const getPlanTypeLabel = (type: PlanType, t: (key: string) => string) =>
@@ -31,6 +30,9 @@ const formatDateRange = (start: Date, end: Date): string => {
     d.toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'});
   return `${fmt(start)} ~ ${fmt(end)}`;
 };
+
+const getStaticMapUrl = (lat: number, lng: number, width: number, height: number) =>
+  `https://dapi.kakao.com/v2/maps/open/staticmap?appkey=${KAKAO_API_KEY}&center=${lng},${lat}&level=7&width=${width}&height=${height}&marker=type:default|position:${lng},${lat}`;
 
 interface GearItemRowProps {
   item: PlanItem;
@@ -89,6 +91,7 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
   const totalKg = (stats.weight / 1000).toFixed(1);
   const photos = plan.photos || [];
   const hasPhotos = photos.length > 0;
+  const hasLocation = !!plan.location;
 
   return (
     <View style={styles.wrapper} pointerEvents="none">
@@ -96,7 +99,6 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
         ref={viewShotRef}
         options={{format: 'png', quality: 1, result: 'tmpfile'}}>
         <View style={styles.container}>
-          {/* Background gradient effect */}
           <View style={styles.bgTop} />
 
           {/* Header */}
@@ -111,26 +113,33 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
                 <Text style={styles.metaText}> · {plan.destination}</Text>
               ) : null}
             </View>
-            <Text style={styles.dateText}>
-              {formatDateRange(plan.startDate, plan.endDate)}
-            </Text>
+            <View style={styles.subRow}>
+              <Text style={styles.dateText}>
+                {formatDateRange(plan.startDate, plan.endDate)}
+              </Text>
+              <View style={styles.statsInline}>
+                <Text style={styles.statInlineText}>{stats.total} {t('plan.gearCount')}</Text>
+                <Text style={styles.statInlineDot}> · </Text>
+                <Text style={styles.statInlineText}>{totalKg}kg</Text>
+              </View>
+            </View>
           </View>
 
-          {/* Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.total}</Text>
-              <Text style={styles.statLabel}>{t('plan.gearCount')}</Text>
+          {/* Map */}
+          {hasLocation && (
+            <View style={styles.mapSection}>
+              <Image
+                source={{
+                  uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300),
+                  headers: {Authorization: `KakaoAK ${KAKAO_API_KEY}`},
+                }}
+                style={styles.mapImage}
+              />
+              <View style={styles.mapOverlay}>
+                <Text style={styles.mapLabel}>{plan.destination}</Text>
+              </View>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{totalKg}</Text>
-              <Text style={styles.statLabel}>kg</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.checked}</Text>
-              <Text style={styles.statLabel}>{t('plan.ready')}</Text>
-            </View>
-          </View>
+          )}
 
           {/* Photos */}
           {hasPhotos && (
@@ -209,7 +218,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   appName: {
     fontSize: 12,
@@ -233,35 +242,53 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: C.whiteAlpha,
   },
+  subRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
   dateText: {
     fontSize: 13,
     color: C.accentLight,
-    marginTop: 4,
     fontWeight: '600',
   },
-  statsRow: {
+  statsInline: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: C.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: C.cardBorder,
-    paddingVertical: 12,
     alignItems: 'center',
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: C.white,
+  statInlineText: {
+    fontSize: 12,
+    color: C.whiteAlpha,
+    fontWeight: '600',
   },
-  statLabel: {
-    fontSize: 10,
+  statInlineDot: {
+    fontSize: 12,
     color: C.whiteAlpha2,
-    marginTop: 2,
+  },
+  mapSection: {
+    marginBottom: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  mapImage: {
+    width: '100%',
+    height: 140,
+    resizeMode: 'cover',
+  },
+  mapOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  mapLabel: {
+    fontSize: 11,
+    color: C.white,
+    fontWeight: '600',
   },
   photoSection: {
     marginBottom: 16,
