@@ -326,10 +326,11 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            style={[styles.input, { backgroundColor: theme.colors.surface, marginTop: 12 }]}
+            style={[styles.input, styles.memoInput, { backgroundColor: theme.colors.surface }]}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={{ borderRadius: 12 }}
           />
         </View>
 
@@ -389,6 +390,11 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8,
+  },
+  memoInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginTop: 12,
   },
   typeContainer: {
     flexDirection: 'row',
