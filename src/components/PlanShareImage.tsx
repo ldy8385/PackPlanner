@@ -32,7 +32,7 @@ const formatDateRange = (start: Date, end: Date): string => {
 };
 
 const getStaticMapUrl = (lat: number, lng: number, width: number, height: number) =>
-  `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=11&size=${width}x${height}&scale=2&markers=color:red|${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}&style=feature:all|element:geometry|color:0x242f3e&style=feature:all|element:labels.text.stroke|color:0x242f3e&style=feature:all|element:labels.text.fill|color:0x746855&style=feature:water|element:geometry|color:0x17263c`;
+  `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=14&size=${width}x${height}&scale=2&markers=color:red|${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}&style=feature:all|element:geometry|color:0x242f3e&style=feature:all|element:labels.text.stroke|color:0x242f3e&style=feature:all|element:labels.text.fill|color:0x746855&style=feature:water|element:geometry|color:0x17263c`;
 
 interface GearItemRowProps {
   item: PlanItem;

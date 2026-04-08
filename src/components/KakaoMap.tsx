@@ -1,7 +1,7 @@
 import React, {useRef, useCallback} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
-import {KAKAO_JS_KEY} from '../config/apiKeys';
+import {GOOGLE_MAPS_API_KEY} from '@env';
 
 interface KakaoMapProps {
   latitude: number;
@@ -37,7 +37,6 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services"></script>
         <style>
           body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
           html { height: 100%; }
@@ -60,38 +59,35 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
         <div id="map"></div>
         ${interactive ? '<div class="center-pin">📍</div>' : ''}
         <script>
-          window.onload = function() {
-            if (typeof kakao !== 'undefined' && kakao.maps) {
-              const mapContainer = document.getElementById('map');
-              const mapOption = {
-                center: new kakao.maps.LatLng(${latitude}, ${longitude}),
-                level: ${interactive ? 5 : 3}
-              };
-              const map = new kakao.maps.Map(mapContainer, mapOption);
+          function initMap() {
+            const center = { lat: ${latitude}, lng: ${longitude} };
+            const map = new google.maps.Map(document.getElementById('map'), {
+              center: center,
+              zoom: ${interactive ? 12 : 14},
+              disableDefaultUI: true,
+              zoomControl: ${interactive},
+              gestureHandling: '${interactive ? 'greedy' : 'none'}',
+            });
 
-              ${interactive ? `
-              // 인터랙티브 모드: 지도 이동 시 중앙 좌표 전달
-              let debounceTimer;
-              kakao.maps.event.addListener(map, 'center_changed', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
-                  const center = map.getCenter();
-                  window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: 'centerChanged',
-                    lat: center.getLat(),
-                    lng: center.getLng()
-                  }));
-                }, 300);
-              });
-              ` : `
-              // 읽기 전용 모드: 마커 표시
-              const markerPosition = new kakao.maps.LatLng(${latitude}, ${longitude});
-              const marker = new kakao.maps.Marker({ position: markerPosition });
-              marker.setMap(map);
-              `}
-            }
-          };
+            ${interactive ? `
+            let debounceTimer;
+            map.addListener('center_changed', function() {
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(function() {
+                const c = map.getCenter();
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'centerChanged',
+                  lat: c.lat(),
+                  lng: c.lng()
+                }));
+              }, 300);
+            });
+            ` : `
+            new google.maps.Marker({ position: center, map: map });
+            `}
+          }
         </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap" async defer></script>
       </body>
     </html>
   `;
