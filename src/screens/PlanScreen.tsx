@@ -962,8 +962,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                         key={index}
                         style={styles.photoThumbnail}
                         activeOpacity={0.8}
-                        onPress={() => setShowPhotoViewer(index)}
-                        onLongPress={() => handleDeletePhoto(index)}>
+                        onPress={() => setShowPhotoViewer(index)}>
                         <FastImage
                           source={{uri: url, priority: FastImage.priority.normal}}
                           style={styles.photoImage}
@@ -1265,11 +1264,22 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             transparent
             onRequestClose={() => setShowPhotoViewer(null)}>
             <View style={styles.photoViewerOverlay}>
-              <TouchableOpacity
-                style={styles.photoViewerClose}
-                onPress={() => setShowPhotoViewer(null)}>
-                <Icon name="close" size={28} color="#fff" />
-              </TouchableOpacity>
+              <View style={styles.photoViewerHeader}>
+                <TouchableOpacity
+                  style={styles.photoViewerButton}
+                  onPress={() => setShowPhotoViewer(null)}>
+                  <Icon name="close" size={26} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.photoViewerButton}
+                  onPress={() => {
+                    const idx = showPhotoViewer;
+                    setShowPhotoViewer(null);
+                    if (idx !== null) handleDeletePhoto(idx);
+                  }}>
+                  <Icon name="delete-outline" size={26} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
               <FastImage
                 source={{uri: selectedPlan.photos[showPhotoViewer]}}
                 style={styles.photoViewerImage}
@@ -1741,12 +1751,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  photoViewerClose: {
+  photoViewerHeader: {
     position: 'absolute',
     top: 50,
-    right: 20,
+    left: 0,
+    right: 0,
     zIndex: 10,
-    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  photoViewerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   photoViewerImage: {
     width: Dimensions.get('window').width,
