@@ -1215,11 +1215,20 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   </Button>
                 </Surface>
               ) : (
-                <PlanItemList
-                  items={selectedPlan.items}
-                  planId={selectedPlan.id}
-                  onToggleCheck={toggleItemCheck}
-                />
+                <>
+                  <PlanItemList
+                    items={selectedPlan.items}
+                    planId={selectedPlan.id}
+                    onToggleCheck={toggleItemCheck}
+                  />
+                  <Button
+                    mode="contained-tonal"
+                    icon="pencil"
+                    style={{marginTop: 12}}
+                    onPress={() => setShowGearSelect(true)}>
+                    {t('plan.manageGears')}
+                  </Button>
+                </>
               )}
             </Card.Content>
           </Card>
