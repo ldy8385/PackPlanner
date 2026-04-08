@@ -38,15 +38,13 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     editingPlan?.location || null,
   );
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const [startDate, setStartDate] = useState(
-    editingPlan ? editingPlan.startDate : today,
+  const [startDate, setStartDate] = useState<Date | null>(
+    editingPlan ? editingPlan.startDate : null,
   );
   const [endDate, setEndDate] = useState<Date | null>(
-    editingPlan ? editingPlan.endDate : tomorrow,
+    editingPlan ? editingPlan.endDate : null,
   );
+  const [isFirstStartSelect, setIsFirstStartSelect] = useState(!editingPlan);
   const [showCalendar, setShowCalendar] = useState(false);
   const [type, setType] = useState<PlanType>(
     editingPlan?.type || PlanType.AUTO_CAMPING,
@@ -69,6 +67,11 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
 
   const handleSave = () => {
     const planName = name.trim() || t('createPlan.unnamedPlan');
+
+    if (!startDate) {
+      Alert.alert(t('common.error'), t('createPlan.errorStartDate'));
+      return;
+    }
 
     const finalEndDate = endDate || startDate;
 
@@ -219,8 +222,8 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {t('createPlan.startDate')}
               </Text>
-              <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                {formatDateDisplay(startDate)}
+              <Text variant="titleMedium" style={{ color: startDate ? theme.colors.onSurface : theme.colors.outline, fontWeight: '600' }}>
+                {startDate ? formatDateDisplay(startDate) : t('createPlan.selectStartDate')}
               </Text>
             </View>
             <Icon name="arrow-right" size={20} color={theme.colors.outline} />
@@ -228,8 +231,8 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {t('createPlan.endDate')}
               </Text>
-              <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                {formatDateDisplay(endDate || startDate)}
+              <Text variant="titleMedium" style={{ color: endDate ? theme.colors.onSurface : theme.colors.outline, fontWeight: '600' }}>
+                {endDate ? formatDateDisplay(endDate) : t('createPlan.selectEndDate')}
               </Text>
             </View>
             <Icon name="calendar-range" size={24} color={theme.colors.primary} />
@@ -256,8 +259,8 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                 <CalendarPicker
                   startFromMonday={false}
                   allowRangeSelection={true}
-                  selectedStartDate={startDate}
-                  selectedEndDate={endDate}
+                  selectedStartDate={startDate || undefined}
+                  selectedEndDate={endDate || undefined}
                   onDateChange={(date, type) => {
                     if (type === 'END_DATE') {
                       if (date) {
@@ -266,9 +269,14 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                     } else {
                       const newStart = new Date(date.toString());
                       setStartDate(newStart);
-                      const nextDay = new Date(newStart);
-                      nextDay.setDate(nextDay.getDate() + 1);
-                      setEndDate(nextDay);
+                      if (isFirstStartSelect) {
+                        const nextDay = new Date(newStart);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        setEndDate(nextDay);
+                        setIsFirstStartSelect(false);
+                      } else {
+                        setEndDate(null);
+                      }
                     }
                   }}
                   selectedDayColor={theme.colors.primary}
