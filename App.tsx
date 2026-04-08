@@ -190,8 +190,16 @@ const AppContent = () => {
         firestoreService.loadGears(userId),
         firestoreService.loadTemplates(userId),
       ]);
+      // 신규 유저: 장비가 없으면 기본 장비 복사
+      let finalGears = savedGears;
+      if (savedGears.length === 0) {
+        const defaults = await firestoreService.copyDefaultGears(userId);
+        if (defaults.length > 0) {
+          finalGears = defaults;
+        }
+      }
       // gear 데이터 주입 + 계층 구조 복원
-      const gearMap = new Map(savedGears.map(g => [g.id, g]));
+      const gearMap = new Map(finalGears.map(g => [g.id, g]));
       const hydratedPlans = savedPlans.map(plan => ({
         ...plan,
         items: restorePlanItemHierarchy(
@@ -199,7 +207,7 @@ const AppContent = () => {
         ),
       }));
       setPlans(hydratedPlans);
-      setGears(savedGears);
+      setGears(finalGears);
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Error loading data:', error);

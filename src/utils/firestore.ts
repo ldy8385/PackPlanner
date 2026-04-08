@@ -67,6 +67,23 @@ const snapshotToArray = <T>(
 // ===== DB 서비스 =====
 
 export const firestoreService = {
+  // ----- Default Gears -----
+  copyDefaultGears: async (userId: string): Promise<Gear[]> => {
+    const snapshot = await database().ref('defaults/gears').once('value');
+    if (!snapshot.exists()) return [];
+    const defaults: Gear[] = [];
+    snapshot.forEach((child: any) => {
+      const gear = child.val();
+      const newId = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+      defaults.push({ ...gear, id: newId });
+      return undefined;
+    });
+    const updates: Record<string, any> = {};
+    defaults.forEach(gear => { updates[gear.id] = gear; });
+    await getUserRef(userId, 'gears').update(updates);
+    return defaults;
+  },
+
   // ----- Gears -----
   saveGear: async (userId: string, gear: Gear): Promise<void> => {
     await getUserRef(userId, `gears/${gear.id}`).set(gear);
