@@ -8,6 +8,7 @@ interface KakaoMapProps {
   longitude: number;
   height?: number;
   interactive?: boolean;
+  showCenterPin?: boolean;
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
@@ -16,6 +17,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
   longitude,
   height = 200,
   interactive = false,
+  showCenterPin = false,
   onLocationChange,
 }) => {
   const webViewRef = useRef<WebView>(null);
@@ -41,7 +43,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
           body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
           html { height: 100%; }
           #map { width: 100%; height: 100%; }
-          ${interactive ? `
+          ${showCenterPin ? `
           .center-pin {
             position: absolute;
             top: 50%;
@@ -57,7 +59,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
       </head>
       <body>
         <div id="map"></div>
-        ${interactive ? '<div class="center-pin">📍</div>' : ''}
+        ${showCenterPin ? '<div class="center-pin">📍</div>' : ''}
         <script>
           function initMap() {
             const center = { lat: ${latitude}, lng: ${longitude} };
@@ -69,7 +71,9 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
               gestureHandling: '${interactive ? 'greedy' : 'none'}',
             });
 
-            ${interactive ? `
+            new google.maps.Marker({ position: center, map: map });
+
+            ${onLocationChange ? `
             let debounceTimer;
             map.addListener('center_changed', function() {
               clearTimeout(debounceTimer);
@@ -82,9 +86,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
                 }));
               }, 300);
             });
-            ` : `
-            new google.maps.Marker({ position: center, map: map });
-            `}
+            ` : ''}
           }
         </script>
         <script src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap" async defer></script>

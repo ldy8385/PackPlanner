@@ -286,6 +286,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           longitude={126.978}
           height={400}
           interactive
+          showCenterPin
           onLocationChange={handleMapLocationChange}
         />
       </View>

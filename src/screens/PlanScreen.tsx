@@ -1284,6 +1284,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 latitude={selectedPlan.location.latitude}
                 longitude={selectedPlan.location.longitude}
                 height={Dimensions.get('window').height - 60}
+                interactive
               />
             </View>
           </Modal>
