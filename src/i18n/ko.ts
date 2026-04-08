@@ -35,7 +35,7 @@ export default {
   home: {
     subtitle: '다음 모험을 준비하세요!',
     totalGears: '전체 장비',
-    totalKg: '총 무게(g)',
+    totalKg: '총 무게(kg)',
     activePlans: '진행 중인 계획',
     upcomingTrip: '다가오는 여행',
     viewAll: '전체 보기',

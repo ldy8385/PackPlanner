@@ -35,7 +35,7 @@ export default {
   home: {
     subtitle: 'Ready for your next adventure?',
     totalGears: 'Total Gears',
-    totalKg: 'Total (g)',
+    totalKg: 'Total (kg)',
     activePlans: 'Active Plans',
     upcomingTrip: 'Upcoming Trip',
     viewAll: 'View All',

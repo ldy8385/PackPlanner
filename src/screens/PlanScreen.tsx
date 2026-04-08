@@ -711,7 +711,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text variant="titleMedium" style={styles.statValue}>
-                {Math.round(totalWeight)}g
+                {(totalWeight / 1000).toFixed(1)}kg
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 {t('plan.weight')}
@@ -841,7 +841,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   <Text
                     variant="bodyLarge"
                     style={{color: theme.colors.onSurface}}>
-                    {t('plan.total')}: {Math.round(totalWeight)}g
+                    {t('plan.total')}: {(totalWeight / 1000).toFixed(1)}kg
                   </Text>
                 </View>
               </View>
