@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
+  Linking,
 } from 'react-native';
 import {
   Card,
@@ -747,6 +748,23 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     );
   };
 
+  const handleExportToCalendar = () => {
+    if (!selectedPlan) return;
+    const start = new Date(selectedPlan.startDate);
+    const end = new Date(selectedPlan.endDate);
+    end.setDate(end.getDate() + 1); // 캘린더 종일 이벤트는 다음날 00:00까지
+    const formatDate = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const params = [
+      'action=TEMPLATE',
+      `text=${encodeURIComponent(selectedPlan.name)}`,
+      `dates=${formatDate(start)}/${formatDate(end)}`,
+      selectedPlan.destination ? `location=${encodeURIComponent(selectedPlan.destination)}` : '',
+      selectedPlan.description ? `details=${encodeURIComponent(selectedPlan.description)}` : '',
+    ].filter(Boolean).join('&');
+    Linking.openURL(`https://calendar.google.com/calendar/render?${params}`);
+  };
+
   const handleAddPhoto = () => {
     if (!selectedPlan || !user) return;
     const currentPhotos = selectedPlan.photos || [];
@@ -825,6 +843,12 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               {selectedPlan.name}
             </Text>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <IconButton
+                icon="calendar-export"
+                iconColor={theme.colors.primary}
+                size={22}
+                onPress={handleExportToCalendar}
+              />
               <IconButton
                 icon="share-variant"
                 iconColor={theme.colors.primary}
