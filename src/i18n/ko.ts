@@ -88,7 +88,7 @@ export default {
   createPlan: {
     newPlan: '새 계획',
     editPlan: '계획 수정',
-    planName: '계획 이름',
+    planName: '계획명',
     planNamePlaceholder: '예: 주말 캠핑',
     campingType: '캠핑 유형',
     destination: '목적지',

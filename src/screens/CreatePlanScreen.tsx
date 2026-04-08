@@ -137,6 +137,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={{ borderRadius: 12 }}
           />
 
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
