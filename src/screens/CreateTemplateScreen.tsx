@@ -166,7 +166,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
               <View style={styles.selectedStat}>
                 <Icon name="weight-kilogram" size={20} color={theme.colors.tertiary} />
                 <Text style={[styles.selectedStatWeight, { color: theme.colors.tertiary }]}>
-                  {selectedGearsWeight.toFixed(1)}kg
+                  {Math.round(selectedGearsWeight)}g
                 </Text>
               </View>
             </Surface>
@@ -191,7 +191,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
                     <View style={styles.selectedGearInfo}>
                       <Text style={[styles.selectedGearName, { color: theme.colors.onSurface }]}>{gear.name}</Text>
                       <Text style={[styles.selectedGearDetail, { color: theme.colors.onSurfaceVariant }]}>
-                        {t(`gearCategory.${gear.category}`)} · {gear.weight}kg
+                        {t(`gearCategory.${gear.category}`)} · {gear.weight}g
                       </Text>
                     </View>
                     <IconButton

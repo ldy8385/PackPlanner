@@ -186,7 +186,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       return;
     }
 
-    const weightNum = parseFloat(weight);
+    const weightNum = Math.round(parseFloat(weight));
     if (isNaN(weightNum) || weightNum < 0) {
       showAlert({
         title: t('common.error'),
@@ -313,7 +313,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             onChangeText={setWeight}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
             keyboardType="decimal-pad"
-            right={<TextInput.Affix text="kg" />}
+            right={<TextInput.Affix text="g" />}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}

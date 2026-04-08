@@ -203,7 +203,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                   {item.gear.name}
                 </Text>
                 <Text variant="bodySmall" style={{color: theme.colors.outline}}>
-                  {t(`gearCategory.${item.gear.category}`)} · {item.gear.weight}kg
+                  {t(`gearCategory.${item.gear.category}`)} · {item.gear.weight}g
                   {hasChildren
                     ? ` · ${item.children?.length} ${t('plan.gearCount')}`
                     : ''}
@@ -711,7 +711,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text variant="titleMedium" style={styles.statValue}>
-                {totalWeight.toFixed(1)}kg
+                {Math.round(totalWeight)}g
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 {t('plan.weight')}
@@ -841,7 +841,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   <Text
                     variant="bodyLarge"
                     style={{color: theme.colors.onSurface}}>
-                    {t('plan.total')}: {totalWeight.toFixed(1)}kg
+                    {t('plan.total')}: {Math.round(totalWeight)}g
                   </Text>
                 </View>
               </View>

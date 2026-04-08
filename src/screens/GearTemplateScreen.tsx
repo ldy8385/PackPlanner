@@ -226,7 +226,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 <View style={styles.statItem}>
                   <Icon name="weight-kilogram" size={14} color={theme.colors.tertiary} />
                   <Text variant="bodySmall" style={{ color: theme.colors.tertiary, fontWeight: '600' }}>
-                    {stats.weight.toFixed(1)}kg
+                    {Math.round(stats.weight)}g
                   </Text>
                 </View>
               </View>
@@ -389,7 +389,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 Select Gear
               </Text>
               <Text variant="bodySmall" style={[styles.sectionSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                Select items to include ({selectedGearsCount} items, {selectedGearsWeight.toFixed(1)}kg)
+                Select items to include ({selectedGearsCount} items, {Math.round(selectedGearsWeight)}g)
               </Text>
 
               {gears.length === 0 ? (
@@ -417,7 +417,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                         <List.Item
                           title={gear.name}
                           titleStyle={{ color: theme.colors.onSurface, fontWeight: isSelected ? '600' : '400' }}
-                          description={`${getManufacturerName(gear.manufacturer, i18n.language) || 'No Brand'} · ${gear.weight}kg`}
+                          description={`${getManufacturerName(gear.manufacturer, i18n.language) || 'No Brand'} · ${gear.weight}g`}
                           descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
                           left={() => (
                             <View style={styles.gearSelectionLeft}>
@@ -456,7 +456,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 </Text>
                 <Icon name="weight-kilogram" size={18} color={theme.colors.onSecondaryContainer} />
                 <Text variant="bodyMedium" style={[styles.summaryWeightText, { color: theme.colors.onSecondaryContainer }]}>
-                  {selectedGearsWeight.toFixed(1)}kg
+                  {Math.round(selectedGearsWeight)}g
                 </Text>
               </Surface>
               <View style={styles.modalButtons}>

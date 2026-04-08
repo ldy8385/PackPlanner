@@ -237,7 +237,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
           <View style={styles.weightContainer}>
             <Icon name="weight-kilogram" size={16} color={theme.colors.secondary} />
             <Text variant="titleSmall" style={{ color: theme.colors.secondary, fontWeight: '600' }}>
-              {item.weight}kg
+              {item.weight}g
             </Text>
           </View>
         </View>
@@ -390,7 +390,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                 </View>
                 <View>
                   <Text variant="titleMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>
-                    {totalWeight.toFixed(1)}
+                    {Math.round(totalWeight)}
                   </Text>
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                     {t('gear.totalKg')}
@@ -509,7 +509,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                               <Text
                                 variant="bodySmall"
                                 style={{ color: theme.colors.outline }}>
-                                {tWeight.toFixed(1)}kg
+                                {Math.round(tWeight)}g
                               </Text>
                             </View>
                           </View>

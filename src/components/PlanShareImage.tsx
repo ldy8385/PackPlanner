@@ -55,7 +55,7 @@ const GearItemBox: React.FC<GearItemBoxProps> = ({item, depth, t}) => {
         <Text style={styles.gearName} numberOfLines={1}>
           {item.gear.name}
         </Text>
-        <Text style={styles.gearWeight}>{item.gear.weight}kg</Text>
+        <Text style={styles.gearWeight}>{item.gear.weight}g</Text>
       </View>
       {hasChildren && (
         <View style={styles.gearChildren}>
@@ -108,7 +108,7 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({
               </View>
               <View style={styles.statBadge}>
                 <Text style={styles.statText}>
-                  {stats.weight.toFixed(1)}kg
+                  {Math.round(stats.weight)}g
                 </Text>
               </View>
             </View>

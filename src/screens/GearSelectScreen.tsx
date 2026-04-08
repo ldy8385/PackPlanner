@@ -364,7 +364,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                 {t('gearSelect.packingList')}
               </Text>
               <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
-                {t('gearSelect.itemsWeight', { count: planItems.length, weight: totalSelectedWeight.toFixed(1) })}
+                {t('gearSelect.itemsWeight', { count: planItems.length, weight: Math.round(totalSelectedWeight) })}
               </Text>
             </View>
             {templates && templates.length > 0 && (
@@ -597,7 +597,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {gear.name}
                         </Text>
                         <Text variant="bodySmall" style={[styles.gearMeta, { color: theme.colors.onSurfaceVariant }]}>
-                          {gear.weight}kg · {t(`gearCategory.${gear.category}`)}
+                          {gear.weight}g · {t(`gearCategory.${gear.category}`)}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                           {t('gearSelect.used', { used: usedQuantity, max: maxQuantity, remaining: remaining })}
@@ -662,7 +662,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {template.name}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                          {templateGears.length} {t('plan.gearCount')} · {totalWeight.toFixed(1)}kg
+                          {templateGears.length} {t('plan.gearCount')} · {Math.round(totalWeight)}g
                         </Text>
                       </View>
                       <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
@@ -749,8 +749,8 @@ const PlanItemView: React.FC<{
                     {item.gear.name}
                   </Text>
                   <Text variant="bodySmall" style={styles.planItemMeta}>
-                    {item.gear.weight}kg × {item.quantity} ={' '}
-                    {(item.gear.weight * item.quantity).toFixed(1)}kg
+                    {item.gear.weight}g × {item.quantity} ={' '}
+                    {Math.round(item.gear.weight * item.quantity)}g
                   </Text>
                 </View>
 

@@ -176,7 +176,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               </View>
               <View>
                 <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.onSurface }]}>
-                  {stats.totalWeight.toFixed(1)}
+                  {Math.round(stats.totalWeight)}
                 </Text>
                 <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                   {t('home.totalKg')}
