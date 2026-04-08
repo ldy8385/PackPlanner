@@ -39,11 +39,13 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
     editingPlan?.location || null,
   );
   const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
   const [startDate, setStartDate] = useState(
     editingPlan ? editingPlan.startDate : today,
   );
   const [endDate, setEndDate] = useState<Date | null>(
-    editingPlan ? editingPlan.endDate : today,
+    editingPlan ? editingPlan.endDate : tomorrow,
   );
   const [showCalendar, setShowCalendar] = useState(false);
   const [type, setType] = useState<PlanType>(
@@ -262,8 +264,11 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                         setEndDate(new Date(date.toString()));
                       }
                     } else {
-                      setStartDate(new Date(date.toString()));
-                      setEndDate(null);
+                      const newStart = new Date(date.toString());
+                      setStartDate(newStart);
+                      const nextDay = new Date(newStart);
+                      nextDay.setDate(nextDay.getDate() + 1);
+                      setEndDate(nextDay);
                     }
                   }}
                   selectedDayColor={theme.colors.primary}
