@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -30,18 +30,26 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'search' | 'map'>('search');
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
-    null,
-  );
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
+  // 지도 탭 상태
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapAddress, setMapAddress] = useState<string>('');
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const addressDebounceRef = useRef<NodeJS.Timeout>();
 
   // Reset state when drawer opens
   useEffect(() => {
     if (visible) {
       setSearchQuery(initialQuery);
       setSelectedLocation(null);
+      setActiveTab('search');
+      setMapCenter(null);
+      setMapAddress('');
       if (initialQuery.length >= 2) {
         searchLocation(initialQuery);
       } else {
@@ -97,15 +105,63 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
     return () => clearTimeout(timer);
   }, [searchQuery, searchLocation]);
 
+  // 역지오코딩: 좌표 → 주소
+  const reverseGeocode = useCallback(async (lat: number, lng: number) => {
+    setIsLoadingAddress(true);
+    try {
+      const response = await fetch(
+        `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lng}&y=${lat}`,
+        {
+          headers: {
+            Authorization: `KakaoAK ${KAKAO_API_KEY}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (data.documents && data.documents.length > 0) {
+        const doc = data.documents[0];
+        const address = doc.road_address?.address_name || doc.address?.address_name || '';
+        setMapAddress(address);
+      } else {
+        setMapAddress('');
+      }
+    } catch {
+      setMapAddress('');
+    } finally {
+      setIsLoadingAddress(false);
+    }
+  }, []);
+
+  // 지도 중심 변경 시
+  const handleMapLocationChange = useCallback((lat: number, lng: number) => {
+    setMapCenter({ lat, lng });
+    if (addressDebounceRef.current) {
+      clearTimeout(addressDebounceRef.current);
+    }
+    addressDebounceRef.current = setTimeout(() => {
+      reverseGeocode(lat, lng);
+    }, 500);
+  }, [reverseGeocode]);
+
   const handleSelectLocation = (location: Location) => {
     setSelectedLocation(location);
   };
 
   const handleConfirm = () => {
-    if (selectedLocation) {
+    if (activeTab === 'search' && selectedLocation) {
       onSelect(selectedLocation);
+    } else if (activeTab === 'map' && mapCenter) {
+      const location: Location = {
+        name: mapAddress || t('location.unknownLocation'),
+        address: mapAddress || undefined,
+        latitude: mapCenter.lat,
+        longitude: mapCenter.lng,
+      };
+      onSelect(location);
     }
   };
+
+  const canConfirm = activeTab === 'search' ? !!selectedLocation : !!mapCenter;
 
   const renderSearchResult = ({ item }: { item: Location }) => (
     <TouchableOpacity
@@ -150,6 +206,113 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
     </TouchableOpacity>
   );
 
+  const renderSearchTab = () => (
+    <>
+      {/* Search Input */}
+      <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <Icon
+          name="magnify"
+          size={20}
+          color={theme.colors.onSurfaceVariant}
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={[styles.searchInput, { color: theme.colors.onSurface }]}
+          placeholder={t('location.searchPlaceholder')}
+          placeholderTextColor={theme.colors.outline}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Icon name="close-circle" size={20} color={theme.colors.outline} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Map Preview (when location selected) */}
+      {selectedLocation && (
+        <View style={[styles.mapPreview, { borderColor: theme.colors.outlineVariant, borderWidth: 1 }]}>
+          <KakaoMap
+            latitude={selectedLocation.latitude}
+            longitude={selectedLocation.longitude}
+            height={200}
+          />
+          <View style={styles.mapOverlay}>
+            <Text variant="titleSmall" style={styles.mapLocationName}>
+              {selectedLocation.name}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Search Results */}
+      <View style={styles.resultsContainer}>
+        {isSearching ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
+              {t('location.searching')}
+            </Text>
+          </View>
+        ) : searchResults.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="map-search" size={48} color={theme.colors.outlineVariant} />
+            <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+              {searchQuery.length < 2
+                ? t('location.searchForPlace')
+                : t('location.noResults')}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={searchResults}
+            keyExtractor={item => item.placeId || item.name}
+            renderItem={renderSearchResult}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.resultsList}
+          />
+        )}
+      </View>
+    </>
+  );
+
+  const renderMapTab = () => (
+    <View style={styles.mapTabContainer}>
+      <View style={styles.mapFullContainer}>
+        <KakaoMap
+          latitude={37.5665}
+          longitude={126.978}
+          height={400}
+          interactive
+          onLocationChange={handleMapLocationChange}
+        />
+      </View>
+      <View style={[styles.mapInfo, { backgroundColor: theme.colors.surface }]}>
+        {isLoadingAddress ? (
+          <View style={styles.mapInfoRow}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginLeft: 8 }}>
+              {t('location.loadingAddress')}
+            </Text>
+          </View>
+        ) : mapCenter ? (
+          <View style={styles.mapInfoRow}>
+            <Icon name="map-marker" size={20} color={theme.colors.primary} />
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginLeft: 8, flex: 1 }} numberOfLines={2}>
+              {mapAddress || `${mapCenter.lat.toFixed(5)}, ${mapCenter.lng.toFixed(5)}`}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
+            {t('location.moveMapToSelect')}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -166,74 +329,54 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
             <IconButton icon="close" size={24} onPress={onClose} iconColor={theme.colors.onSurface} />
           </View>
 
-          {/* Search Input */}
-          <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <Icon
-              name="magnify"
-              size={20}
-              color={theme.colors.onSurfaceVariant}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={[styles.searchInput, { color: theme.colors.onSurface }]}
-              placeholder={t('location.searchPlaceholder')}
-              placeholderTextColor={theme.colors.outline}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              autoFocus
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Icon name="close-circle" size={20} color={theme.colors.outline} />
-              </TouchableOpacity>
-            )}
+          {/* Tabs */}
+          <View style={[styles.tabContainer, { borderBottomColor: theme.colors.outlineVariant }]}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'search' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 },
+              ]}
+              onPress={() => setActiveTab('search')}>
+              <Icon
+                name="magnify"
+                size={18}
+                color={activeTab === 'search' ? theme.colors.primary : theme.colors.outline}
+              />
+              <Text
+                variant="bodyMedium"
+                style={{
+                  color: activeTab === 'search' ? theme.colors.primary : theme.colors.outline,
+                  fontWeight: activeTab === 'search' ? '600' : '400',
+                  marginLeft: 6,
+                }}>
+                {t('location.tabSearch')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'map' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 },
+              ]}
+              onPress={() => setActiveTab('map')}>
+              <Icon
+                name="map"
+                size={18}
+                color={activeTab === 'map' ? theme.colors.primary : theme.colors.outline}
+              />
+              <Text
+                variant="bodyMedium"
+                style={{
+                  color: activeTab === 'map' ? theme.colors.primary : theme.colors.outline,
+                  fontWeight: activeTab === 'map' ? '600' : '400',
+                  marginLeft: 6,
+                }}>
+                {t('location.tabMap')}
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Map Preview (when location selected) */}
-          {selectedLocation && (
-            <View style={[styles.mapContainer, { borderColor: theme.colors.outlineVariant, borderWidth: 1 }]}>
-              <KakaoMap
-                latitude={selectedLocation.latitude}
-                longitude={selectedLocation.longitude}
-                height={200}
-              />
-              <View style={styles.mapOverlay}>
-                <Text variant="titleSmall" style={styles.mapLocationName}>
-                  {selectedLocation.name}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Search Results */}
-          <View style={styles.resultsContainer}>
-            {isSearching ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
-                  {t('location.searching')}
-                </Text>
-              </View>
-            ) : searchResults.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Icon name="map-search" size={48} color={theme.colors.outlineVariant} />
-                <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                  {searchQuery.length < 2
-                    ? t('location.searchForPlace')
-                    : t('location.noResults')}
-                </Text>
-              </View>
-            ) : (
-              <FlatList
-                data={searchResults}
-                keyExtractor={item => item.placeId || item.name}
-                renderItem={renderSearchResult}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.resultsList}
-              />
-            )}
-          </View>
+          {/* Tab Content */}
+          {activeTab === 'search' ? renderSearchTab() : renderMapTab()}
 
           {/* Bottom Buttons */}
           <View style={[styles.footer, { borderTopColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}>
@@ -249,7 +392,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
               onPress={handleConfirm}
               style={styles.selectButton}
               buttonColor={theme.colors.primary}
-              disabled={!selectedLocation}>
+              disabled={!canConfirm}>
               {t('location.select')}
             </Button>
           </View>
@@ -282,6 +425,19 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: '600',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -298,7 +454,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     padding: 0,
   },
-  mapContainer: {
+  mapPreview: {
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
@@ -354,6 +510,23 @@ const styles = StyleSheet.create({
   resultName: {
     fontWeight: '500',
     marginBottom: 2,
+  },
+  mapTabContainer: {
+    flex: 1,
+  },
+  mapFullContainer: {
+    flex: 1,
+    margin: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  mapInfo: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  mapInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   footer: {
     flexDirection: 'row',

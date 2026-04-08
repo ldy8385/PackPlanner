@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Alert,
   TouchableOpacity,
   Image,
 } from 'react-native';
@@ -11,6 +10,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
+import { useDialog } from '../contexts/DialogContext';
 import { Gear, GearCategory } from '../types';
 import { gearCategories, manufacturers, getManufacturerName } from '../data/mockData';
 import ManufacturerSelectDrawer from '../components/ManufacturerSelectDrawer';
@@ -31,6 +31,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { showAlert } = useDialog();
   const isEditMode = !!editingGear;
 
   const [name, setName] = useState(editingGear?.name || '');
@@ -176,18 +177,33 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
     const gearName = name.trim();
 
     if (!gearName) {
-      Alert.alert(t('common.error'), t('createGear.errorName'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createGear.errorName'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 
     const weightNum = parseFloat(weight);
     if (isNaN(weightNum) || weightNum < 0) {
-      Alert.alert(t('common.error'), t('createGear.errorWeight'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createGear.errorWeight'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 
     if (!category) {
-      Alert.alert(t('common.error'), t('createGear.errorCategory'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createGear.errorCategory'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 

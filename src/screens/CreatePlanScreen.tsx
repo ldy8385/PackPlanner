@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Modal,
 } from 'react-native';
 import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
@@ -13,6 +12,7 @@ import CalendarPicker from 'react-native-calendar-picker';
 import { useTranslation } from 'react-i18next';
 import { Plan, PlanType, Location } from '../types';
 import { planTypes } from '../data/mockData';
+import { useDialog } from '../contexts/DialogContext';
 import LocationSelectDrawer from '../components/LocationSelectDrawer';
 import KakaoMap from '../components/KakaoMap';
 
@@ -29,6 +29,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { showAlert } = useDialog();
   const isEditMode = !!editingPlan;
 
   const [name, setName] = useState(editingPlan?.name || '');
@@ -68,14 +69,24 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
     const planName = name.trim() || t('createPlan.unnamedPlan');
 
     if (!startDate) {
-      Alert.alert(t('common.error'), t('createPlan.errorStartDate'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createPlan.errorStartDate'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 
     const finalEndDate = endDate || startDate;
 
     if (startDate > finalEndDate) {
-      Alert.alert(t('common.error'), t('createPlan.errorDate'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createPlan.errorDate'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 

@@ -5,7 +5,6 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import {
   Text,
@@ -18,6 +17,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useTranslation } from 'react-i18next';
 import { ThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 import { storage } from '../utils/storage';
 
 interface MyPageScreenProps {
@@ -32,38 +32,40 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const { user, signOut, deleteAccount } = useAuth();
+  const { showAlert, showConfirm } = useDialog();
   const [subScreen, setSubScreen] = useState<'terms' | 'privacy' | null>(null);
 
   const handleLogout = () => {
-    Alert.alert(
-      t('mypage.logoutTitle'),
-      t('mypage.logoutMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('mypage.logout'), onPress: () => signOut(), style: 'destructive' },
-      ],
-    );
+    showConfirm({
+      title: t('mypage.logoutTitle'),
+      message: t('mypage.logoutMessage'),
+      icon: 'warning',
+      confirmText: t('mypage.logout'),
+      cancelText: t('common.cancel'),
+      onConfirm: () => signOut(),
+    });
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      t('mypage.deleteAccountTitle'),
-      t('mypage.deleteAccountMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('mypage.deleteAccountConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteAccount();
-            } catch {
-              Alert.alert(t('mypage.deleteAccountTitle'), t('mypage.deleteAccountError'));
-            }
-          },
-        },
-      ],
-    );
+    showConfirm({
+      title: t('mypage.deleteAccountTitle'),
+      message: t('mypage.deleteAccountMessage'),
+      icon: 'delete',
+      confirmText: t('mypage.deleteAccountConfirm'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        try {
+          await deleteAccount();
+        } catch {
+          showAlert({
+            title: t('mypage.deleteAccountTitle'),
+            message: t('mypage.deleteAccountError'),
+            icon: 'error',
+            confirmText: t('common.confirm'),
+          });
+        }
+      },
+    });
   };
 
   const languageOptions: { code: string; label: string; icon: string }[] = [

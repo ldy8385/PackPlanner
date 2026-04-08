@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  Alert,
   Image,
 } from 'react-native';
 import { Text, Chip, Surface, IconButton, Divider, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
+import { useDialog } from '../contexts/DialogContext';
 import { Gear, GearCategory, GearTemplate } from '../types';
 import { gearCategories, getManufacturerName } from '../data/mockData';
 import CreateTemplateScreen from './CreateTemplateScreen';
@@ -40,6 +40,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { showConfirm } = useDialog();
   const [activeTab, setActiveTab] = useState<'gears' | 'templates'>('gears');
   const [selectedCategory, setSelectedCategory] = useState<GearCategory | null>(
     null,
@@ -147,25 +148,17 @@ const GearScreen: React.FC<GearScreenProps> = ({
       alertMessage += t('gear.deleteGearAffected');
     }
 
-    Alert.alert(
-      t('gear.deleteGearTitle'),
-      alertMessage,
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            const affectedPlanIds = affectedPlans.map(plan => plan.id);
-            onDeleteGear?.(gear.id, affectedPlanIds);
-          },
-        },
-      ],
-      { cancelable: true },
-    );
+    showConfirm({
+      title: t('gear.deleteGearTitle'),
+      message: alertMessage,
+      icon: 'delete',
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: () => {
+        const affectedPlanIds = affectedPlans.map(plan => plan.id);
+        onDeleteGear?.(gear.id, affectedPlanIds);
+      },
+    });
   };
 
   const renderGearItem = ({ item }: { item: Gear }) => (
@@ -526,22 +519,18 @@ const GearScreen: React.FC<GearScreenProps> = ({
                           size={20}
                           iconColor={theme.colors.error}
                           onPress={() => {
-                            Alert.alert(
-                              t('gear.deleteTemplateTitle'),
-                              t('gear.deleteTemplateMessage', { name: template.name }),
-                              [
-                                { text: t('common.cancel'), style: 'cancel' },
-                                {
-                                  text: t('common.delete'),
-                                  style: 'destructive',
-                                  onPress: () => {
-                                    onUpdateTemplates(
-                                      templates.filter(t => t.id !== template.id),
-                                    );
-                                  },
-                                },
-                              ],
-                            );
+                            showConfirm({
+                              title: t('gear.deleteTemplateTitle'),
+                              message: t('gear.deleteTemplateMessage', { name: template.name }),
+                              icon: 'delete',
+                              confirmText: t('common.delete'),
+                              cancelText: t('common.cancel'),
+                              onConfirm: () => {
+                                onUpdateTemplates(
+                                  templates.filter(t => t.id !== template.id),
+                                );
+                              },
+                            });
                           }}
                         />
                       </View>

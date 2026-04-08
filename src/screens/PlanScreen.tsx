@@ -4,11 +4,12 @@ import {
   StyleSheet,
   FlatList,
   SafeAreaView,
-  Alert,
   ScrollView,
   BackHandler,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import {
   Card,
@@ -28,6 +29,7 @@ import {OPENWEATHER_KEY} from '../config/apiKeys';
 import {countAllItems} from '../utils/gearHierarchy';
 import PlanShareImage from '../components/PlanShareImage';
 import {useSharePlanImage} from '../hooks/useSharePlanImage';
+import {useDialog} from '../contexts/DialogContext';
 
 interface DailyWeather {
   date: string;
@@ -258,9 +260,11 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 }) => {
   const theme = useTheme();
   const {t, i18n} = useTranslation();
+  const {showConfirm} = useDialog();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showGearSelect, setShowGearSelect] = useState(false);
   const [showPastPlans, setShowPastPlans] = useState(false);
+  const [showFullMap, setShowFullMap] = useState(false);
   const [weatherData, setWeatherData] = useState<DailyWeather[]>([]);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherStatus, setWeatherStatus] = useState<
@@ -452,23 +456,19 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
   }, [selectedPlan, showGearSelect]);
 
   const deletePlan = (plan: Plan) => {
-    Alert.alert(
-      t('plan.deleteConfirmTitle'),
-      t('plan.deleteConfirmMessage', {name: plan.name}),
-      [
-        {text: t('common.cancel'), style: 'cancel'},
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            onUpdatePlans(plans.filter(p => p.id !== plan.id));
-            if (selectedPlan?.id === plan.id) {
-              setSelectedPlan(null);
-            }
-          },
-        },
-      ],
-    );
+    showConfirm({
+      title: t('plan.deleteConfirmTitle'),
+      message: t('plan.deleteConfirmMessage', {name: plan.name}),
+      icon: 'delete',
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: () => {
+        onUpdatePlans(plans.filter(p => p.id !== plan.id));
+        if (selectedPlan?.id === plan.id) {
+          setSelectedPlan(null);
+        }
+      },
+    });
   };
 
   const toggleItemCheck = (planId: string, itemId: string) => {
@@ -848,13 +848,16 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 
               {/* 지도 표시 - 위치 정보가 있을 때만 */}
               {selectedPlan.location && (
-                <View style={styles.mapContainer}>
+                <TouchableOpacity
+                  style={styles.mapContainer}
+                  activeOpacity={0.8}
+                  onPress={() => setShowFullMap(true)}>
                   <KakaoMap
                     latitude={selectedPlan.location.latitude}
                     longitude={selectedPlan.location.longitude}
                     height={180}
                   />
-                </View>
+                </TouchableOpacity>
               )}
             </Card.Content>
           </Card>
@@ -1108,6 +1111,34 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               {t('plan.generatingImage')}
             </Text>
           </View>
+        )}
+
+        {/* Full screen map modal */}
+        {selectedPlan.location && (
+          <Modal
+            visible={showFullMap}
+            animationType="fade"
+            transparent={false}
+            onRequestClose={() => setShowFullMap(false)}>
+            <View style={{flex: 1, backgroundColor: theme.colors.background}}>
+              <Surface style={[styles.fullMapHeader, {backgroundColor: theme.colors.surface}]} elevation={1}>
+                <IconButton
+                  icon="close"
+                  size={24}
+                  onPress={() => setShowFullMap(false)}
+                  iconColor={theme.colors.onSurface}
+                />
+                <Text variant="titleMedium" style={{color: theme.colors.onSurface, flex: 1}}>
+                  {selectedPlan.location.name}
+                </Text>
+              </Surface>
+              <KakaoMap
+                latitude={selectedPlan.location.latitude}
+                longitude={selectedPlan.location.longitude}
+                height={Dimensions.get('window').height - 60}
+              />
+            </View>
+          </Modal>
         )}
       </SafeAreaView>
     );
@@ -1535,6 +1566,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
+  },
+  fullMapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 16,
+    height: 56,
   },
   // Weather styles
   weatherCard: {

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   BackHandler,
-  Alert,
 } from 'react-native';
 import {
   Provider as PaperProvider,
@@ -30,6 +29,7 @@ import MyPageScreen from './src/screens/MyPageScreen';
 import { Plan, Gear, GearTemplate, PlanItem } from './src/types';
 import { ThemeProvider, useThemeMode } from './src/contexts/ThemeContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { DialogProvider, useDialog } from './src/contexts/DialogContext';
 import { firestoreService } from './src/utils/firestore';
 import {
   hydratePlanItemGears,
@@ -123,6 +123,7 @@ const AppContent = () => {
   const { isDarkMode, themeMode, setThemeMode } = useThemeMode();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { t } = useTranslation();
+  const { showAlert, showConfirm } = useDialog();
   const theme = isDarkMode ? darkTheme : lightTheme;
   const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'gear' | 'mypage'>('home');
   const [showCreatePlan, setShowCreatePlan] = useState(false);
@@ -206,14 +207,14 @@ const AppContent = () => {
       setPlans([]);
       setGears([]);
       setTemplates([]);
-      Alert.alert(
-        t('common.error'),
-        t('common.loadError'),
-        [
-          { text: t('common.confirm'), style: 'cancel' },
-          { text: t('common.retry'), onPress: () => loadData(userId) },
-        ],
-      );
+      showConfirm({
+        title: t('common.error'),
+        message: t('common.loadError'),
+        icon: 'error',
+        confirmText: t('common.retry'),
+        cancelText: t('common.confirm'),
+        onConfirm: () => loadData(userId),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +229,12 @@ const AppContent = () => {
       } catch (error) {
         console.error('Error saving plans:', error);
         crashlytics().recordError(error instanceof Error ? error : new Error(String(error)));
-        Alert.alert(t('common.error'), t('common.saveError'));
+        showAlert({
+          title: t('common.error'),
+          message: t('common.saveError'),
+          icon: 'error',
+          confirmText: t('common.confirm'),
+        });
       }
     }
   };
@@ -242,7 +248,12 @@ const AppContent = () => {
       } catch (error) {
         console.error('Error saving gears:', error);
         crashlytics().recordError(error instanceof Error ? error : new Error(String(error)));
-        Alert.alert(t('common.error'), t('common.saveError'));
+        showAlert({
+          title: t('common.error'),
+          message: t('common.saveError'),
+          icon: 'error',
+          confirmText: t('common.confirm'),
+        });
       }
     }
   };
@@ -423,14 +434,14 @@ const AppContent = () => {
 
       // 5. 홈 화면인 경우 → 앱 종료 확인
       if (activeTab === 'home') {
-        Alert.alert(t('app.exitTitle'), t('app.exitMessage'), [
-          {
-            text: t('common.cancel'),
-            onPress: () => null,
-            style: 'cancel',
-          },
-          { text: t('app.exit'), onPress: () => BackHandler.exitApp() },
-        ]);
+        showConfirm({
+          title: t('app.exitTitle'),
+          message: t('app.exitMessage'),
+          icon: 'warning',
+          confirmText: t('app.exit'),
+          cancelText: t('common.cancel'),
+          onConfirm: () => BackHandler.exitApp(),
+        });
         return true;
       }
 
@@ -673,7 +684,9 @@ const App = () => {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <AppContent />
+        <DialogProvider>
+          <AppContent />
+        </DialogProvider>
       </ThemeProvider>
     </AuthProvider>
   );

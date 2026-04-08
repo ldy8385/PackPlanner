@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Text,
@@ -13,6 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gear, GearTemplate } from '../types';
+import { useDialog } from '../contexts/DialogContext';
 import GearSelectScreen from './GearSelectScreen';
 
 interface CreateTemplateScreenProps {
@@ -30,6 +31,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { showAlert } = useDialog();
   const isEditMode = !!editingTemplate;
 
   const [name, setName] = useState(editingTemplate?.name || '');
@@ -53,12 +55,22 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert(t('common.error'), t('createTemplate.errorName'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createTemplate.errorName'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 
     if (selectedGearIds.length === 0) {
-      Alert.alert(t('common.error'), t('createTemplate.errorGear'));
+      showAlert({
+        title: t('common.error'),
+        message: t('createTemplate.errorGear'),
+        icon: 'error',
+        confirmText: t('common.confirm'),
+      });
       return;
     }
 

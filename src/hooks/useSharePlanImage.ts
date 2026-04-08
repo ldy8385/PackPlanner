@@ -1,13 +1,15 @@
 import {useRef, useState, useCallback} from 'react';
-import {Alert, Platform} from 'react-native';
+import {Platform} from 'react-native';
 import Share from 'react-native-share';
 import {useTranslation} from 'react-i18next';
 import {Plan} from '../types';
+import {useDialog} from '../contexts/DialogContext';
 
 export const useSharePlanImage = () => {
   const viewShotRef = useRef<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const {t} = useTranslation();
+  const {showAlert} = useDialog();
 
   const sharePlanAsImage = useCallback(
     async (_plan: Plan) => {
@@ -38,7 +40,12 @@ export const useSharePlanImage = () => {
         ) {
           return;
         }
-        Alert.alert(t('common.error'), t('plan.shareError'));
+        showAlert({
+          title: t('common.error'),
+          message: t('plan.shareError'),
+          icon: 'error',
+          confirmText: t('common.confirm'),
+        });
       } finally {
         setIsGenerating(false);
       }

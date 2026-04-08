@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Text,
@@ -9,12 +9,14 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 
 const LoginScreen: React.FC = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const theme = useTheme();
   const { t } = useTranslation();
   const { signInWithGoogle } = useAuth();
+  const { showAlert } = useDialog();
 
   const handleGoogleLogin = async () => {
     try {
@@ -23,7 +25,12 @@ const LoginScreen: React.FC = () => {
     } catch (error: any) {
       console.error('GoogleSignIn error:', error?.code, error?.message);
       if (error?.code !== 'SIGN_IN_CANCELLED') {
-        Alert.alert(t('common.error'), `${t('login.errorGoogle')}\n(${error?.code || 'UNKNOWN'})`);
+        showAlert({
+          title: t('common.error'),
+          message: `${t('login.errorGoogle')}\n(${error?.code || 'UNKNOWN'})`,
+          icon: 'error',
+          confirmText: t('common.confirm'),
+        });
       }
     } finally {
       setIsSigningIn(false);
