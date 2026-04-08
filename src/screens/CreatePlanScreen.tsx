@@ -44,7 +44,6 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   const [endDate, setEndDate] = useState<Date | null>(
     editingPlan ? editingPlan.endDate : null,
   );
-  const [isFirstStartSelect, setIsFirstStartSelect] = useState(!editingPlan);
   const [showCalendar, setShowCalendar] = useState(false);
   const [type, setType] = useState<PlanType>(
     editingPlan?.type || PlanType.AUTO_CAMPING,
@@ -267,16 +266,8 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                         setEndDate(new Date(date.toString()));
                       }
                     } else {
-                      const newStart = new Date(date.toString());
-                      setStartDate(newStart);
-                      if (isFirstStartSelect) {
-                        const nextDay = new Date(newStart);
-                        nextDay.setDate(nextDay.getDate() + 1);
-                        setEndDate(nextDay);
-                        setIsFirstStartSelect(false);
-                      } else {
-                        setEndDate(null);
-                      }
+                      setStartDate(new Date(date.toString()));
+                      setEndDate(null);
                     }
                   }}
                   selectedDayColor={theme.colors.primary}
