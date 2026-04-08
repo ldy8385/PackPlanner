@@ -68,11 +68,6 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
   const handleSave = () => {
     const planName = name.trim() || t('createPlan.unnamedPlan');
 
-    if (!destination.trim()) {
-      Alert.alert(t('common.error'), t('createPlan.errorDestination'));
-      return;
-    }
-
     const finalEndDate = endDate || startDate;
 
     if (startDate > finalEndDate) {
