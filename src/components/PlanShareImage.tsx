@@ -1,89 +1,94 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, Image, StyleSheet, Dimensions} from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
 
-const IMAGE_COLORS = {
-  background: '#F9FAFB',
-  surface: '#FFFFFF',
-  primary: '#4F46E5',
-  onSurface: '#1F2937',
-  onSurfaceVariant: '#4B5563',
-  outline: '#9CA3AF',
-  outlineVariant: '#E5E7EB',
+// Instagram Story: 1080x1920 (9:16)
+// 렌더링은 축소 비율로, 캡처 시 고해상도
+const STORY_WIDTH = 360;
+const STORY_HEIGHT = 640;
+
+const C = {
+  bg: '#1a1145',
+  bgGrad: '#2d1b69',
+  card: 'rgba(255,255,255,0.08)',
+  cardBorder: 'rgba(255,255,255,0.12)',
+  accent: '#818CF8',
+  accentLight: '#C7D2FE',
+  white: '#FFFFFF',
+  whiteAlpha: 'rgba(255,255,255,0.7)',
+  whiteAlpha2: 'rgba(255,255,255,0.5)',
+  badge: 'rgba(129,140,248,0.2)',
 };
 
 const getPlanTypeLabel = (type: PlanType, t: (key: string) => string) =>
   t(`planType.${type}`);
 
 const formatDateRange = (start: Date, end: Date): string => {
-  const startStr = start.toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-  });
-  const endStr = end.toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-  });
-  return `${startStr} ~ ${endStr}`;
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'});
+  return `${fmt(start)} ~ ${fmt(end)}`;
 };
 
-interface GearItemBoxProps {
+interface GearItemRowProps {
   item: PlanItem;
   depth: number;
-  t: (key: string) => string;
 }
 
-const GearItemBox: React.FC<GearItemBoxProps> = ({item, depth, t}) => {
+const GearItemRow: React.FC<GearItemRowProps> = ({item, depth}) => {
   const hasChildren = item.children && item.children.length > 0;
-  const bgColor = depth % 2 === 0 ? IMAGE_COLORS.surface : IMAGE_COLORS.background;
-
   return (
-    <View
-      style={[
-        styles.gearBox,
-        {
-          backgroundColor: bgColor,
-          borderColor: hasChildren
-            ? IMAGE_COLORS.outline
-            : IMAGE_COLORS.outlineVariant,
-        },
-      ]}>
-      <View style={styles.gearBoxHeader}>
-        <Text style={styles.gearName} numberOfLines={1}>
-          {item.gear.name}
-        </Text>
-        <Text style={styles.gearWeight}>{item.gear.weight}g</Text>
+    <View style={{marginLeft: depth * 12}}>
+      <View style={rowStyles.row}>
+        <View style={rowStyles.dot} />
+        <Text style={rowStyles.name} numberOfLines={1}>{item.gear.name}</Text>
+        <Text style={rowStyles.weight}>{item.gear.weight}g</Text>
       </View>
-      {hasChildren && (
-        <View style={styles.gearChildren}>
-          {item.children!.map(child => (
-            <GearItemBox
-              key={child.id}
-              item={child}
-              depth={depth + 1}
-              t={t}
-            />
-          ))}
-        </View>
-      )}
+      {hasChildren && item.children!.map(child => (
+        <GearItemRow key={child.id} item={child} depth={depth + 1} />
+      ))}
     </View>
   );
 };
+
+const rowStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 3,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.accent,
+    marginRight: 8,
+  },
+  name: {
+    flex: 1,
+    fontSize: 11,
+    color: C.white,
+    marginRight: 6,
+  },
+  weight: {
+    fontSize: 10,
+    color: C.whiteAlpha,
+  },
+});
 
 interface PlanShareImageProps {
   plan: Plan;
   viewShotRef: React.RefObject<any>;
 }
 
-const PlanShareImage: React.FC<PlanShareImageProps> = ({
-  plan,
-  viewShotRef,
-}) => {
+const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
   const {t} = useTranslation();
   const stats = countAllItems(plan.items);
+  const totalKg = (stats.weight / 1000).toFixed(1);
+  const photos = plan.photos || [];
+  const hasPhotos = photos.length > 0;
 
   return (
     <View style={styles.wrapper} pointerEvents="none">
@@ -91,38 +96,83 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({
         ref={viewShotRef}
         options={{format: 'png', quality: 1, result: 'tmpfile'}}>
         <View style={styles.container}>
+          {/* Background gradient effect */}
+          <View style={styles.bgTop} />
+
           {/* Header */}
           <View style={styles.header}>
+            <Text style={styles.appName}>PackPlanner</Text>
             <Text style={styles.planName}>{plan.name}</Text>
-            <Text style={styles.planMeta}>
-              {getPlanTypeLabel(plan.type, t)} · {plan.destination}
-            </Text>
-            <Text style={styles.planMeta}>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaText}>
+                {getPlanTypeLabel(plan.type, t)}
+              </Text>
+              {plan.destination ? (
+                <Text style={styles.metaText}> · {plan.destination}</Text>
+              ) : null}
+            </View>
+            <Text style={styles.dateText}>
               {formatDateRange(plan.startDate, plan.endDate)}
             </Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statBadge}>
-                <Text style={styles.statText}>
-                  {stats.total} {t('plan.gearCount')}
-                </Text>
-              </View>
-              <View style={styles.statBadge}>
-                <Text style={styles.statText}>
-                  {Math.round(stats.weight)}g
-                </Text>
-              </View>
+          </View>
+
+          {/* Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.total}</Text>
+              <Text style={styles.statLabel}>{t('plan.gearCount')}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{totalKg}</Text>
+              <Text style={styles.statLabel}>kg</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.checked}</Text>
+              <Text style={styles.statLabel}>{t('plan.ready')}</Text>
             </View>
           </View>
 
-          {/* Divider */}
-          <View style={styles.divider} />
+          {/* Photos */}
+          {hasPhotos && (
+            <View style={styles.photoSection}>
+              <View style={styles.photoGrid}>
+                {photos.slice(0, 3).map((url, i) => (
+                  <View key={i} style={[
+                    styles.photoItem,
+                    i === 0 && photos.length >= 2 ? styles.photoLarge : styles.photoSmall,
+                  ]}>
+                    <Image source={{uri: url}} style={styles.photoImage} />
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
-          {/* Gear Tree */}
-          <View style={styles.gearTree}>
-            {plan.items.map(item => (
-              <GearItemBox key={item.id} item={item} depth={0} t={t} />
-            ))}
-          </View>
+          {/* Memo */}
+          {plan.description ? (
+            <View style={styles.memoCard}>
+              <Text style={styles.memoText} numberOfLines={3}>
+                {plan.description}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Gear List */}
+          {plan.items.length > 0 && (
+            <View style={styles.gearSection}>
+              <Text style={styles.sectionTitle}>{t('plan.gearList')}</Text>
+              <View style={styles.gearCard}>
+                {plan.items.slice(0, 15).map(item => (
+                  <GearItemRow key={item.id} item={item} depth={0} />
+                ))}
+                {plan.items.length > 15 && (
+                  <Text style={styles.moreText}>
+                    +{plan.items.length - 15} more
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -141,83 +191,147 @@ const styles = StyleSheet.create({
     top: -9999,
   },
   container: {
-    width: 375,
-    backgroundColor: IMAGE_COLORS.background,
-    padding: 20,
+    width: STORY_WIDTH,
+    minHeight: STORY_HEIGHT,
+    backgroundColor: C.bg,
+    padding: 24,
+    paddingTop: 40,
+    paddingBottom: 24,
+  },
+  bgTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    backgroundColor: C.bgGrad,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
   header: {
-    marginBottom: 12,
+    marginBottom: 20,
+  },
+  appName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.accent,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   planName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: IMAGE_COLORS.onSurface,
+    fontSize: 26,
+    fontWeight: '800',
+    color: C.white,
     marginBottom: 6,
   },
-  planMeta: {
-    fontSize: 14,
-    color: IMAGE_COLORS.onSurfaceVariant,
-    marginBottom: 2,
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  metaText: {
+    fontSize: 13,
+    color: C.whiteAlpha,
+  },
+  dateText: {
+    fontSize: 13,
+    color: C.accentLight,
+    marginTop: 4,
+    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 10,
-  },
-  statBadge: {
-    backgroundColor: IMAGE_COLORS.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: IMAGE_COLORS.outlineVariant,
+    gap: 10,
     marginBottom: 16,
   },
-  gearTree: {
-    gap: 8,
-  },
-  gearBox: {
+  statCard: {
+    flex: 1,
+    backgroundColor: C.card,
+    borderRadius: 14,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-  },
-  gearBoxHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderColor: C.cardBorder,
+    paddingVertical: 12,
     alignItems: 'center',
   },
-  gearName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: IMAGE_COLORS.onSurface,
-    flex: 1,
-    marginRight: 8,
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: C.white,
   },
-  gearWeight: {
-    fontSize: 12,
-    color: IMAGE_COLORS.onSurfaceVariant,
+  statLabel: {
+    fontSize: 10,
+    color: C.whiteAlpha2,
+    marginTop: 2,
   },
-  gearChildren: {
-    marginTop: 8,
+  photoSection: {
+    marginBottom: 16,
+  },
+  photoGrid: {
+    flexDirection: 'row',
     gap: 6,
+    height: 120,
+  },
+  photoLarge: {
+    flex: 2,
+  },
+  photoSmall: {
+    flex: 1,
+  },
+  photoItem: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  memoCard: {
+    backgroundColor: C.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+    padding: 14,
+    marginBottom: 16,
+  },
+  memoText: {
+    fontSize: 12,
+    color: C.whiteAlpha,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+  gearSection: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.accentLight,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  gearCard: {
+    backgroundColor: C.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+    padding: 12,
+  },
+  moreText: {
+    fontSize: 10,
+    color: C.whiteAlpha2,
+    textAlign: 'center',
+    marginTop: 6,
   },
   footer: {
-    marginTop: 20,
     alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: IMAGE_COLORS.outlineVariant,
+    marginTop: 'auto',
+    paddingTop: 16,
   },
   footerText: {
-    fontSize: 12,
-    color: IMAGE_COLORS.outline,
+    fontSize: 10,
+    color: C.whiteAlpha2,
+    letterSpacing: 0.5,
   },
 });
 

@@ -854,7 +854,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 iconColor={theme.colors.onSurface}
                 size={22}
                 onPress={() => sharePlanAsImage(selectedPlan)}
-                disabled={selectedPlan.items.length === 0 || isGenerating}
+                disabled={isGenerating}
               />
               <IconButton
                 icon="pencil"
