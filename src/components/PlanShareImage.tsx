@@ -1,10 +1,10 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
-import {KAKAO_API_KEY, KAKAO_JS_KEY} from '../config/apiKeys';
+import {KAKAO_API_KEY} from '../config/apiKeys';
 
 // Instagram Story: 1080x1920 (9:16)
 const STORY_WIDTH = 360;
@@ -92,6 +92,21 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
   const photos = plan.photos || [];
   const hasPhotos = photos.length > 0;
   const hasLocation = !!plan.location;
+  const [mapBase64, setMapBase64] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!plan.location) return;
+    const {latitude, longitude} = plan.location;
+    const url = getStaticMapUrl(latitude, longitude, 600, 300);
+    fetch(url, {headers: {Authorization: `KakaoAK ${KAKAO_API_KEY}`}})
+      .then(res => res.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => setMapBase64(reader.result as string);
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => setMapBase64(null));
+  }, [plan.location]);
 
   return (
     <View style={styles.wrapper} pointerEvents="none">
@@ -126,13 +141,10 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
           </View>
 
           {/* Map */}
-          {hasLocation && (
+          {hasLocation && mapBase64 && (
             <View style={styles.mapSection}>
               <Image
-                source={{
-                  uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300),
-                  headers: {Authorization: `KakaoAK ${KAKAO_API_KEY}`},
-                }}
+                source={{uri: mapBase64}}
                 style={styles.mapImage}
               />
               <View style={styles.mapOverlay}>
