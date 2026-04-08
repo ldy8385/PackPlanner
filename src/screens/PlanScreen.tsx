@@ -845,20 +845,20 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <IconButton
                 icon="calendar-export"
-                iconColor={theme.colors.onSurfaceVariant}
+                iconColor={theme.colors.onSurface}
                 size={22}
                 onPress={handleExportToCalendar}
               />
               <IconButton
                 icon="share-variant"
-                iconColor={theme.colors.onSurfaceVariant}
+                iconColor={theme.colors.onSurface}
                 size={22}
                 onPress={() => sharePlanAsImage(selectedPlan)}
                 disabled={selectedPlan.items.length === 0 || isGenerating}
               />
               <IconButton
                 icon="pencil"
-                iconColor={theme.colors.onSurfaceVariant}
+                iconColor={theme.colors.onSurface}
                 size={22}
                 onPress={() => handleEditPress(selectedPlan)}
               />
