@@ -61,6 +61,8 @@ export interface Location {
   placeId?: string;
 }
 
+export const PLAN_MAX_PHOTOS = 10;
+
 export interface Plan {
   id: string;
   name: string;
@@ -70,6 +72,7 @@ export interface Plan {
   location?: Location;
   type: PlanType;
   description?: string;
+  photos?: string[];
   createdAt: Date;
   items: PlanItem[];
   isCompleted: boolean;

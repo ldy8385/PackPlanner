@@ -4,8 +4,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Text, Button, TextInput, Chip, IconButton, useTheme, Surface } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,7 +17,7 @@ import ManufacturerSelectDrawer from '../components/ManufacturerSelectDrawer';
 import CategorySelectDrawer from '../components/CategorySelectDrawer';
 
 interface CreateGearScreenProps {
-  onSave: (gear: Gear) => void;
+  onSave: (gear: Gear, localImageUri?: string) => void;
   onCancel: () => void;
   editingGear?: Gear | null;
   tags?: string[];
@@ -209,6 +209,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
 
     const quantityNum = parseInt(quantity, 10) || 1;
 
+    // 로컬 URI인지 Storage URL인지 구분
+    const isLocalImage = imageUri && imageUri.startsWith('file://');
     const newGear: Gear = {
       id: editingGear?.id || Date.now().toString(),
       name: gearName,
@@ -217,12 +219,12 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
       manufacturer: manufacturer || undefined,
       description: description.trim() || undefined,
       tags,
-      imageUrl: imageUri || undefined,
+      imageUrl: isLocalImage ? editingGear?.imageUrl : (imageUri || undefined),
       container: container || undefined,
-      quantity: quantityNum > 1 ? quantityNum : undefined, // 1보다 클 때만 저장
+      quantity: quantityNum > 1 ? quantityNum : undefined,
     };
 
-    onSave(newGear);
+    onSave(newGear, isLocalImage ? imageUri : undefined);
   };
 
   return (
@@ -262,7 +264,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             activeOpacity={0.7}>
             {imageUri ? (
               <View style={styles.imageWrapper}>
-                <Image source={{ uri: imageUri || undefined }} style={styles.image} />
+                <FastImage source={{ uri: imageUri || undefined }} style={styles.image} resizeMode={FastImage.resizeMode.cover} />
                 <TouchableOpacity
                   style={[styles.removeImageButton, { backgroundColor: theme.colors.surface }]}
                   onPress={handleRemoveImage}>

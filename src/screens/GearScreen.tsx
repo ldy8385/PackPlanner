@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  Image,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { Text, Chip, Surface, IconButton, Divider, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
@@ -170,7 +170,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
         <View style={styles.gearHeader}>
           <Surface style={[styles.gearIcon, { backgroundColor: theme.colors.secondaryContainer }]} elevation={0}>
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.gearImage} />
+              <FastImage source={{ uri: item.imageUrl, priority: FastImage.priority.normal }} style={styles.gearImage} resizeMode={FastImage.resizeMode.cover} />
             ) : (
               <Icon
                 name={getCategoryIcon(item.category)}

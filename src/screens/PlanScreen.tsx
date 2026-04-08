@@ -22,14 +22,18 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTranslation} from 'react-i18next';
-import {Plan, Gear, GearTemplate, PlanItem, PlanType} from '../types';
+import {Plan, Gear, GearTemplate, PlanItem, PlanType, PLAN_MAX_PHOTOS} from '../types';
+import {launchImageLibrary} from 'react-native-image-picker';
+import FastImage from 'react-native-fast-image';
 import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
 import {OPENWEATHER_KEY} from '../config/apiKeys';
+import {firestoreService} from '../utils/firestore';
 import {countAllItems} from '../utils/gearHierarchy';
 import PlanShareImage from '../components/PlanShareImage';
 import {useSharePlanImage} from '../hooks/useSharePlanImage';
 import {useDialog} from '../contexts/DialogContext';
+import {useAuth} from '../contexts/AuthContext';
 
 interface DailyWeather {
   date: string;
@@ -260,11 +264,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
 }) => {
   const theme = useTheme();
   const {t, i18n} = useTranslation();
-  const {showConfirm} = useDialog();
+  const {showAlert, showConfirm} = useDialog();
+  const {user} = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showGearSelect, setShowGearSelect] = useState(false);
   const [showPastPlans, setShowPastPlans] = useState(false);
   const [showFullMap, setShowFullMap] = useState(false);
+  const [showPhotoViewer, setShowPhotoViewer] = useState<number | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [weatherData, setWeatherData] = useState<DailyWeather[]>([]);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherStatus, setWeatherStatus] = useState<
@@ -740,6 +747,60 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     );
   };
 
+  const handleAddPhoto = () => {
+    if (!selectedPlan || !user) return;
+    const currentPhotos = selectedPlan.photos || [];
+    if (currentPhotos.length >= PLAN_MAX_PHOTOS) {
+      showAlert({
+        title: t('plan.photos'),
+        message: t('plan.photoLimitReached', { max: PLAN_MAX_PHOTOS }),
+        icon: 'warning',
+      });
+      return;
+    }
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.7, maxWidth: 1200, maxHeight: 1200, selectionLimit: 1 },
+      async (response: any) => {
+        if (response.assets && response.assets.length > 0) {
+          const uri = response.assets[0].uri;
+          if (!uri) return;
+          setIsUploadingPhoto(true);
+          try {
+            const index = currentPhotos.length;
+            const url = await firestoreService.uploadPlanPhoto(user.uid, selectedPlan.id, index, uri);
+            const updatedPhotos = [...currentPhotos, url];
+            const updatedPlan = { ...selectedPlan, photos: updatedPhotos };
+            onUpdatePlans(plans.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+            setSelectedPlan(updatedPlan);
+          } catch {
+            showAlert({ title: t('common.error'), message: t('common.saveError'), icon: 'error' });
+          } finally {
+            setIsUploadingPhoto(false);
+          }
+        }
+      },
+    );
+  };
+
+  const handleDeletePhoto = (photoIndex: number) => {
+    if (!selectedPlan || !user) return;
+    showConfirm({
+      title: t('plan.deletePhotoTitle'),
+      message: t('plan.deletePhotoMessage'),
+      icon: 'delete',
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        const currentPhotos = [...(selectedPlan.photos || [])];
+        currentPhotos.splice(photoIndex, 1);
+        const updatedPlan = { ...selectedPlan, photos: currentPhotos.length > 0 ? currentPhotos : undefined };
+        onUpdatePlans(plans.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+        setSelectedPlan(updatedPlan);
+        await firestoreService.deletePlanPhoto(user.uid, selectedPlan.id, photoIndex).catch(() => {});
+      },
+    });
+  };
+
   const renderDetailView = () => {
     if (!selectedPlan) return null;
 
@@ -859,6 +920,61 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   />
                 </TouchableOpacity>
               )}
+              {/* 메모 (description) */}
+              {selectedPlan.description ? (
+                <View style={styles.memoContainer}>
+                  <View style={styles.memoHeader}>
+                    <Icon name="note-text" size={20} color={theme.colors.primary} />
+                    <Text variant="titleSmall" style={{color: theme.colors.onSurface, marginLeft: 8}}>
+                      {t('plan.memo')}
+                    </Text>
+                  </View>
+                  <Text variant="bodyMedium" style={{color: theme.colors.onSurfaceVariant, lineHeight: 22}}>
+                    {selectedPlan.description}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* 사진 갤러리 */}
+              <View style={styles.photoSection}>
+                <View style={styles.photoSectionHeader}>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Icon name="image-multiple" size={20} color={theme.colors.primary} />
+                    <Text variant="titleSmall" style={{color: theme.colors.onSurface, marginLeft: 8}}>
+                      {t('plan.photos')} ({(selectedPlan.photos || []).length}/{PLAN_MAX_PHOTOS})
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={handleAddPhoto}
+                    disabled={isUploadingPhoto}
+                    style={[styles.addPhotoButton, {backgroundColor: theme.colors.primaryContainer}]}>
+                    {isUploadingPhoto ? (
+                      <ActivityIndicator size="small" color={theme.colors.primary} />
+                    ) : (
+                      <Icon name="plus" size={20} color={theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {(selectedPlan.photos || []).length > 0 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
+                    {(selectedPlan.photos || []).map((url, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.photoThumbnail}
+                        activeOpacity={0.8}
+                        onPress={() => setShowPhotoViewer(index)}
+                        onLongPress={() => handleDeletePhoto(index)}>
+                        <FastImage
+                          source={{uri: url, priority: FastImage.priority.normal}}
+                          style={styles.photoImage}
+                          resizeMode={FastImage.resizeMode.cover}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                ) : null}
+              </View>
+
             </Card.Content>
           </Card>
 
@@ -1136,6 +1252,28 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 latitude={selectedPlan.location.latitude}
                 longitude={selectedPlan.location.longitude}
                 height={Dimensions.get('window').height - 60}
+              />
+            </View>
+          </Modal>
+        )}
+
+        {/* Photo viewer modal */}
+        {showPhotoViewer !== null && selectedPlan.photos && (
+          <Modal
+            visible={true}
+            animationType="fade"
+            transparent
+            onRequestClose={() => setShowPhotoViewer(null)}>
+            <View style={styles.photoViewerOverlay}>
+              <TouchableOpacity
+                style={styles.photoViewerClose}
+                onPress={() => setShowPhotoViewer(null)}>
+                <Icon name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+              <FastImage
+                source={{uri: selectedPlan.photos[showPhotoViewer]}}
+                style={styles.photoViewerImage}
+                resizeMode={FastImage.resizeMode.contain}
               />
             </View>
           </Modal>
@@ -1566,6 +1704,64 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
+  },
+  photoSection: {
+    marginTop: 16,
+  },
+  photoSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  addPhotoButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoScroll: {
+    flexDirection: 'row',
+  },
+  photoThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  photoViewerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoViewerClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  photoViewerImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.7,
+  },
+  memoContainer: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+  },
+  memoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   fullMapHeader: {
     flexDirection: 'row',

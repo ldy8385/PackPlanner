@@ -1,4 +1,5 @@
 import database from '@react-native-firebase/database';
+import storage from '@react-native-firebase/storage';
 import { Plan, Gear, GearTemplate } from '../types';
 import {
   flattenPlanItemHierarchy,
@@ -66,7 +67,50 @@ const snapshotToArray = <T>(
 
 // ===== DB 서비스 =====
 
+// Storage 경로 헬퍼
+const getGearImagePath = (userId: string, gearId: string) =>
+  `users/${userId}/gears/${gearId}.jpg`;
+
+const getPlanPhotoPath = (userId: string, planId: string, index: number) =>
+  `users/${userId}/plans/${planId}/photo_${index}.jpg`;
+
 export const firestoreService = {
+  // ----- Gear Image -----
+  uploadGearImage: async (userId: string, gearId: string, localUri: string): Promise<string> => {
+    const ref = storage().ref(getGearImagePath(userId, gearId));
+    await ref.putFile(localUri);
+    return ref.getDownloadURL();
+  },
+
+  deleteGearImage: async (userId: string, gearId: string): Promise<void> => {
+    try {
+      await storage().ref(getGearImagePath(userId, gearId)).delete();
+    } catch {}
+  },
+
+  // ----- Plan Photo -----
+  uploadPlanPhoto: async (userId: string, planId: string, index: number, localUri: string): Promise<string> => {
+    const ref = storage().ref(getPlanPhotoPath(userId, planId, index));
+    await ref.putFile(localUri);
+    return ref.getDownloadURL();
+  },
+
+  deletePlanPhoto: async (userId: string, planId: string, index: number): Promise<void> => {
+    try {
+      await storage().ref(getPlanPhotoPath(userId, planId, index)).delete();
+    } catch {}
+  },
+
+  deleteAllPlanPhotos: async (userId: string, planId: string, count: number): Promise<void> => {
+    const promises = [];
+    for (let i = 0; i < count; i++) {
+      promises.push(
+        storage().ref(getPlanPhotoPath(userId, planId, i)).delete().catch(() => {}),
+      );
+    }
+    await Promise.all(promises);
+  },
+
   // ----- Default Gears -----
   copyDefaultGears: async (userId: string): Promise<Gear[]> => {
     const snapshot = await database().ref('defaults/gears').once('value');

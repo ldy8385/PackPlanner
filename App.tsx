@@ -273,11 +273,15 @@ const AppContent = () => {
   ) => {
     setIsSaving(true);
     try {
-      // 1. 장비 삭제
+      // 1. 장비 삭제 (Storage 이미지도 삭제)
+      const deletingGear = gears.find(gear => gear.id === gearId);
       const updatedGears = gears.filter(gear => gear.id !== gearId);
       setGears(updatedGears);
       if (user) {
         await firestoreService.deleteGear(user.uid, gearId);
+        if (deletingGear?.imageUrl) {
+          await firestoreService.deleteGearImage(user.uid, gearId);
+        }
       }
 
       // 2. 연결된 계획에서 해당 장비 제거 (PlanItem 계층 구조 유지하며 제거)
@@ -374,13 +378,18 @@ const AppContent = () => {
   };
 
   // 새 장비 생성
-  const handleCreateGear = async (newGear: Gear) => {
+  const handleCreateGear = async (newGear: Gear, localImageUri?: string) => {
     setIsSaving(true);
     try {
-      const updatedGears = [...gears, newGear];
+      let gear = { ...newGear };
+      if (user && localImageUri) {
+        const url = await firestoreService.uploadGearImage(user.uid, gear.id, localImageUri);
+        gear.imageUrl = url;
+      }
+      const updatedGears = [...gears, gear];
       setGears(updatedGears);
       if (user) {
-        await firestoreService.saveGear(user.uid, newGear);
+        await firestoreService.saveGear(user.uid, gear);
       }
       setShowCreateGear(false);
     } finally {
@@ -389,15 +398,24 @@ const AppContent = () => {
   };
 
   // 장비 수정
-  const handleUpdateGear = async (updatedGear: Gear) => {
+  const handleUpdateGear = async (updatedGear: Gear, localImageUri?: string) => {
     setIsSaving(true);
     try {
+      let gear = { ...updatedGear };
+      if (user && localImageUri) {
+        const url = await firestoreService.uploadGearImage(user.uid, gear.id, localImageUri);
+        gear.imageUrl = url;
+      }
+      // 이미지 삭제된 경우 (기존에 있었는데 없어짐)
+      if (user && !gear.imageUrl && editingGear?.imageUrl) {
+        await firestoreService.deleteGearImage(user.uid, gear.id);
+      }
       const updatedGears = gears.map(g =>
-        g.id === updatedGear.id ? updatedGear : g,
+        g.id === gear.id ? gear : g,
       );
       setGears(updatedGears);
       if (user) {
-        await firestoreService.saveGear(user.uid, updatedGear);
+        await firestoreService.saveGear(user.uid, gear);
       }
       setEditingGear(null);
     } finally {
