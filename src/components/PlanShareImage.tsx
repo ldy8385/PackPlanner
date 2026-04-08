@@ -4,7 +4,7 @@ import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
-import {KAKAO_API_KEY} from '../config/apiKeys';
+import {KAKAO_JS_KEY} from '../config/apiKeys';
 
 // Instagram Story: 1080x1920 (9:16)
 const STORY_WIDTH = 360;
@@ -32,7 +32,7 @@ const formatDateRange = (start: Date, end: Date): string => {
 };
 
 const getStaticMapUrl = (lat: number, lng: number, width: number, height: number) =>
-  `https://dapi.kakao.com/v2/maps/open/staticmap?appkey=${KAKAO_API_KEY}&center=${lng},${lat}&level=7&width=${width}&height=${height}&marker=type:default|position:${lng},${lat}`;
+  `https://dapi.kakao.com/v2/maps/open/staticmap?appkey=${KAKAO_JS_KEY}&center=${lng},${lat}&level=7&width=${width}&height=${height}&marker=type:default|position:${lng},${lat}`;
 
 interface GearItemRowProps {
   item: PlanItem;
@@ -129,10 +129,7 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
           {hasLocation && (
             <View style={styles.mapSection}>
               <Image
-                source={{
-                  uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300),
-                  headers: {Authorization: `KakaoAK ${KAKAO_API_KEY}`},
-                }}
+                source={{uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300)}}
                 style={styles.mapImage}
               />
               <View style={styles.mapOverlay}>
