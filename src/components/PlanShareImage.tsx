@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
-import {KAKAO_API_KEY} from '../config/apiKeys';
+import {GOOGLE_MAPS_API_KEY} from '@env';
 
 // Instagram Story: 1080x1920 (9:16)
 const STORY_WIDTH = 360;
@@ -32,7 +32,7 @@ const formatDateRange = (start: Date, end: Date): string => {
 };
 
 const getStaticMapUrl = (lat: number, lng: number, width: number, height: number) =>
-  `https://dapi.kakao.com/v2/maps/open/staticmap?appkey=${KAKAO_API_KEY}&center=${lng},${lat}&level=7&width=${width}&height=${height}&marker=type:default|position:${lng},${lat}`;
+  `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=11&size=${width}x${height}&scale=2&markers=color:red|${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}&style=feature:all|element:geometry|color:0x242f3e&style=feature:all|element:labels.text.stroke|color:0x242f3e&style=feature:all|element:labels.text.fill|color:0x746855&style=feature:water|element:geometry|color:0x17263c`;
 
 interface GearItemRowProps {
   item: PlanItem;
@@ -92,21 +92,6 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
   const photos = plan.photos || [];
   const hasPhotos = photos.length > 0;
   const hasLocation = !!plan.location;
-  const [mapBase64, setMapBase64] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!plan.location) return;
-    const {latitude, longitude} = plan.location;
-    const url = getStaticMapUrl(latitude, longitude, 600, 300);
-    fetch(url, {headers: {Authorization: `KakaoAK ${KAKAO_API_KEY}`}})
-      .then(res => res.blob())
-      .then(blob => {
-        const reader = new FileReader();
-        reader.onloadend = () => setMapBase64(reader.result as string);
-        reader.readAsDataURL(blob);
-      })
-      .catch(() => setMapBase64(null));
-  }, [plan.location]);
 
   return (
     <View style={styles.wrapper} pointerEvents="none">
@@ -141,10 +126,10 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
           </View>
 
           {/* Map */}
-          {hasLocation && mapBase64 && (
+          {hasLocation && (
             <View style={styles.mapSection}>
               <Image
-                source={{uri: mapBase64}}
+                source={{uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300)}}
                 style={styles.mapImage}
               />
               <View style={styles.mapOverlay}>
