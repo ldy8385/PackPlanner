@@ -6,20 +6,17 @@ import {Plan, PlanItem, PlanType} from '../types';
 import {countAllItems} from '../utils/gearHierarchy';
 import {GOOGLE_MAPS_API_KEY} from '@env';
 
-// Instagram Story: 1080x1920 (9:16)
 const STORY_WIDTH = 360;
-const STORY_HEIGHT = 640;
 
 const C = {
-  bg: '#FFFFFF',
-  bgGrad: '#E0E7FF',
-  card: '#F3F4F6',
-  cardBorder: '#E5E7EB',
+  bg: '#F3F4F6',
+  card: '#FFFFFF',
   accent: '#4F46E5',
-  accentLight: '#3730A3',
+  accentBg: '#EEF2FF',
   text: '#111827',
   textSub: '#4B5563',
   textMuted: '#9CA3AF',
+  border: '#E5E7EB',
 };
 
 const getPlanTypeLabel = (type: PlanType, t: (key: string) => string) =>
@@ -42,7 +39,7 @@ interface GearItemRowProps {
 const GearItemRow: React.FC<GearItemRowProps> = ({item, depth}) => {
   const hasChildren = item.children && item.children.length > 0;
   return (
-    <View style={{marginLeft: depth * 12}}>
+    <View style={{marginLeft: depth * 14}}>
       <View style={rowStyles.row}>
         <View style={rowStyles.dot} />
         <Text style={rowStyles.name} numberOfLines={1}>{item.gear.name}</Text>
@@ -59,24 +56,24 @@ const rowStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: C.accent,
     marginRight: 8,
   },
   name: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 12,
     color: C.text,
     marginRight: 6,
   },
   weight: {
-    fontSize: 10,
-    color: C.textSub,
+    fontSize: 11,
+    color: C.textMuted,
   },
 });
 
@@ -99,64 +96,62 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
         ref={viewShotRef}
         options={{format: 'png', quality: 1, result: 'tmpfile'}}>
         <View style={styles.container}>
-          <View style={styles.bgTop} />
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.appName}>PackPlanner</Text>
+          {/* Header Card */}
+          <View style={styles.headerCard}>
+            <Text style={styles.appName}>PACKPLANNER</Text>
             <Text style={styles.planName}>{plan.name}</Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaText}>
-                {getPlanTypeLabel(plan.type, t)}
-              </Text>
-              {plan.destination ? (
-                <Text style={styles.metaText}> · {plan.destination}</Text>
-              ) : null}
-            </View>
-            <View style={styles.subRow}>
+            <Text style={styles.metaText}>
+              {getPlanTypeLabel(plan.type, t)}{plan.destination ? ` · ${plan.destination}` : ''}
+            </Text>
+            <View style={styles.headerBottom}>
               <Text style={styles.dateText}>
                 {formatDateRange(plan.startDate, plan.endDate)}
               </Text>
-              <View style={styles.statsInline}>
-                <Text style={styles.statInlineText}>{stats.total} {t('plan.gearCount')}</Text>
-                <Text style={styles.statInlineDot}> · </Text>
-                <Text style={styles.statInlineText}>{totalKg}kg</Text>
+              <View style={styles.statBadges}>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{stats.total} {t('plan.gearCount')}</Text>
+                </View>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{totalKg}kg</Text>
+                </View>
               </View>
             </View>
           </View>
 
           {/* Map */}
           {hasLocation && (
-            <View style={styles.mapSection}>
+            <View style={styles.mapCard}>
               <Image
-                source={{uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 300)}}
+                source={{uri: getStaticMapUrl(plan.location!.latitude, plan.location!.longitude, 600, 280)}}
                 style={styles.mapImage}
               />
-              <View style={styles.mapOverlay}>
-                <Text style={styles.mapLabel}>{plan.destination}</Text>
-              </View>
+              {plan.destination ? (
+                <View style={styles.mapLabelRow}>
+                  <Text style={styles.mapLabel}>{plan.destination}</Text>
+                </View>
+              ) : null}
             </View>
           )}
 
           {/* Photos */}
           {hasPhotos && (
-            <View style={styles.photoSection}>
-              <View style={styles.photoGrid}>
-                {photos.slice(0, 3).map((url, i) => (
-                  <View key={i} style={[
-                    styles.photoItem,
-                    i === 0 && photos.length >= 2 ? styles.photoLarge : styles.photoSmall,
-                  ]}>
-                    <Image source={{uri: url}} style={styles.photoImage} />
-                  </View>
-                ))}
-              </View>
+            <View style={styles.photoGrid}>
+              {photos.slice(0, 3).map((url, i) => (
+                <View key={i} style={[
+                  styles.photoItem,
+                  i === 0 && photos.length >= 2 ? styles.photoLarge : styles.photoSmall,
+                ]}>
+                  <Image source={{uri: url}} style={styles.photoImage} />
+                </View>
+              ))}
             </View>
           )}
 
           {/* Memo */}
           {plan.description ? (
             <View style={styles.memoCard}>
+              <Text style={styles.memoLabel}>{t('plan.memo')}</Text>
               <Text style={styles.memoText} numberOfLines={3}>
                 {plan.description}
               </Text>
@@ -165,18 +160,14 @@ const PlanShareImage: React.FC<PlanShareImageProps> = ({plan, viewShotRef}) => {
 
           {/* Gear List */}
           {plan.items.length > 0 && (
-            <View style={styles.gearSection}>
+            <View style={styles.gearCard}>
               <Text style={styles.sectionTitle}>{t('plan.gearList')}</Text>
-              <View style={styles.gearCard}>
-                {plan.items.slice(0, 15).map(item => (
-                  <GearItemRow key={item.id} item={item} depth={0} />
-                ))}
-                {plan.items.length > 15 && (
-                  <Text style={styles.moreText}>
-                    +{plan.items.length - 15} more
-                  </Text>
-                )}
-              </View>
+              {plan.items.slice(0, 15).map(item => (
+                <GearItemRow key={item.id} item={item} depth={0} />
+              ))}
+              {plan.items.length > 15 && (
+                <Text style={styles.moreText}>+{plan.items.length - 15} more</Text>
+              )}
             </View>
           )}
 
@@ -198,102 +189,83 @@ const styles = StyleSheet.create({
   },
   container: {
     width: STORY_WIDTH,
-    minHeight: STORY_HEIGHT,
     backgroundColor: C.bg,
-    padding: 24,
-    paddingTop: 40,
+    padding: 16,
+    paddingTop: 32,
     paddingBottom: 24,
+    gap: 12,
   },
-  bgTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: C.bgGrad,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-  },
-  header: {
-    marginBottom: 16,
+  headerCard: {
+    backgroundColor: C.card,
+    borderRadius: 20,
+    padding: 20,
   },
   appName: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: C.accent,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 8,
+    letterSpacing: 2,
+    marginBottom: 10,
   },
   planName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: C.text,
-    marginBottom: 6,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginBottom: 4,
   },
   metaText: {
     fontSize: 13,
     color: C.textSub,
+    marginBottom: 12,
   },
-  subRow: {
+  headerBottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
   },
   dateText: {
     fontSize: 13,
-    color: C.accentLight,
-    fontWeight: '600',
+    color: C.accent,
+    fontWeight: '700',
   },
-  statsInline: {
+  statBadges: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 6,
   },
-  statInlineText: {
+  badge: {
+    backgroundColor: C.accentBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: C.accent,
+  },
+  mapCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: C.card,
+  },
+  mapImage: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
+  },
+  mapLabelRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  mapLabel: {
     fontSize: 12,
     color: C.textSub,
     fontWeight: '600',
   },
-  statInlineDot: {
-    fontSize: 12,
-    color: C.textMuted,
-  },
-  mapSection: {
-    marginBottom: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  mapImage: {
-    width: '100%',
-    height: 140,
-    resizeMode: 'cover',
-  },
-  mapOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  mapLabel: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  photoSection: {
-    marginBottom: 16,
-  },
   photoGrid: {
     flexDirection: 'row',
     gap: 6,
-    height: 120,
+    height: 130,
   },
   photoLarge: {
     flex: 2,
@@ -302,7 +274,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   photoItem: {
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   photoImage: {
@@ -312,45 +284,44 @@ const styles = StyleSheet.create({
   },
   memoCard: {
     backgroundColor: C.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: C.cardBorder,
-    padding: 14,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  memoLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.textMuted,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 6,
   },
   memoText: {
-    fontSize: 12,
-    color: C.textSub,
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  gearSection: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: C.accentLight,
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    color: C.textSub,
+    lineHeight: 20,
   },
   gearCard: {
     backgroundColor: C.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: C.cardBorder,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.textMuted,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   moreText: {
-    fontSize: 10,
+    fontSize: 11,
     color: C.textMuted,
     textAlign: 'center',
-    marginTop: 6,
+    marginTop: 8,
   },
   footer: {
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingTop: 16,
+    paddingTop: 4,
   },
   footerText: {
     fontSize: 10,
