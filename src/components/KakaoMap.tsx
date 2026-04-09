@@ -1,7 +1,11 @@
-import React, {useRef, useCallback} from 'react';
+import React, {useRef, useCallback, useImperativeHandle, forwardRef} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
 import {GOOGLE_MAPS_API_KEY} from '@env';
+
+export interface KakaoMapHandle {
+  moveTo: (lat: number, lng: number) => void;
+}
 
 interface KakaoMapProps {
   latitude: number;
@@ -12,15 +16,23 @@ interface KakaoMapProps {
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
-const KakaoMap: React.FC<KakaoMapProps> = ({
+const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
   latitude,
   longitude,
   height = 200,
   interactive = false,
   showCenterPin = false,
   onLocationChange,
-}) => {
+}, ref) => {
   const webViewRef = useRef<WebView>(null);
+
+  useImperativeHandle(ref, () => ({
+    moveTo: (lat: number, lng: number) => {
+      webViewRef.current?.injectJavaScript(
+        `if(window._map){window._map.panTo(new google.maps.LatLng(${lat},${lng}));}true;`
+      );
+    },
+  }));
 
   const handleMessage = useCallback(
     (event: any) => {
@@ -63,7 +75,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
         <script>
           function initMap() {
             const center = { lat: ${latitude}, lng: ${longitude} };
-            const map = new google.maps.Map(document.getElementById('map'), {
+            const map = window._map = new google.maps.Map(document.getElementById('map'), {
               center: center,
               zoom: ${interactive ? 12 : 14},
               disableDefaultUI: true,
@@ -71,7 +83,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
               gestureHandling: '${interactive ? 'greedy' : 'none'}',
             });
 
-            new google.maps.Marker({ position: center, map: map });
+            ${!showCenterPin ? `new google.maps.Marker({ position: center, map: map });` : ''}
 
             ${onLocationChange ? `
             let debounceTimer;
@@ -109,7 +121,7 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

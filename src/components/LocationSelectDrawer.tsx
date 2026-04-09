@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { KAKAO_API_KEY } from '../config/apiKeys';
 import { Location } from '../types';
-import KakaoMap from './KakaoMap';
+import KakaoMap, { KakaoMapHandle } from './KakaoMap';
 
 interface LocationSelectDrawerProps {
   visible: boolean;
@@ -37,9 +37,9 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
   const [showResults, setShowResults] = useState(false);
 
   // 지도 상태
+  const mapRef = useRef<KakaoMapHandle>(null);
   const [mapLat, setMapLat] = useState(37.5665);
   const [mapLng, setMapLng] = useState(126.978);
-  const [mapKey, setMapKey] = useState(0); // 지도 리렌더링용
   const [address, setAddress] = useState('');
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -53,9 +53,6 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
       setShowResults(false);
       setAddress('');
       setHasInteracted(false);
-      setMapLat(37.5665);
-      setMapLng(126.978);
-      setMapKey(prev => prev + 1);
       if (initialQuery.length >= 2) {
         searchLocation(initialQuery);
         setShowResults(true);
@@ -146,7 +143,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
     setHasInteracted(true);
     setShowResults(false);
     setSearchQuery(location.name);
-    setMapKey(prev => prev + 1);
+    mapRef.current?.moveTo(location.latitude, location.longitude);
     Keyboard.dismiss();
   };
 
@@ -179,7 +176,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           {/* Map + Search overlay */}
           <View style={styles.mapArea}>
             <KakaoMap
-              key={mapKey}
+              ref={mapRef}
               latitude={mapLat}
               longitude={mapLng}
               height={400}
