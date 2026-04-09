@@ -36,10 +36,10 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  // 지도 상태
+  // 지도 상태 (좌표는 ref로 관리 → 리렌더링 방지)
   const mapRef = useRef<KakaoMapHandle>(null);
-  const [mapLat, setMapLat] = useState(37.5665);
-  const [mapLng, setMapLng] = useState(126.978);
+  const mapLatRef = useRef(37.5665);
+  const mapLngRef = useRef(126.978);
   const [address, setAddress] = useState('');
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -128,17 +128,17 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
 
   // 지도 이동 시
   const handleMapLocationChange = useCallback((lat: number, lng: number) => {
-    setMapLat(lat);
-    setMapLng(lng);
-    setHasInteracted(true);
+    mapLatRef.current = lat;
+    mapLngRef.current = lng;
+    if (!hasInteracted) setHasInteracted(true);
     if (addressDebounceRef.current) clearTimeout(addressDebounceRef.current);
     addressDebounceRef.current = setTimeout(() => reverseGeocode(lat, lng), 500);
-  }, [reverseGeocode]);
+  }, [reverseGeocode, hasInteracted]);
 
   // 검색 결과 선택 → 지도 이동
   const handleSelectResult = (location: Location) => {
-    setMapLat(location.latitude);
-    setMapLng(location.longitude);
+    mapLatRef.current = location.latitude;
+    mapLngRef.current = location.longitude;
     setAddress(location.address || location.name);
     setHasInteracted(true);
     setShowResults(false);
@@ -151,8 +151,8 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
     const location: Location = {
       name: address || searchQuery || t('location.unknownLocation'),
       address: address || undefined,
-      latitude: mapLat,
-      longitude: mapLng,
+      latitude: mapLatRef.current,
+      longitude: mapLngRef.current,
     };
     onSelect(location);
   };
@@ -177,8 +177,8 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           <View style={styles.mapArea}>
             <KakaoMap
               ref={mapRef}
-              latitude={mapLat}
-              longitude={mapLng}
+              latitude={37.5665}
+              longitude={126.978}
               height={0}
               interactive
               showCenterPin
@@ -264,7 +264,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
                 <>
                   <Icon name="map-marker" size={20} color={theme.colors.primary} />
                   <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginLeft: 8, flex: 1 }} numberOfLines={2}>
-                    {address || `${mapLat.toFixed(5)}, ${mapLng.toFixed(5)}`}
+                    {address || `${mapLatRef.current.toFixed(5)}, ${mapLngRef.current.toFixed(5)}`}
                   </Text>
                 </>
               ) : (
