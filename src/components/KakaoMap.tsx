@@ -1,4 +1,4 @@
-import React, {useRef, useCallback, useImperativeHandle, forwardRef} from 'react';
+import React, {useRef, useCallback, useImperativeHandle, forwardRef, useMemo} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
 import {GOOGLE_MAPS_API_KEY} from '@env';
@@ -25,6 +25,8 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
   onLocationChange,
 }, ref) => {
   const webViewRef = useRef<WebView>(null);
+  const onLocationChangeRef = useRef(onLocationChange);
+  onLocationChangeRef.current = onLocationChange;
 
   useImperativeHandle(ref, () => ({
     moveTo: (lat: number, lng: number) => {
@@ -34,26 +36,23 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
     },
   }));
 
-  const handleMessage = useCallback(
-    (event: any) => {
-      try {
-        const data = JSON.parse(event.nativeEvent.data);
-        if (data.type === 'centerChanged' && onLocationChange) {
-          onLocationChange(data.lat, data.lng);
-        }
-      } catch {}
-    },
-    [onLocationChange],
-  );
+  const handleMessage = useCallback((event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'centerChanged' && onLocationChangeRef.current) {
+        onLocationChangeRef.current(data.lat, data.lng);
+      }
+    } catch {}
+  }, []);
 
-  const htmlContent = `
+  const htmlContent = useMemo(() => `
     <!DOCTYPE html>
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <style>
-          body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-          html { height: 100%; }
+          * { margin: 0; padding: 0; }
+          html, body { width: 100%; height: 100%; overflow: hidden; }
           #map { width: 100%; height: 100%; }
           ${showCenterPin ? `
           .center-pin {
@@ -83,9 +82,9 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
               gestureHandling: '${interactive ? 'greedy' : 'none'}',
             });
 
-            ${!showCenterPin ? `new google.maps.Marker({ position: center, map: map });` : ''}
+            ${!showCenterPin ? 'new google.maps.Marker({ position: center, map: map });' : ''}
 
-            ${onLocationChange ? `
+            ${interactive ? `
             let debounceTimer;
             map.addListener('center_changed', function() {
               clearTimeout(debounceTimer);
@@ -104,10 +103,10 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
         <script src="https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap" async defer></script>
       </body>
     </html>
-  `;
+  `, [latitude, longitude, interactive, showCenterPin]);
 
   return (
-    <View style={[styles.container, {height}]}>
+    <View style={[styles.container, height ? {height} : {flex: 1}]}>
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
@@ -118,6 +117,7 @@ const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(({
         scrollEnabled={false}
         bounces={false}
         onMessage={handleMessage}
+        overScrollMode="never"
       />
     </View>
   );
