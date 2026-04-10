@@ -69,8 +69,18 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
   React.useEffect(() => {
     // selectedItems가 있으면 계층 구조 유지 (깊은 복사), 없으면 flat IDs에서 변환
     if (selectedItems && selectedItems.length > 0) {
-      // 깊은 복사로 원본 데이터 보호
-      setPlanItems(deepClonePlanItems(selectedItems));
+      // 깊은 복사 + gear hydrate (DB에서 로드된 items에는 gear가 없을 수 있음)
+      const hydrateGear = (items: PlanItem[]): PlanItem[] =>
+        items.map(item => {
+          const gear = item.gear || gears.find(g => g.id === item.gearId);
+          if (!gear) return null;
+          return {
+            ...item,
+            gear,
+            children: item.children ? hydrateGear(item.children) : undefined,
+          };
+        }).filter((i): i is PlanItem => i !== null);
+      setPlanItems(hydrateGear(deepClonePlanItems(selectedItems)));
     } else if (initialSelectedIds && initialSelectedIds.length > 0) {
       const initialItems: PlanItem[] = gears
         .filter(g => initialSelectedIds.includes(g.id))
