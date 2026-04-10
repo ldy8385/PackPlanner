@@ -536,6 +536,13 @@ const AppContent = () => {
             setShowCreateGear(false);
             setEditingGear(null);
           }}
+          onDelete={(gear) => {
+            const affectedPlanIds = plans
+              .filter(p => p.items.some(item => item.gearId === gear.id))
+              .map(p => p.id);
+            handleDeleteGear(gear.id, affectedPlanIds);
+            setEditingGear(null);
+          }}
           editingGear={editingGear}
           tags={tags}
         />

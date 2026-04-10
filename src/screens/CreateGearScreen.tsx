@@ -19,6 +19,7 @@ import CategorySelectDrawer from '../components/CategorySelectDrawer';
 interface CreateGearScreenProps {
   onSave: (gear: Gear, localImageUri?: string) => void;
   onCancel: () => void;
+  onDelete?: (gear: Gear) => void;
   editingGear?: Gear | null;
   tags?: string[];
 }
@@ -26,6 +27,7 @@ interface CreateGearScreenProps {
 const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
   onSave,
   onCancel,
+  onDelete,
   editingGear,
   tags: availableTags = [],
 }) => {
@@ -529,6 +531,18 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             {t('createGear.saveGear')}
           </Button>
         </View>
+
+        {isEditMode && onDelete && editingGear && (
+          <View style={styles.deleteContainer}>
+            <Button
+              mode="text"
+              icon="delete-outline"
+              onPress={() => onDelete(editingGear)}
+              textColor={theme.colors.error}>
+              {t('common.delete')}
+            </Button>
+          </View>
+        )}
       </ScrollView>
 
       {/* Drawers */}
@@ -673,6 +687,10 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     borderRadius: 12,
+  },
+  deleteContainer: {
+    alignItems: 'center',
+    paddingBottom: 32,
   },
   containerToggleRow: {
     flexDirection: 'row',
