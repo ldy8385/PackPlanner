@@ -113,7 +113,7 @@ export default {
     templates: 'Templates',
     items: 'Items',
     tags: 'Tags',
-    totalKg: 'Total (g)',
+    totalKg: 'Total (kg)',
     noItemsFound: 'No items found',
     adjustFilters: 'Try adjusting filters or add new gear',
     noTemplates: 'No templates yet',

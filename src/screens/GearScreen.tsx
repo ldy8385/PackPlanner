@@ -390,7 +390,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                 </View>
                 <View>
                   <Text variant="titleMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>
-                    {Math.round(totalWeight)}
+                    {totalWeight > 0 ? (totalWeight / 1000).toFixed(1) : '-'}
                   </Text>
                   <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                     {t('gear.totalKg')}

@@ -112,7 +112,7 @@ export default {
     templates: '템플릿',
     items: '장비',
     tags: '태그',
-    totalKg: '총 무게(g)',
+    totalKg: '총 무게(kg)',
     noItemsFound: '장비를 찾을 수 없습니다',
     adjustFilters: '필터를 조정하거나 새 장비를 추가하세요',
     noTemplates: '아직 템플릿이 없습니다',
