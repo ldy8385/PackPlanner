@@ -213,16 +213,6 @@ const GearScreen: React.FC<GearScreenProps> = ({
         {item.description && <Divider style={styles.descriptionDivider} />}
       </TouchableOpacity>
 
-      {/* Delete Action */}
-      <TouchableOpacity
-        style={[styles.deleteGearButton, { borderTopColor: theme.colors.outlineVariant }]}
-        onPress={() => handleDeleteGear(item)}
-        activeOpacity={0.7}>
-        <Icon name="delete-outline" size={20} color={theme.colors.error} />
-        <Text variant="bodySmall" style={{ color: theme.colors.error, fontWeight: '500' }}>
-          {t('gear.remove')}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 
