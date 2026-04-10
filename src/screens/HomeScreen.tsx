@@ -44,10 +44,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const recentPlan = useMemo(() => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const futurePlans = activePlans
-      .filter(p => p.startDate >= now)
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-    return futurePlans[0] || activePlans[activePlans.length - 1];
+      .filter(p => new Date(p.endDate) >= now)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+    return futurePlans[0] || null;
   }, [activePlans]);
 
   const topTags = useMemo(() => {
@@ -216,8 +217,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </View>
 
         {/* 최근 계획 카드 - Glass/Clean Look */}
-        {recentPlan && (
-          <View style={styles.sectionContainer}>
+        <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
                 {t('home.upcomingTrip')}
@@ -230,10 +230,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 {t('home.viewAll')}
               </Button>
             </View>
+            {recentPlan ? (
             <Card
               style={[styles.featuredCard, { backgroundColor: theme.colors.primary }]}
               onPress={() =>
-                recentPlan && onNavigateToPlanDetail(recentPlan.id)
+                onNavigateToPlanDetail(recentPlan.id)
               }
               mode="contained">
               <Card.Content style={styles.featuredCardContent}>
@@ -309,8 +310,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 })()}
               </Card.Content>
             </Card>
-          </View>
-        )}
+          ) : (
+            <Surface style={[styles.emptyPlanCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+              <MaterialCommunityIcons name="calendar-blank-outline" size={40} color={theme.colors.outlineVariant} />
+              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
+                {t('plan.noUpcomingPlans')}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline, marginTop: 4 }}>
+                {t('plan.createPlanToStart')}
+              </Text>
+            </Surface>
+          )}
+        </View>
 
         {/* 빠른 액션 - Minimal Buttons */}
         <View style={styles.sectionContainer}>
@@ -469,7 +480,14 @@ const styles = StyleSheet.create({
   },
   featuredCard: {
     borderRadius: 28,
-    // Shadow removed for cleaner look, relying on color
+  },
+  emptyPlanCard: {
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    borderStyle: 'dashed',
   },
   featuredCardContent: {
     padding: 24,
