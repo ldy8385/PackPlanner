@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Text,
@@ -7,13 +7,13 @@ import {
   TextInput,
   IconButton,
   Surface,
-  Divider,
   useTheme,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gear, GearTemplate, PlanItem } from '../types';
 import { useDialog } from '../contexts/DialogContext';
+import { getCategoryIcon } from '../utils/gearHierarchy';
 import GearSelectScreen from './GearSelectScreen';
 
 interface CreateTemplateScreenProps {
@@ -50,7 +50,6 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
     return gears.filter(g => selectedGearIds.includes(g.id));
   }, [gears, selectedGearIds]);
 
-  const selectedGearsCount = selectedGears.length;
   const selectedGearsWeight = selectedGears.reduce(
     (sum, gear) => sum + gear.weight,
     0,
@@ -108,6 +107,34 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
     );
   }
 
+  // 계층 구조 렌더링
+  const renderItemTree = (items: PlanItem[], depth: number = 0): React.ReactNode => {
+    return items.map(item => {
+      const gear = item.gear || gears.find(g => g.id === item.gearId);
+      if (!gear) return null;
+      const hasChildren = item.children && item.children.length > 0;
+
+      return (
+        <View key={item.id}>
+          <View style={[styles.treeItem, { paddingLeft: 12 + depth * 20 }]}>
+            {depth > 0 && (
+              <View style={[styles.depthLine, { left: depth * 20, backgroundColor: theme.colors.outlineVariant }]} />
+            )}
+            <Icon name={getCategoryIcon(gear.category)} size={18} color={theme.colors.primary} />
+            <View style={styles.treeItemInfo}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>{gear.name}</Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                {t(`gearCategory.${gear.category}`)} · {gear.weight}g
+                {hasChildren ? ` · ${item.children?.length} ${t('plan.gearCount')}` : ''}
+              </Text>
+            </View>
+          </View>
+          {hasChildren && renderItemTree(item.children!, depth + 1)}
+        </View>
+      );
+    });
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
@@ -138,6 +165,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={{ borderRadius: 12 }}
           />
 
           <TextInput
@@ -147,84 +175,65 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             value={description}
             onChangeText={setDescription}
             multiline
-            numberOfLines={2}
-            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            numberOfLines={3}
+            style={[styles.input, styles.memoInput, { backgroundColor: theme.colors.surface }]}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={{ borderRadius: 12 }}
           />
 
-          <Divider style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-
-          {/* Gear Selection Section */}
+          {/* Gear Section */}
           <View style={styles.gearSection}>
-            <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-              {t('createTemplate.selectGear')}
-            </Text>
-
-            <Surface style={[styles.selectedInfo, { backgroundColor: theme.colors.surface }]} elevation={0}>
-              <View style={styles.selectedStat}>
-                <Icon name="package-variant" size={20} color={theme.colors.secondary} />
-                <Text style={[styles.selectedStatText, { color: theme.colors.onSurfaceVariant }]}>
-                  {selectedGearsCount} {t('gear.items')}
-                </Text>
+            <View style={styles.gearSectionHeader}>
+              <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+                {t('createTemplate.selectGear')}
+              </Text>
+              <View style={styles.statBadges}>
+                <View style={[styles.badge, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: theme.colors.primary }}>
+                    {selectedGearIds.length} {t('gear.items')}
+                  </Text>
+                </View>
+                <View style={[styles.badge, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: theme.colors.primary }}>
+                    {selectedGearsWeight > 0 ? `${(selectedGearsWeight / 1000).toFixed(1)}kg` : '-'}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.selectedStat}>
-                <Icon name="weight-kilogram" size={20} color={theme.colors.tertiary} />
-                <Text style={[styles.selectedStatWeight, { color: theme.colors.tertiary }]}>
-                  {Math.round(selectedGearsWeight)}g
-                </Text>
-              </View>
-            </Surface>
+            </View>
 
             <Button
-              mode="contained"
-              icon="plus"
+              mode="contained-tonal"
+              icon="pencil"
               onPress={() => setShowGearSelect(true)}
-              style={[styles.selectGearButton, { backgroundColor: theme.colors.secondary }]}
-              buttonColor={theme.colors.secondary}>
+              style={styles.selectGearButton}
+              buttonColor={theme.colors.primaryContainer}
+              textColor={theme.colors.primary}>
               {t('createTemplate.selectGear')}
             </Button>
 
-            {/* Selected Gear List */}
-            {selectedGears.length > 0 && (
-              <Surface style={[styles.selectedGearsContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
-                <Text variant="bodyMedium" style={[styles.selectedGearsTitle, { color: theme.colors.onSurfaceVariant }]}>
-                  {t('createTemplate.selectedItems')}
-                </Text>
+            {/* Selected Gear Tree */}
+            {templateItems.length > 0 ? (
+              <Surface style={[styles.treeContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
+                {renderItemTree(templateItems)}
+              </Surface>
+            ) : selectedGears.length > 0 ? (
+              <Surface style={[styles.treeContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
                 {selectedGears.map(gear => (
-                  <View key={gear.id} style={[styles.selectedGearItem, { borderBottomColor: theme.colors.outlineVariant }]}>
-                    <View style={styles.selectedGearInfo}>
-                      <Text style={[styles.selectedGearName, { color: theme.colors.onSurface }]}>{gear.name}</Text>
-                      <Text style={[styles.selectedGearDetail, { color: theme.colors.onSurfaceVariant }]}>
+                  <View key={gear.id} style={[styles.treeItem, { paddingLeft: 12 }]}>
+                    <Icon name={getCategoryIcon(gear.category)} size={18} color={theme.colors.primary} />
+                    <View style={styles.treeItemInfo}>
+                      <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>{gear.name}</Text>
+                      <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                         {t(`gearCategory.${gear.category}`)} · {gear.weight}g
                       </Text>
                     </View>
-                    <IconButton
-                      icon="close"
-                      size={20}
-                      iconColor={theme.colors.error}
-                      onPress={() => {
-                        setSelectedGearIds(
-                          selectedGearIds.filter(id => id !== gear.id),
-                        );
-                      }}
-                    />
                   </View>
                 ))}
               </Surface>
-            )}
+            ) : null}
           </View>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            mode="outlined"
-            onPress={onCancel}
-            style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
-            textColor={theme.colors.onSurfaceVariant}>
-            {t('common.cancel')}
-          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -257,79 +266,54 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   input: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  divider: {
-    marginVertical: 24,
-    height: 1,
+  memoInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   gearSection: {
-    marginTop: 8,
+    marginTop: 16,
   },
-  sectionTitle: {
-    marginBottom: 16,
-    fontWeight: '600',
-  },
-  selectedInfo: {
+  gearSectionHeader: {
     flexDirection: 'row',
-    gap: 24,
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  selectedStat: {
-    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 12,
   },
-  selectedStatText: {
-    fontSize: 14,
-    fontWeight: '500',
+  statBadges: {
+    flexDirection: 'row',
+    gap: 6,
   },
-  selectedStatWeight: {
-    fontSize: 14,
-    fontWeight: '600',
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   selectGearButton: {
     marginBottom: 16,
     borderRadius: 12,
   },
-  selectedGearsContainer: {
-    borderRadius: 12,
-    padding: 16,
+  treeContainer: {
+    borderRadius: 14,
     borderWidth: 1,
+    overflow: 'hidden',
   },
-  selectedGearsTitle: {
-    marginBottom: 12,
-    fontWeight: '500',
-  },
-  selectedGearItem: {
+  treeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    paddingVertical: 10,
+    paddingRight: 12,
+    gap: 10,
   },
-  selectedGearInfo: {
+  treeItemInfo: {
     flex: 1,
   },
-  selectedGearName: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  selectedGearDetail: {
-    fontSize: 14,
-  },
-  buttonContainer: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  cancelButton: {
-    width: '100%',
-    borderRadius: 12,
+  depthLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1.5,
   },
 });
 
