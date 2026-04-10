@@ -734,6 +734,7 @@ const PlanItemView: React.FC<{
   movingId,
   setMovingId,
 }) => {
+    const theme = useTheme();
     const isExpanded = expandedIds.has(item.id);
     const hasChildren = item.children && item.children.length > 0;
     const isContainer = item.gear.container;
