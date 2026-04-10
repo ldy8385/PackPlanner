@@ -14,7 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory, GearTemplate, PlanItem } from '../types';
 import { gearCategories } from '../data/mockData';
-import { deepClonePlanItems } from '../utils/gearHierarchy';
+import { deepClonePlanItems, getCategoryIcon } from '../utils/gearHierarchy';
 import { t } from 'i18next';
 
 interface GearSelectScreenProps {
@@ -758,7 +758,7 @@ const PlanItemView: React.FC<{
                 )}
 
                 <View style={styles.planItemIcon}>
-                  <Icon name="cube" size={20} color="#2E7D32" />
+                  <Icon name={getCategoryIcon(item.gear.category)} size={20} color={theme.colors.primary} />
                 </View>
 
                 <View style={styles.planItemInfo}>

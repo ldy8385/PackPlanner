@@ -1,4 +1,36 @@
-import {PlanItem, Gear} from '../types';
+import {PlanItem, Gear, GearCategory} from '../types';
+
+export const getCategoryIcon = (category: GearCategory): string => {
+  const iconMap: { [key: string]: string } = {
+    [GearCategory.TENT]: 'tent',
+    [GearCategory.TARP]: 'texture',
+    [GearCategory.SLEEPING_BAG]: 'sleep',
+    [GearCategory.PILLOW]: 'panorama-wide-angle-outline',
+    [GearCategory.MAT]: 'bed',
+    [GearCategory.COOKING]: 'silverware-fork-knife',
+    [GearCategory.LIGHTING]: 'lamp',
+    [GearCategory.BATTERY]: 'battery',
+    [GearCategory.CAMERA]: 'camera',
+    [GearCategory.POUCH]: 'package-variant-closed',
+    [GearCategory.CHAIR]: 'chair-rolling',
+    [GearCategory.TABLE]: 'table-furniture',
+    [GearCategory.SOUND]: 'speaker',
+    [GearCategory.FURNITURE]: 'sofa',
+    [GearCategory.CLOTHING]: 'tshirt-v',
+    [GearCategory.ACCESSORIES]: 'toolbox',
+    [GearCategory.TOOLS]: 'wrench',
+    [GearCategory.CARE]: 'shower',
+    [GearCategory.DOWN]: 'feather',
+    [GearCategory.BOOTY]: 'shoe-cleat',
+    [GearCategory.FOOD]: 'food-apple',
+    [GearCategory.BOTTLE]: 'bottle-tonic-outline',
+    [GearCategory.TABLEWARE]: 'silverware-fork-knife',
+    [GearCategory.HIKING_STICK]: 'hiking',
+    [GearCategory.BAG]: 'bag-personal',
+    [GearCategory.ETC]: 'package-variant',
+  };
+  return iconMap[category] || 'package-variant';
+};
 
 /**
  * PlanItem 계층의 총 아이템 수, 체크 수, 무게 집계
