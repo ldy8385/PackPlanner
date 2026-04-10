@@ -230,37 +230,53 @@ const GearScreen: React.FC<GearScreenProps> = ({
 
     <SafeView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Top Tabs */}
-      <Surface style={[styles.tabHeader, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'gears' && { borderBottomColor: theme.colors.primary },
-          ]}
-          onPress={() => setActiveTab('gears')}>
-          <Text
-            variant="titleSmall"
-            style={{
-              color: activeTab === 'gears' ? theme.colors.primary : theme.colors.onSurfaceVariant,
-              fontWeight: activeTab === 'gears' ? '600' : '500',
-            }}>
-            {t('gear.gearList')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'templates' && { borderBottomColor: theme.colors.primary },
-          ]}
-          onPress={() => setActiveTab('templates')}>
-          <Text
-            variant="titleSmall"
-            style={{
-              color: activeTab === 'templates' ? theme.colors.primary : theme.colors.onSurfaceVariant,
-              fontWeight: activeTab === 'templates' ? '600' : '500',
-            }}>
-            {t('gear.templates')}
-          </Text>
-        </TouchableOpacity>
+      <Surface style={[styles.tabHeader, { backgroundColor: theme.colors.surface }]} elevation={0}>
+        <View style={[styles.tabContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'gears' && { backgroundColor: theme.colors.primary },
+            ]}
+            onPress={() => setActiveTab('gears')}
+            activeOpacity={0.8}>
+            <Icon
+              name="briefcase-outline"
+              size={18}
+              color={activeTab === 'gears' ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{
+                color: activeTab === 'gears' ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
+                fontWeight: '600',
+              }}>
+              {t('gear.gearList')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'templates' && { backgroundColor: theme.colors.primary },
+            ]}
+            onPress={() => setActiveTab('templates')}
+            activeOpacity={0.8}>
+            <Icon
+              name="clipboard-list-outline"
+              size={18}
+              color={activeTab === 'templates' ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{
+                color: activeTab === 'templates' ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
+                fontWeight: '600',
+              }}>
+              {t('gear.templates')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </Surface>
 
       {activeTab === 'gears' ? (
@@ -544,14 +560,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  tabContainer: {
     flexDirection: 'row',
+    borderRadius: 14,
+    padding: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    flexDirection: 'row',
+    paddingVertical: 10,
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
+    justifyContent: 'center',
+    borderRadius: 11,
   },
   fixedHeader: {
     zIndex: 1,
