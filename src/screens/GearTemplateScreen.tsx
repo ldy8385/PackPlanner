@@ -467,6 +467,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                     setIsModalVisible(false);
                   }}
                   style={[styles.modalButton, { borderColor: theme.colors.outline }]}
+                  contentStyle={{ height: 56 }}
                   textColor={theme.colors.onSurface}>
                   Cancel
                 </Button>
@@ -474,6 +475,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                   mode="contained"
                   onPress={saveTemplate}
                   style={styles.modalButton}
+                  contentStyle={{ height: 56 }}
                   disabled={!formData.name.trim()}
                   buttonColor={theme.colors.primary}
                   textColor={theme.colors.onPrimary}>
@@ -504,6 +506,7 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 mode="outlined"
                 onPress={() => setDeleteConfirmVisible(false)}
                 style={styles.deleteModalButton}
+                contentStyle={{ height: 56 }}
                 textColor={theme.colors.onSurface}
                 theme={{ colors: { primary: theme.colors.outline } }}>
                 Cancel
@@ -512,7 +515,8 @@ const GearTemplateScreen: React.FC<GearTemplateScreenProps> = ({
                 mode="contained"
                 onPress={deleteTemplate}
                 buttonColor={theme.colors.error}
-                style={styles.deleteModalButton}>
+                style={styles.deleteModalButton}
+                contentStyle={{ height: 56 }}>
                 Delete
               </Button>
             </View>
@@ -752,7 +756,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   deleteModalContainer: {
     padding: 24,
@@ -781,7 +785,7 @@ const styles = StyleSheet.create({
   },
   deleteModalButton: {
     flex: 1,
-    borderRadius: 8,
+    borderRadius: 12,
   },
 });
 

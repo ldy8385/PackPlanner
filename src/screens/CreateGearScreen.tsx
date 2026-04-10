@@ -252,6 +252,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={styles.outlineRounded}
           />
 
           {/* Photo Selection */}
@@ -319,6 +320,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={styles.outlineRounded}
           />
 
           {/* Manufacturer Selection */}
@@ -375,7 +377,8 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
               <Button
                 mode="contained"
                 onPress={handleAddTag}
-                style={[styles.addTagButton, { backgroundColor: theme.colors.primaryContainer }]}
+                style={[styles.addTagButton, { backgroundColor: theme.colors.primaryContainer, borderRadius: 12 }]}
+                contentStyle={{ height: 56 }}
                 labelStyle={{ color: theme.colors.onPrimaryContainer }}>
                 {t('common.add')}
               </Button>
@@ -486,6 +489,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={styles.outlineRounded}
           />
           <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.outline }]}>
             {t('createGear.quantityHelper')}
@@ -499,10 +503,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            style={[styles.input, styles.memoInput, { backgroundColor: theme.colors.surface }]}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
+            outlineStyle={styles.outlineRounded}
           />
         </View>
 
@@ -511,6 +516,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             mode="outlined"
             onPress={onCancel}
             style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+            contentStyle={{ height: 56 }}
             textColor={theme.colors.onSurfaceVariant}>
             {t('common.cancel')}
           </Button>
@@ -518,6 +524,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             mode="contained"
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+            contentStyle={{ height: 56 }}
             buttonColor={theme.colors.primary}>
             {t('createGear.saveGear')}
           </Button>
@@ -572,6 +579,13 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8,
+  },
+  memoInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  outlineRounded: {
+    borderRadius: 12,
   },
   helperText: {
     marginBottom: 16,

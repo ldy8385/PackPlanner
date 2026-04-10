@@ -311,7 +311,8 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
                       setShowCalendar(false);
                     }}
                     buttonColor={theme.colors.primary}
-                    style={styles.calendarConfirmBtn}>
+                    style={styles.calendarConfirmBtn}
+                    contentStyle={{ height: 56 }}>
                     {t('common.confirm')}
                   </Button>
                 </View>
@@ -340,6 +341,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             mode="outlined"
             onPress={onCancel}
             style={[styles.cancelButton, { borderColor: theme.colors.outline }]}
+            contentStyle={{ height: 56 }}
             textColor={theme.colors.onSurfaceVariant}>
             {t('common.cancel')}
           </Button>
@@ -347,6 +349,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             mode="contained"
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+            contentStyle={{ height: 56 }}
             buttonColor={theme.colors.primary}>
             {t('createPlan.savePlan')}
           </Button>

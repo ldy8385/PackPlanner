@@ -429,7 +429,8 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                     mode="contained-tonal"
                     icon="file-document-outline"
                     onPress={() => setShowTemplateModal(true)}
-                    style={{marginTop: 16}}>
+                    style={{marginTop: 16, borderRadius: 12}}
+                    contentStyle={{height: 56}}>
                     {t('gearSelect.loadTemplate')}
                   </Button>
                 )}

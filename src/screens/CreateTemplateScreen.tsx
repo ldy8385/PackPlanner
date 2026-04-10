@@ -208,6 +208,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
               icon="pencil"
               onPress={() => setShowGearSelect(true)}
               style={styles.selectGearButton}
+              contentStyle={{ height: 56 }}
               buttonColor={theme.colors.primaryContainer}
               textColor={theme.colors.primary}>
               {t('createTemplate.selectGear')}

@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   googleButtonContent: {
-    height: 52,
+    height: 56,
   },
   footer: {
     textAlign: 'center',

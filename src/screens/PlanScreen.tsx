@@ -1209,7 +1209,8 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   </Text>
                   <Button
                     mode="contained-tonal"
-                    style={{marginTop: 16}}
+                    style={{marginTop: 16, borderRadius: 12}}
+                    contentStyle={{height: 56}}
                     onPress={() => setShowGearSelect(true)}>
                     {t('plan.addGears')}
                   </Button>
@@ -1224,7 +1225,8 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                   <Button
                     mode="contained-tonal"
                     icon="pencil"
-                    style={{marginTop: 12}}
+                    style={{marginTop: 12, borderRadius: 12}}
+                    contentStyle={{height: 56}}
                     onPress={() => setShowGearSelect(true)}>
                     {t('plan.manageGears')}
                   </Button>
@@ -1240,6 +1242,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               styles.deletePlanButton,
               {borderColor: theme.colors.errorContainer},
             ]}
+            contentStyle={{height: 56}}
             onPress={() => deletePlan(selectedPlan)}>
             {t('plan.deletePlan')}
           </Button>
@@ -1404,7 +1407,8 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               <Button
                 mode="contained"
                 onPress={onCreateNewPlan}
-                style={{marginTop: 16}}>
+                style={{marginTop: 16, borderRadius: 12}}
+                contentStyle={{height: 56}}>
                 {t('plan.createPlan')}
               </Button>
             )}
@@ -1685,6 +1689,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 1,
+    borderRadius: 12,
   },
   // Empty State
   emptyState: {
