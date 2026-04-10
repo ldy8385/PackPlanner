@@ -3,7 +3,7 @@ import {View, Text, Image, StyleSheet} from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import {useTranslation} from 'react-i18next';
 import {Plan, PlanItem, PlanType} from '../types';
-import {countAllItems} from '../utils/gearHierarchy';
+import {countAllItems, formatNumber} from '../utils/gearHierarchy';
 import {GOOGLE_MAPS_API_KEY} from '@env';
 
 const STORY_WIDTH = 360;
@@ -43,7 +43,7 @@ const GearItemRow: React.FC<GearItemRowProps> = ({item, depth}) => {
       <View style={rowStyles.row}>
         <View style={rowStyles.dot} />
         <Text style={rowStyles.name} numberOfLines={1}>{item.gear.name}</Text>
-        <Text style={rowStyles.weight}>{item.gear.weight}g</Text>
+        <Text style={rowStyles.weight}>{formatNumber(item.gear.weight)}g</Text>
       </View>
       {hasChildren && item.children!.map(child => (
         <GearItemRow key={child.id} item={child} depth={depth + 1} />

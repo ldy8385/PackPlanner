@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gear, GearTemplate, PlanItem } from '../types';
 import { useDialog } from '../contexts/DialogContext';
-import { getCategoryIcon } from '../utils/gearHierarchy';
+import { getCategoryIcon, formatNumber } from '../utils/gearHierarchy';
 import GearSelectScreen from './GearSelectScreen';
 
 interface CreateTemplateScreenProps {
@@ -124,7 +124,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
             <View style={styles.treeItemInfo}>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>{gear.name}</Text>
               <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                {t(`gearCategory.${gear.category}`)} · {gear.weight}g
+                {t(`gearCategory.${gear.category}`)} · {formatNumber(gear.weight)}g
                 {hasChildren ? ` · ${item.children?.length} ${t('plan.gearCount')}` : ''}
               </Text>
             </View>
@@ -227,7 +227,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
                     <View style={styles.treeItemInfo}>
                       <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>{gear.name}</Text>
                       <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
-                        {t(`gearCategory.${gear.category}`)} · {gear.weight}g
+                        {t(`gearCategory.${gear.category}`)} · {formatNumber(gear.weight)}g
                       </Text>
                     </View>
                   </View>

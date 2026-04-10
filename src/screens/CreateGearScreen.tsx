@@ -288,7 +288,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
             {t('createGear.category')}
           </Text>
-          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={0}>
             <TouchableOpacity
               style={styles.selectorTouchable}
               onPress={() => setShowCategoryDrawer(true)}>
@@ -329,7 +329,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
             {t('createGear.manufacturer')}
           </Text>
-          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+          <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={0}>
             <TouchableOpacity
               style={styles.selectorTouchable}
               onPress={() => setShowManufacturerDrawer(true)}>
@@ -607,15 +607,17 @@ const styles = StyleSheet.create({
   },
   selectorCard: {
     borderRadius: 12,
+    height: 56,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
   },
   selectorTouchable: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
+    flex: 1,
   },
   selectorContent: {
     flex: 1,

@@ -1,5 +1,8 @@
 import {PlanItem, Gear, GearCategory} from '../types';
 
+export const formatNumber = (num: number): string =>
+  num.toLocaleString();
+
 export const getCategoryIcon = (category: GearCategory): string => {
   const iconMap: { [key: string]: string } = {
     [GearCategory.TENT]: 'tent',

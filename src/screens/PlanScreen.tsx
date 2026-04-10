@@ -30,7 +30,7 @@ import GearSelectScreen from './GearSelectScreen';
 import KakaoMap from '../components/KakaoMap';
 import {OPENWEATHER_KEY} from '../config/apiKeys';
 import {firestoreService} from '../utils/firestore';
-import {countAllItems} from '../utils/gearHierarchy';
+import {countAllItems, formatNumber} from '../utils/gearHierarchy';
 import PlanShareImage from '../components/PlanShareImage';
 import {useSharePlanImage} from '../hooks/useSharePlanImage';
 import {useDialog} from '../contexts/DialogContext';
@@ -208,7 +208,7 @@ const PlanItemList: React.FC<PlanItemListProps> = ({
                   {item.gear.name}
                 </Text>
                 <Text variant="bodySmall" style={{color: theme.colors.outline}}>
-                  {t(`gearCategory.${item.gear.category}`)} · {item.gear.weight}g
+                  {t(`gearCategory.${item.gear.category}`)} · {formatNumber(item.gear.weight)}g
                   {hasChildren
                     ? ` · ${item.children?.length} ${t('plan.gearCount')}`
                     : ''}

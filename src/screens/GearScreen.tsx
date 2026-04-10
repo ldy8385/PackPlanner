@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useDialog } from '../contexts/DialogContext';
 import { Gear, GearCategory, GearTemplate } from '../types';
 import { gearCategories, getManufacturerName } from '../data/mockData';
-import { getCategoryIcon } from '../utils/gearHierarchy';
+import { getCategoryIcon, formatNumber } from '../utils/gearHierarchy';
 import CreateTemplateScreen from './CreateTemplateScreen';
 
 interface GearScreenProps {
@@ -206,7 +206,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
           <View style={styles.weightContainer}>
             <Icon name="weight-kilogram" size={16} color={theme.colors.secondary} />
             <Text variant="titleSmall" style={{ color: theme.colors.secondary, fontWeight: '600' }}>
-              {item.weight}g
+              {formatNumber(item.weight)}g
             </Text>
           </View>
         </View>
@@ -484,7 +484,7 @@ const GearScreen: React.FC<GearScreenProps> = ({
                               <Text
                                 variant="bodySmall"
                                 style={{ color: theme.colors.outline }}>
-                                {Math.round(tWeight)}g
+                                {formatNumber(Math.round(tWeight))}g
                               </Text>
                             </View>
                           </View>

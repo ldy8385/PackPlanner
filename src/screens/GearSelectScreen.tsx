@@ -14,7 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
 import { Gear, GearCategory, GearTemplate, PlanItem } from '../types';
 import { gearCategories } from '../data/mockData';
-import { deepClonePlanItems, getCategoryIcon } from '../utils/gearHierarchy';
+import { deepClonePlanItems, getCategoryIcon, formatNumber } from '../utils/gearHierarchy';
 import { t } from 'i18next';
 
 interface GearSelectScreenProps {
@@ -625,7 +625,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {gear.name}
                         </Text>
                         <Text variant="bodySmall" style={[styles.gearMeta, { color: theme.colors.onSurfaceVariant }]}>
-                          {gear.weight}g · {t(`gearCategory.${gear.category}`)}
+                          {formatNumber(gear.weight)}g · {t(`gearCategory.${gear.category}`)}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                           {t('gearSelect.used', { used: usedQuantity, max: maxQuantity, remaining: remaining })}
@@ -690,7 +690,7 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
                           {template.name}
                         </Text>
                         <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                          {templateGears.length} {t('plan.gearCount')} · {Math.round(totalWeight)}g
+                          {templateGears.length} {t('plan.gearCount')} · {formatNumber(Math.round(totalWeight))}g
                         </Text>
                       </View>
                       <Icon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
@@ -778,8 +778,8 @@ const PlanItemView: React.FC<{
                     {item.gear.name}
                   </Text>
                   <Text variant="bodySmall" style={styles.planItemMeta}>
-                    {item.gear.weight}g × {item.quantity} ={' '}
-                    {Math.round(item.gear.weight * item.quantity)}g
+                    {formatNumber(item.gear.weight)}g × {item.quantity} ={' '}
+                    {formatNumber(Math.round(item.gear.weight * item.quantity))}g
                   </Text>
                 </View>
 
