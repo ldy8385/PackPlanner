@@ -12,7 +12,7 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Gear, GearTemplate } from '../types';
+import { Gear, GearTemplate, PlanItem } from '../types';
 import { useDialog } from '../contexts/DialogContext';
 import GearSelectScreen from './GearSelectScreen';
 
@@ -40,6 +40,9 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
   );
   const [selectedGearIds, setSelectedGearIds] = useState<string[]>(
     editingTemplate?.gearIds || [],
+  );
+  const [templateItems, setTemplateItems] = useState<PlanItem[]>(
+    editingTemplate?.items || [],
   );
   const [showGearSelect, setShowGearSelect] = useState(false);
 
@@ -79,6 +82,7 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
       name: name.trim(),
       description: description.trim(),
       gearIds: selectedGearIds,
+      items: templateItems.length > 0 ? templateItems : undefined,
       createdAt: editingTemplate?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -86,8 +90,9 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
     onSave(template);
   };
 
-  const handleGearSelect = (gearIds: string[]) => {
+  const handleGearSelect = (gearIds: string[], items?: PlanItem[]) => {
     setSelectedGearIds(gearIds);
+    setTemplateItems(items || []);
     setShowGearSelect(false);
   };
 
@@ -95,7 +100,8 @@ const CreateTemplateScreen: React.FC<CreateTemplateScreenProps> = ({
     return (
       <GearSelectScreen
         gears={gears}
-        selectedGearIds={selectedGearIds}
+        selectedItems={templateItems.length > 0 ? templateItems : undefined}
+        selectedGearIds={templateItems.length > 0 ? undefined : selectedGearIds}
         onSave={handleGearSelect}
         onCancel={() => setShowGearSelect(false)}
       />

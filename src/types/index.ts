@@ -94,6 +94,7 @@ export interface GearTemplate {
   name: string;
   description?: string;
   gearIds: string[];
+  items?: PlanItem[];
   createdAt: Date;
   updatedAt: Date;
 }

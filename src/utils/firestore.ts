@@ -36,8 +36,15 @@ const planFromDb = (key: string, data: any): Plan => ({
 
 // ===== Template 변환 =====
 
+const stripGearFromItems = (items: any[]): any[] =>
+  items.map(({ children, expanded, gear, ...item }) => ({
+    ...item,
+    ...(children ? { children: stripGearFromItems(children) } : {}),
+  }));
+
 const templateToDb = (template: GearTemplate) => ({
   ...template,
+  items: template.items ? stripGearFromItems(template.items) : undefined,
   createdAt: template.createdAt.toISOString(),
   updatedAt: template.updatedAt.toISOString(),
 });

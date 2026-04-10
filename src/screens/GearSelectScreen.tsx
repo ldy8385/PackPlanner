@@ -180,20 +180,37 @@ const GearSelectScreen: React.FC<GearSelectScreenProps> = ({
 
   // 템플릿에서 장비 불러오기
   const loadFromTemplate = (template: GearTemplate) => {
-    const newItems: PlanItem[] = [];
-    template.gearIds.forEach(gearId => {
-      const gear = gears.find(g => g.id === gearId);
-      if (gear) {
-        newItems.push({
-          id: `${Date.now()}_${gear.id}_${Math.random().toString(36).substr(2, 9)}`,
-          gearId: gear.id,
-          gear: gear,
-          isChecked: false,
-          quantity: 1,
-        });
-      }
-    });
-    setPlanItems(prev => [...prev, ...newItems]);
+    // 계층 구조가 있으면 그대로 사용, 없으면 flat으로 변환
+    if (template.items && template.items.length > 0) {
+      const hydrateItems = (items: PlanItem[]): PlanItem[] =>
+        items.map(item => {
+          const gear = gears.find(g => g.id === item.gearId);
+          if (!gear) return null;
+          return {
+            ...item,
+            id: `${Date.now()}_${item.gearId}_${Math.random().toString(36).substr(2, 9)}`,
+            gear,
+            isChecked: false,
+            children: item.children ? hydrateItems(item.children) : undefined,
+          };
+        }).filter((i): i is PlanItem => i !== null);
+      setPlanItems(prev => [...prev, ...hydrateItems(template.items!)]);
+    } else {
+      const newItems: PlanItem[] = [];
+      template.gearIds.forEach(gearId => {
+        const gear = gears.find(g => g.id === gearId);
+        if (gear) {
+          newItems.push({
+            id: `${Date.now()}_${gear.id}_${Math.random().toString(36).substr(2, 9)}`,
+            gearId: gear.id,
+            gear: gear,
+            isChecked: false,
+            quantity: 1,
+          });
+        }
+      });
+      setPlanItems(prev => [...prev, ...newItems]);
+    }
     setShowTemplateModal(false);
   };
 
