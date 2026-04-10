@@ -18,7 +18,9 @@ import { useTranslation } from 'react-i18next';
 import { ThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
+import { firestoreService } from '../utils/firestore';
 import { storage } from '../utils/storage';
+import database from '@react-native-firebase/database';
 
 interface MyPageScreenProps {
   themeMode: ThemeMode;
@@ -64,6 +66,54 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
             confirmText: t('common.confirm'),
           });
         }
+      },
+    });
+  };
+
+  const handleDataManagement = () => {
+    showConfirm({
+      title: t('mypage.dataManagement'),
+      message: t('mypage.dataSync') + ' / ' + t('mypage.dataReset'),
+      icon: 'info',
+      confirmText: t('mypage.dataSync'),
+      cancelText: t('mypage.dataReset'),
+      onConfirm: async () => {
+        if (!user) return;
+        try {
+          // 캐시 삭제 후 서버에서 재로드
+          await database().goOffline();
+          await database().goOnline();
+          showAlert({
+            title: t('mypage.dataManagement'),
+            message: t('mypage.dataSyncComplete'),
+            icon: 'success',
+          });
+        } catch {
+          showAlert({ title: t('common.error'), message: t('common.loadError'), icon: 'error' });
+        }
+      },
+      onCancel: () => {
+        // 데이터 초기화 확인
+        showConfirm({
+          title: t('mypage.dataReset'),
+          message: t('mypage.dataResetMessage'),
+          icon: 'delete',
+          confirmText: t('mypage.dataReset'),
+          cancelText: t('common.cancel'),
+          onConfirm: async () => {
+            if (!user) return;
+            try {
+              await database().ref(`users/${user.uid}`).remove();
+              showAlert({
+                title: t('mypage.dataManagement'),
+                message: t('mypage.dataResetComplete'),
+                icon: 'success',
+              });
+            } catch {
+              showAlert({ title: t('common.error'), message: t('common.saveError'), icon: 'error' });
+            }
+          },
+        });
       },
     });
   };
@@ -266,8 +316,8 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 
             <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
 
-            {/* 알림 설정 */}
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            {/* 알림 설정 - 비활성 */}
+            <View style={[styles.settingRow, { opacity: 0.5 }]}>
               <View style={styles.settingRowLeft}>
                 <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
                   <MaterialCommunityIcons
@@ -280,17 +330,15 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
                   {t('mypage.notifications')}
                 </Text>
               </View>
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={24}
-                color={theme.colors.outline}
-              />
-            </TouchableOpacity>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                {t('mypage.notificationsPreparing')}
+              </Text>
+            </View>
 
             <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
 
             {/* 데이터 관리 */}
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={handleDataManagement}>
               <View style={styles.settingRowLeft}>
                 <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
                   <MaterialCommunityIcons
