@@ -236,7 +236,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
         <Text variant="titleLarge" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
           {isEditMode ? t('createGear.editGear') : t('createGear.addNewGear')}
         </Text>
-        <View style={{ width: 48 }} />
+        {isEditMode && onDelete && editingGear ? (
+          <IconButton icon="delete-outline" size={24} onPress={() => onDelete(editingGear)} iconColor={theme.colors.error} />
+        ) : (
+          <View style={{ width: 48 }} />
+        )}
       </Surface>
 
       <ScrollView
@@ -244,9 +248,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none">
         <View style={styles.form}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createGear.gearName')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createGear.gearName')}
             placeholder={t('createGear.gearNamePlaceholder')}
             value={name}
             onChangeText={setName}
@@ -310,9 +316,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             </TouchableOpacity>
           </Surface>
 
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createGear.weight')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createGear.weight')}
             placeholder={t('createGear.weightPlaceholder')}
             value={weight}
             onChangeText={setWeight}
@@ -359,10 +367,10 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             <View style={styles.tagInputContainer} onLayout={onTagInputLayout}>
               <TextInput
                 mode="outlined"
-                label={t('createGear.addTags')}
                 placeholder={t('createGear.tagsPlaceholder')}
                 outlineColor={theme.colors.outline}
                 activeOutlineColor={theme.colors.primary}
+                outlineStyle={styles.outlineRounded}
                 value={tagInput}
                 onChangeText={text => {
                   setTagInput(text);
@@ -372,16 +380,17 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
                 onBlur={() => {
                   setTimeout(() => setShowTagSuggestions(false), 200);
                 }}
-                style={[styles.input, { flex: 1, backgroundColor: theme.colors.surface }]}
+                style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: theme.colors.surface }]}
                 textColor={theme.colors.onSurface}
                 onSubmitEditing={handleAddTag}
               />
               <Button
-                mode="contained"
+                mode="contained-tonal"
                 onPress={handleAddTag}
-                style={[styles.addTagButton, { backgroundColor: theme.colors.primaryContainer, borderRadius: 12 }]}
+                style={{ borderRadius: 12, marginLeft: 8 }}
                 contentStyle={{ height: 56 }}
-                labelStyle={{ color: theme.colors.onPrimaryContainer }}>
+                buttonColor={theme.colors.primaryContainer}
+                textColor={theme.colors.onPrimaryContainer}>
                 {t('common.add')}
               </Button>
             </View>
@@ -480,9 +489,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           </View>
 
           {/* Quantity */}
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createGear.quantity')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createGear.quantity')}
             placeholder={t('createGear.quantityPlaceholder')}
             value={quantity}
             onChangeText={setQuantity}
@@ -497,9 +508,11 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
             {t('createGear.quantityHelper')}
           </Text>
 
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createGear.descriptionLabel')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createGear.descriptionLabel')}
             placeholder={t('createGear.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
@@ -532,17 +545,6 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           </Button>
         </View>
 
-        {isEditMode && onDelete && editingGear && (
-          <View style={styles.deleteContainer}>
-            <Button
-              mode="text"
-              icon="delete-outline"
-              onPress={() => onDelete(editingGear)}
-              textColor={theme.colors.error}>
-              {t('common.delete')}
-            </Button>
-          </View>
-        )}
       </ScrollView>
 
       {/* Drawers */}
@@ -659,7 +661,7 @@ const styles = StyleSheet.create({
   tagInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 8,
   },
   addTagButton: {
     marginBottom: 8,
