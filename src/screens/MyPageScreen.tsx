@@ -5,6 +5,7 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import {
   Text,
@@ -70,50 +71,44 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
     });
   };
 
-  const handleDataManagement = () => {
+  const [showDataMenu, setShowDataMenu] = useState(false);
+
+  const handleDataSync = async () => {
+    setShowDataMenu(false);
+    if (!user) return;
+    try {
+      await database().goOffline();
+      await database().goOnline();
+      showAlert({
+        title: t('mypage.dataManagement'),
+        message: t('mypage.dataSyncComplete'),
+        icon: 'success',
+      });
+    } catch {
+      showAlert({ title: t('common.error'), message: t('common.loadError'), icon: 'error' });
+    }
+  };
+
+  const handleDataReset = () => {
+    setShowDataMenu(false);
     showConfirm({
-      title: t('mypage.dataManagement'),
-      message: t('mypage.dataSync') + ' / ' + t('mypage.dataReset'),
-      icon: 'info',
-      confirmText: t('mypage.dataSync'),
-      cancelText: t('mypage.dataReset'),
+      title: t('mypage.dataReset'),
+      message: t('mypage.dataResetMessage'),
+      icon: 'delete',
+      confirmText: t('mypage.dataReset'),
+      cancelText: t('common.cancel'),
       onConfirm: async () => {
         if (!user) return;
         try {
-          // 캐시 삭제 후 서버에서 재로드
-          await database().goOffline();
-          await database().goOnline();
+          await database().ref(`users/${user.uid}`).remove();
           showAlert({
             title: t('mypage.dataManagement'),
-            message: t('mypage.dataSyncComplete'),
+            message: t('mypage.dataResetComplete'),
             icon: 'success',
           });
         } catch {
-          showAlert({ title: t('common.error'), message: t('common.loadError'), icon: 'error' });
+          showAlert({ title: t('common.error'), message: t('common.saveError'), icon: 'error' });
         }
-      },
-      onCancel: () => {
-        // 데이터 초기화 확인
-        showConfirm({
-          title: t('mypage.dataReset'),
-          message: t('mypage.dataResetMessage'),
-          icon: 'delete',
-          confirmText: t('mypage.dataReset'),
-          cancelText: t('common.cancel'),
-          onConfirm: async () => {
-            if (!user) return;
-            try {
-              await database().ref(`users/${user.uid}`).remove();
-              showAlert({
-                title: t('mypage.dataManagement'),
-                message: t('mypage.dataResetComplete'),
-                icon: 'success',
-              });
-            } catch {
-              showAlert({ title: t('common.error'), message: t('common.saveError'), icon: 'error' });
-            }
-          },
-        });
       },
     });
   };
@@ -338,7 +333,7 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
             <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
 
             {/* 데이터 관리 */}
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={handleDataManagement}>
+            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => setShowDataMenu(true)}>
               <View style={styles.settingRowLeft}>
                 <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
                   <MaterialCommunityIcons
@@ -478,6 +473,42 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
           </Surface>
         </View>
       </ScrollView>
+
+      {/* Data Management Bottom Sheet */}
+      <Modal
+        visible={showDataMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDataMenu(false)}>
+        <TouchableOpacity
+          style={styles.dataMenuOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDataMenu(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.dataMenuSheet, { backgroundColor: theme.colors.surface }]}>
+            <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600', marginBottom: 16 }}>
+              {t('mypage.dataManagement')}
+            </Text>
+            <TouchableOpacity
+              style={[styles.dataMenuItem, { backgroundColor: theme.colors.primaryContainer }]}
+              onPress={handleDataSync}
+              activeOpacity={0.7}>
+              <MaterialCommunityIcons name="cloud-sync-outline" size={22} color={theme.colors.primary} />
+              <Text variant="bodyLarge" style={{ color: theme.colors.primary, fontWeight: '500', marginLeft: 12 }}>
+                {t('mypage.dataSync')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dataMenuItem, { backgroundColor: theme.colors.errorContainer }]}
+              onPress={handleDataReset}
+              activeOpacity={0.7}>
+              <MaterialCommunityIcons name="delete-sweep-outline" size={22} color={theme.colors.error} />
+              <Text variant="bodyLarge" style={{ color: theme.colors.error, fontWeight: '500', marginLeft: 12 }}>
+                {t('mypage.dataReset')}
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -485,6 +516,24 @@ const MyPageScreen: React.FC<MyPageScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  dataMenuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  dataMenuSheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  dataMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 10,
   },
   scrollView: {
     flex: 1,
