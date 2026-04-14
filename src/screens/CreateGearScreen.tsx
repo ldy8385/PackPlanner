@@ -254,6 +254,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <TextInput
             mode="outlined"
             placeholder={t('createGear.gearNamePlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={name}
             onChangeText={setName}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -322,6 +323,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <TextInput
             mode="outlined"
             placeholder={t('createGear.weightPlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={weight}
             onChangeText={setWeight}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -368,6 +370,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
               <TextInput
                 mode="outlined"
                 placeholder={t('createGear.tagsPlaceholder')}
+                placeholderTextColor={theme.colors.outline}
                 outlineColor={theme.colors.outline}
                 activeOutlineColor={theme.colors.primary}
                 outlineStyle={styles.outlineRounded}
@@ -495,6 +498,7 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <TextInput
             mode="outlined"
             placeholder={t('createGear.quantityPlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={quantity}
             onChangeText={setQuantity}
             keyboardType="numeric"
@@ -514,11 +518,13 @@ const CreateGearScreen: React.FC<CreateGearScreenProps> = ({
           <TextInput
             mode="outlined"
             placeholder={t('createGear.descriptionPlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
             style={[styles.input, styles.memoInput, { backgroundColor: theme.colors.surface }]}
+            contentStyle={{ paddingTop: 12 }}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
@@ -686,7 +692,6 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     borderRadius: 12,
-    borderColor: '#e0e0e0',
   },
   saveButton: {
     flex: 1,

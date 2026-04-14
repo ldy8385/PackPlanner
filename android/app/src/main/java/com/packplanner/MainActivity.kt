@@ -21,7 +21,8 @@ class MainActivity : ReactActivity() {
     val rootView = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
       val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-      view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+      val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+      view.setPadding(systemBars.left, systemBars.top, systemBars.right, maxOf(systemBars.bottom, ime.bottom))
       WindowInsetsCompat.CONSUMED
     }
   }

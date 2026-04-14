@@ -151,7 +151,7 @@ export default {
     standalone: '단독',
     quantity: '수량',
     quantityPlaceholder: '기본: 1',
-    quantityHelper: '보유한 수량을 설정하세요 (예: 등산 폴 2개).',
+    quantityHelper: '보유한 수량을 설정하세요.',
     descriptionLabel: '설명 (선택)',
     descriptionPlaceholder: '장비에 대한 설명을 추가하세요...',
     saveGear: '장비 저장',

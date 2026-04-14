@@ -224,7 +224,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
                       style={styles.dropdownList}
                       renderItem={({ item }) => (
                         <TouchableOpacity
-                          style={styles.dropdownItem}
+                          style={[styles.dropdownItem, {borderBottomColor: theme.colors.outlineVariant}]}
                           onPress={() => handleSelectResult(item)}>
                           <Icon name="map-marker" size={16} color={theme.colors.primary} />
                           <View style={styles.dropdownTextContainer}>
@@ -251,7 +251,7 @@ const LocationSelectDrawer: React.FC<LocationSelectDrawerProps> = ({
           </View>
 
           {/* Address info + buttons */}
-          <View style={[styles.bottomArea, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.bottomArea, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
             <View style={styles.addressRow}>
               {isLoadingAddress ? (
                 <>
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: undefined,
   },
   dropdownTextContainer: {
     flex: 1,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   bottomArea: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: undefined,
   },
   addressRow: {
     flexDirection: 'row',

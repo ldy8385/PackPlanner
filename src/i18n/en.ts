@@ -152,7 +152,7 @@ export default {
     standalone: 'Standalone',
     quantity: 'Quantity',
     quantityPlaceholder: 'Default: 1',
-    quantityHelper: 'Set the number of items you own (e.g., 2 hiking poles).',
+    quantityHelper: 'Set the number of items you own.',
     descriptionLabel: 'Description (Optional)',
     descriptionPlaceholder: 'Add details about this gear...',
     saveGear: 'Save Gear',

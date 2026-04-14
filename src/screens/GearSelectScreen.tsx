@@ -763,7 +763,7 @@ const PlanItemView: React.FC<{
                   <Icon
                     name={isExpanded ? 'chevron-down' : 'chevron-right'}
                     size={22}
-                    color="#666"
+                    color={theme.colors.onSurfaceVariant}
                   />
                 ) : (
                   <View style={{ width: 22 }} />
@@ -790,7 +790,7 @@ const PlanItemView: React.FC<{
                       <Icon
                         name="package-variant-closed"
                         size={14}
-                        color="#fff"
+                        color={theme.colors.onPrimary}
                       />
                     </View>
                   )}
@@ -815,7 +815,7 @@ const PlanItemView: React.FC<{
                   onMoveToContainer(movingId, item.id);
                   setMovingId(null);
                 }}>
-                <Icon name="arrow-down-circle" size={20} color="#fff" />
+                <Icon name="arrow-down-circle" size={20} color={theme.colors.onPrimary} />
                 <Text variant="bodyMedium" style={styles.dropButtonText}>
                   {t('gearSelect.putHere')}
                 </Text>

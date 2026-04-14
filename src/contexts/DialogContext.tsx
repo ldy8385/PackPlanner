@@ -40,13 +40,13 @@ interface DialogContextType {
 
 const DialogContext = createContext<DialogContextType | undefined>(undefined);
 
-const ICON_MAP: Record<DialogIcon, { name: string; color: string; bg: string }> = {
-  error: { name: 'alert-circle', color: '#EF4444', bg: '#FEE2E2' },
-  warning: { name: 'alert', color: '#F59E0B', bg: '#FEF3C7' },
-  success: { name: 'check-circle', color: '#10B981', bg: '#D1FAE5' },
-  info: { name: 'information', color: '#4F46E5', bg: '#E0E7FF' },
-  delete: { name: 'delete-alert', color: '#EF4444', bg: '#FEE2E2' },
-};
+const getIconMap = (colors: any): Record<DialogIcon, { name: string; color: string; bg: string }> => ({
+  error: { name: 'alert-circle', color: colors.error, bg: colors.errorContainer },
+  warning: { name: 'alert', color: colors.tertiary, bg: colors.tertiaryContainer },
+  success: { name: 'check-circle', color: colors.secondary, bg: colors.secondaryContainer },
+  info: { name: 'information', color: colors.primary, bg: colors.primaryContainer },
+  delete: { name: 'delete-alert', color: colors.error, bg: colors.errorContainer },
+});
 
 export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const theme = useTheme();
@@ -73,7 +73,8 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     config?.onCancel?.();
   };
 
-  const iconInfo = config?.icon ? ICON_MAP[config.icon] : null;
+  const iconMap = getIconMap(theme.colors);
+  const iconInfo = config?.icon ? iconMap[config.icon] : null;
 
   return (
     <DialogContext.Provider value={{ showAlert, showConfirm }}>
@@ -113,7 +114,7 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 mode="contained"
                 onPress={handleConfirm}
                 style={styles.button}
-                buttonColor={config?.confirmColor || (config?.icon === 'delete' || config?.icon === 'error' ? '#EF4444' : theme.colors.primary)}>
+                buttonColor={config?.confirmColor || (config?.icon === 'delete' || config?.icon === 'error' ? theme.colors.error : theme.colors.primary)}>
                 {config?.confirmText || '확인'}
               </Button>
             </View>

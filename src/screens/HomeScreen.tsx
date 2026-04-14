@@ -239,17 +239,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               mode="contained">
               <Card.Content style={styles.featuredCardContent}>
                 <View style={styles.featuredHeader}>
-                  <View style={[styles.planBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                  <View style={[styles.planBadge, { backgroundColor: `${theme.colors.onPrimary}33` }]}>
                     <MaterialCommunityIcons
                       name={getPlanTypeIcon(recentPlan.type)}
                       size={16}
-                      color="#FFFFFF"
+                      color={theme.colors.onPrimary}
                     />
-                    <Text variant="labelMedium" style={{ color: '#FFFFFF' }}>
+                    <Text variant="labelMedium" style={{ color: theme.colors.onPrimary }}>
                       {t(`planType.${recentPlan.type}`)}
                     </Text>
                   </View>
-                  <View style={[styles.ddayBadge, { backgroundColor: '#FFFFFF' }]}>
+                  <View style={[styles.ddayBadge, { backgroundColor: theme.colors.onPrimary }]}>
                     <Text variant="labelLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
                       {getDday(recentPlan.startDate)}
                     </Text>
@@ -265,9 +265,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <MaterialCommunityIcons
                       name="map-marker"
                       size={18}
-                      color="rgba(255,255,255,0.8)"
+                      color={`${theme.colors.onPrimary}CC`}
                     />
-                    <Text variant="bodyMedium" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    <Text variant="bodyMedium" style={{ color: `${theme.colors.onPrimary}E6` }}>
                       {recentPlan.destination}
                     </Text>
                   </View>
@@ -275,9 +275,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <MaterialCommunityIcons
                       name="calendar"
                       size={18}
-                      color="rgba(255,255,255,0.8)"
+                      color={`${theme.colors.onPrimary}CC`}
                     />
-                    <Text variant="bodyMedium" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    <Text variant="bodyMedium" style={{ color: `${theme.colors.onPrimary}E6` }}>
                       {formatDateRange(
                         recentPlan.startDate,
                         recentPlan.endDate,
@@ -293,17 +293,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   return (
                     <View style={styles.progressContainer}>
                       <View style={styles.progressInfo}>
-                        <Text variant="bodySmall" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        <Text variant="bodySmall" style={{ color: `${theme.colors.onPrimary}CC` }}>
                           {t('home.packingProgress')}
                         </Text>
-                        <Text variant="bodySmall" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+                        <Text variant="bodySmall" style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
                           {pct}%
                         </Text>
                       </View>
                       <ProgressBar
                         progress={rc.checked / rc.total}
-                        color="#FFFFFF"
-                        style={styles.progressBar}
+                        color={theme.colors.onPrimary}
+                        style={[styles.progressBar, { backgroundColor: `${theme.colors.onPrimary}4D` }]}
                       />
                     </View>
                   );
@@ -311,7 +311,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               </Card.Content>
             </Card>
           ) : (
-            <Surface style={[styles.emptyPlanCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <Surface style={[styles.emptyPlanCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]} elevation={0}>
               <MaterialCommunityIcons name="calendar-blank-outline" size={40} color={theme.colors.outlineVariant} />
               <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: 12 }}>
                 {t('plan.noUpcomingPlans')}
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: undefined,
     borderStyle: 'dashed',
   },
   featuredCardContent: {
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: undefined,
   },
   quickActionsGrid: {
     flexDirection: 'row',

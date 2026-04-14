@@ -677,7 +677,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               <Icon
                 name={getPlanTypeIcon(item.type)}
                 size={16}
-                color="#2E7D32"
+                color={theme.colors.secondary}
                 style={styles.planTypeIcon}
               />
               <Text variant="labelMedium" style={styles.planTypeText}>
@@ -695,13 +695,13 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             {item.name}
           </Text>
           <View style={styles.planDestination}>
-            <Icon name="map-marker" size={16} color="#49454F" />
+            <Icon name="map-marker" size={16} color={theme.colors.onSurfaceVariant} />
             <Text variant="bodyMedium" style={styles.destinationText}>
               {item.destination}
             </Text>
           </View>
           <View style={styles.planDateRow}>
-            <Icon name="calendar" size={14} color="#79747E" />
+            <Icon name="calendar" size={14} color={theme.colors.onSurfaceVariant} />
             <Text variant="bodySmall" style={styles.planDate}>
               {formatDateRange(item.startDate, item.endDate)}
             </Text>
@@ -739,7 +739,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
           <View style={styles.progressContainer}>
             <ProgressBar
               progress={progress}
-              color="#2E7D32"
+              color={theme.colors.secondary}
               style={styles.progressBar}
             />
           </View>
@@ -934,7 +934,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               {/* 지도 표시 - 위치 정보가 있을 때만 */}
               {selectedPlan.location && (
                 <TouchableOpacity
-                  style={styles.mapContainer}
+                  style={[styles.mapContainer, {borderColor: theme.colors.outlineVariant}]}
                   activeOpacity={0.8}
                   onPress={() => setShowFullMap(true)}>
                   <KakaoMap
@@ -946,7 +946,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               )}
               {/* 메모 (description) */}
               {selectedPlan.description ? (
-                <View style={styles.memoContainer}>
+                <View style={[styles.memoContainer, {backgroundColor: theme.colors.surfaceVariant}]}>
                   <View style={styles.memoHeader}>
                     <Icon name="note-text" size={20} color={theme.colors.primary} />
                     <Text variant="titleSmall" style={{color: theme.colors.onSurface, marginLeft: 8}}>
@@ -1305,7 +1305,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                 <TouchableOpacity
                   style={styles.photoViewerButton}
                   onPress={() => setShowPhotoViewer(null)}>
-                  <Icon name="close" size={26} color="#fff" />
+                  <Icon name="close" size={26} color={theme.colors.onPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.photoViewerButton}
@@ -1314,7 +1314,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
                     setShowPhotoViewer(null);
                     if (idx !== null) handleDeletePhoto(idx);
                   }}>
-                  <Icon name="delete-outline" size={26} color="#EF4444" />
+                  <Icon name="delete-outline" size={26} color={theme.colors.error} />
                 </TouchableOpacity>
               </View>
               <FastImage
@@ -1349,7 +1349,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
     <SafeAreaView
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <Surface
-        style={[styles.header, {backgroundColor: theme.colors.surface}]}
+        style={[styles.header, {backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant}]}
         elevation={0}>
         <View style={styles.headerContent}>
           <Text
@@ -1403,23 +1403,14 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
               style={[styles.emptyStateSubtext, {color: theme.colors.outline}]}>
               {t('plan.createPlanToStart')}
             </Text>
-            {onCreateNewPlan && (
-              <Button
-                mode="contained"
-                onPress={onCreateNewPlan}
-                style={{marginTop: 16, borderRadius: 12}}
-                contentStyle={{height: 56}}>
-                {t('plan.createPlan')}
-              </Button>
-            )}
           </View>
         }
       />
 
       {/* FAB - 새 계획 추가 */}
-      {onCreateNewPlan && filteredPlans.length > 0 && (
+      {onCreateNewPlan && (
         <Surface
-          style={[styles.fab, {backgroundColor: theme.colors.primaryContainer}]}
+          style={[styles.fab, {backgroundColor: theme.colors.primary, borderRadius: 16}]}
           elevation={4}>
           <TouchableOpacity
             style={styles.fabTouchable}
@@ -1428,7 +1419,7 @@ const PlanScreen: React.FC<PlanScreenProps> = ({
             <Icon
               name="plus"
               size={28}
-              color={theme.colors.onPrimaryContainer}
+              color={theme.colors.onPrimary}
             />
           </TouchableOpacity>
         </Surface>
@@ -1445,7 +1436,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: undefined,
   },
   headerContent: {
     flexDirection: 'row',
@@ -1709,20 +1700,18 @@ const styles = StyleSheet.create({
   // FAB
   fab: {
     position: 'absolute',
-    margin: 24,
-    right: 0,
-    bottom: 0,
-    borderRadius: 16,
-    width: 64,
-    height: 64,
-    alignItems: 'center',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   fabTouchable: {
-    width: 64,
-    height: 64,
-    alignItems: 'center',
+    width: 56,
+    height: 56,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   pastPlansToggle: {
     flexDirection: 'row',
@@ -1752,7 +1741,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: undefined,
   },
   photoSection: {
     marginTop: 16,
@@ -1816,7 +1805,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.03)',
+    backgroundColor: undefined,
   },
   memoHeader: {
     flexDirection: 'row',

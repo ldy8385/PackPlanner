@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -53,6 +53,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
     editingPlan?.description || '',
   );
   const [showLocationDrawer, setShowLocationDrawer] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSelectLocation = (location: Location) => {
     setSelectedLocation(location);
@@ -125,19 +126,22 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
         <View style={{ width: 48 }} />
       </Surface>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView ref={scrollViewRef} style={styles.scrollView} keyboardShouldPersistTaps="handled">
         <View style={styles.form}>
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createPlan.planName')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createPlan.planName')}
             placeholder={t('createPlan.planNamePlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={name}
             onChangeText={setName}
             style={[styles.input, { backgroundColor: theme.colors.surface }]}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
-            outlineStyle={{ borderRadius: 12 }}
+            outlineStyle={styles.outlineRounded}
           />
 
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
@@ -170,7 +174,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
           </Text>
 
           {!selectedLocation ? (
-            <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <Surface style={[styles.selectorCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]} elevation={0}>
               <TouchableOpacity
                 style={styles.locationSelector}
                 onPress={() => setShowLocationDrawer(true)}>
@@ -227,7 +231,7 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
           </Text>
 
           <TouchableOpacity
-            style={[styles.dateRangeSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+            style={[styles.dateRangeSelector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
             onPress={() => setShowCalendar(true)}>
             <View style={styles.dateRangeItem}>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
@@ -320,19 +324,24 @@ const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({
             </View>
           </Modal>
 
+          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+            {t('createPlan.description')}
+          </Text>
           <TextInput
             mode="outlined"
-            label={t('createPlan.description')}
             placeholder={t('createPlan.descriptionPlaceholder')}
+            placeholderTextColor={theme.colors.outline}
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
             style={[styles.input, styles.memoInput, { backgroundColor: theme.colors.surface }]}
+            contentStyle={{ paddingTop: 12 }}
             outlineColor={theme.colors.outline}
             activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
-            outlineStyle={{ borderRadius: 12 }}
+            outlineStyle={styles.outlineRounded}
+            onFocus={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 300)}
           />
         </View>
 
@@ -398,7 +407,9 @@ const styles = StyleSheet.create({
   memoInput: {
     minHeight: 100,
     textAlignVertical: 'top',
-    marginTop: 12,
+  },
+  outlineRounded: {
+    borderRadius: 12,
   },
   typeContainer: {
     flexDirection: 'row',
@@ -411,15 +422,17 @@ const styles = StyleSheet.create({
   },
   selectorCard: {
     borderRadius: 12,
+    height: 56,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
   },
   locationSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
+    flex: 1,
   },
   locationContent: {
     flexDirection: 'row',
@@ -505,7 +518,6 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     borderRadius: 12,
-    borderColor: '#e0e0e0',
   },
   saveButton: {
     flex: 1,
